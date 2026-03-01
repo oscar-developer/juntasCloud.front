@@ -80,22 +80,19 @@ export function LoginPage() {
         justifyContent: 'center',
         px: { xs: 2, sm: 3 },
         py: { xs: 3, sm: 4 },
-        backgroundColor: '#f3f4f6',
+        bgcolor: 'background.default',
       }}
     >
       <Paper
-        elevation={0}
+        elevation={2}
         sx={{
           width: '100%',
           maxWidth: 420,
           borderRadius: { xs: 3, sm: 4 },
           px: { xs: 3, sm: 5 },
           py: { xs: 4, sm: 5 },
-          boxShadow: {
-            xs: '0 12px 30px rgba(15, 23, 42, 0.08)',
-            sm: '0 20px 48px rgba(15, 23, 42, 0.10)',
-          },
-          backgroundColor: '#ffffff',
+          boxShadow: { xs: 2, sm: 3 },
+          bgcolor: 'background.paper',
         }}
       >
         <Box
@@ -129,8 +126,7 @@ export function LoginPage() {
               />
               <Typography
                 sx={{
-                  color: '#1f2937',
-                  // fontSize: { xs: 20, sm: 22 },
+                  color: 'text.primary',
                   fontSize: { xs: 25, sm: 28 },
                   lineHeight: 1,
                 }}
@@ -142,7 +138,7 @@ export function LoginPage() {
                   component="span"
                   sx={{
                     fontWeight: 400,
-                    color: '#4b5563',
+                    color: 'text.secondary',
                   }}
                 >
                   Cloud
@@ -151,7 +147,7 @@ export function LoginPage() {
             </Box>
             <Typography
               sx={{
-                color: '#1f2937',
+                color: 'text.primary',
                 fontSize: { xs: 32, sm: 36 },
                 fontWeight: 700,
                 lineHeight: 1.1,
@@ -183,11 +179,6 @@ export function LoginPage() {
               label="Email"
               onChange={(event) => setEmail(event.target.value)}
               size="medium"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: '#ffffff',
-                },
-              }}
               type="email"
               value={email}
             />
@@ -198,11 +189,6 @@ export function LoginPage() {
               label="Contraseña"
               onChange={(event) => setPassword(event.target.value)}
               size="medium"
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: '#ffffff',
-                },
-              }}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -228,20 +214,14 @@ export function LoginPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 1,
-                color: '#374151',
+                color: 'text.secondary',
               }}
             >
               <Checkbox
                 checked={rememberMe}
                 disableRipple
                 onChange={(event) => setRememberMe(event.target.checked)}
-                sx={{
-                  p: 0,
-                  color: '#9ca3af',
-                  '&.Mui-checked': {
-                    color: '#eb7a3c',
-                  },
-                }}
+                sx={{ p: 0 }}
               />
               <Typography sx={{ fontSize: 16 }}>Recordarme</Typography>
             </Box>
@@ -256,19 +236,14 @@ export function LoginPage() {
                 minHeight: 52,
                 mt: 0.5,
                 borderRadius: 1.5,
-                boxShadow: 'none',
-                backgroundColor: '#eb7a3c',
-                color: '#ffffff',
                 fontSize: 16,
                 fontWeight: 700,
-                textTransform: 'none',
                 '&:hover': {
-                  backgroundColor: '#d9682e',
-                  boxShadow: 'none',
+                  bgcolor: 'primary.dark',
                 },
                 '&.Mui-disabled': {
-                  backgroundColor: '#f3b18d',
-                  color: '#ffffff',
+                  bgcolor: 'primary.light',
+                  color: 'primary.contrastText',
                 },
               }}
             >
@@ -277,7 +252,7 @@ export function LoginPage() {
 
             <Typography
               sx={{
-                color: '#374151',
+                color: 'text.secondary',
                 fontSize: { xs: 14, sm: 15 },
                 textAlign: 'center',
               }}
@@ -287,7 +262,7 @@ export function LoginPage() {
                 component="a"
                 href="#"
                 sx={{
-                  color: '#eb7a3c',
+                  color: 'primary.main',
                   fontWeight: 600,
                   textDecoration: 'none',
                   cursor: 'pointer',

@@ -30,27 +30,10 @@ export function DashboardPage() {
 
   return (
     <Stack spacing={3} sx={{ pt: { xs: 2, md: 3 } }}>
-      <Card
-        elevation={0}
-        sx={{
-          borderRadius: 3,
-          p: { xs: 0.5, md: 1 },
-          border: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
+      <Card elevation={0} sx={{ p: { xs: 0.5, md: 1 } }}>
         <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
           <Stack spacing={2}>
-            <Chip
-              label="Resumen ejecutivo"
-              variant="filled"
-              sx={{
-                alignSelf: 'flex-start',
-                color: 'text.primary',
-                bgcolor: 'action.hover',
-                borderRadius: 2,
-              }}
-            />
+            <Chip label="Resumen ejecutivo" sx={{ alignSelf: 'flex-start' }} variant="filled" />
             <Box>
               <Typography
                 variant="h4"
@@ -75,16 +58,7 @@ export function DashboardPage() {
         }}
       >
         {summaryCards.map((card) => (
-          <Card
-            elevation={0}
-            key={card.title}
-            sx={{
-              borderRadius: 3,
-              border: '1px solid',
-              borderColor: 'divider',
-              minHeight: 180,
-            }}
-          >
+          <Card elevation={0} key={card.title} sx={{ minHeight: 180 }}>
             <CardContent sx={{ p: 3 }}>
               <Typography color="text.secondary" variant="body2">
                 {card.title}
@@ -107,14 +81,7 @@ export function DashboardPage() {
           gap: 2,
         }}
       >
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
+        <Card elevation={0}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6">Panel central</Typography>
             <Typography color="text.secondary" sx={{ mt: 1.25 }} variant="body1">
@@ -124,14 +91,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card
-          elevation={0}
-          sx={{
-            borderRadius: 3,
-            border: '1px solid',
-            borderColor: 'divider',
-          }}
-        >
+        <Card elevation={0}>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6">Siguientes acciones</Typography>
             <Stack spacing={1.5} sx={{ mt: 2 }}>
