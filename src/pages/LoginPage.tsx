@@ -1,8 +1,20 @@
-import { Alert, Box, Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import VisibilityOffRoundedIcon from '@mui/icons-material/VisibilityOffRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import {
+  Box,
+  Button,
+  Checkbox,
+  CircularProgress,
+  IconButton,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { isAxiosError } from 'axios';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { LoadingButton } from '../components/LoadingButton';
+import juntascloudCloudSvg from '../assets/juntascloud-cloud.svg';
 import { useAuth } from '../auth/useAuth';
 
 function getFriendlyErrorMessage(error: unknown) {
@@ -31,10 +43,13 @@ export function LoginPage() {
   const location = useLocation();
   const [email, setEmail] = useState('oscar@villaunion.pe');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/';
+  const isSubmitDisabled = loading || !email.trim() || !password.trim();
 
   if (isAuthenticated) {
     return <Navigate replace to={fromPath} />;
@@ -59,47 +74,119 @@ export function LoginPage() {
     <Box
       sx={{
         minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        px: 2,
-        py: 3,
-        background:
-          'radial-gradient(circle at top left, rgba(15, 23, 42, 0.08), transparent 38%), linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        px: { xs: 2, sm: 3 },
+        py: { xs: 3, sm: 4 },
+        backgroundColor: '#f3f4f6',
       }}
     >
-      <Card
+      <Paper
         elevation={0}
         sx={{
           width: '100%',
-          maxWidth: 460,
-          borderRadius: 5,
-          border: '1px solid',
-          borderColor: 'divider',
-          boxShadow: '0 22px 70px rgba(15, 23, 42, 0.08)',
+          maxWidth: 420,
+          borderRadius: { xs: 3, sm: 4 },
+          px: { xs: 3, sm: 5 },
+          py: { xs: 4, sm: 5 },
+          boxShadow: {
+            xs: '0 12px 30px rgba(15, 23, 42, 0.08)',
+            sm: '0 20px 48px rgba(15, 23, 42, 0.10)',
+          },
+          backgroundColor: '#ffffff',
         }}
       >
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-          <Stack component="form" onSubmit={handleSubmit} spacing={3}>
-            <Box>
-              <Typography variant="overline" sx={{ letterSpacing: 1.6, color: 'primary.main' }}>
-                Acceso seguro
-              </Typography>
-              <Typography sx={{ fontSize: { xs: 30, sm: 34 }, fontWeight: 800, lineHeight: 1.1 }}>
-                Iniciar sesión
-              </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-                Ingresa a tu panel para gestionar juntas, personas y configuraciones clave.
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+          }}
+        >
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 1.25,
+                mb: 4,
+              }}
+            >
+              <Box
+                alt="JuntasCloud"
+                component="img"
+                src={juntascloudCloudSvg}
+                sx={{
+                  width: { xs: 60, sm: 80 },
+                  height: 'auto',
+                  display: 'block',
+                }}
+              />
+              <Typography
+                sx={{
+                  color: '#1f2937',
+                  // fontSize: { xs: 20, sm: 22 },
+                  fontSize: { xs: 25, sm: 28 },
+                  lineHeight: 1,
+                }}
+              >
+                <Box component="span" sx={{ fontWeight: 700 }}>
+                  Juntas
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
+                    fontWeight: 400,
+                    color: '#4b5563',
+                  }}
+                >
+                  Cloud
+                </Box>
               </Typography>
             </Box>
+            <Typography
+              sx={{
+                color: '#1f2937',
+                fontSize: { xs: 32, sm: 36 },
+                fontWeight: 700,
+                lineHeight: 1.1,
+                textAlign: 'center',
+              }}
+            >
+              Bienvenido
+            </Typography>
+          </Box>
 
-            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+          {errorMessage && (
+            <Typography
+              sx={{
+                mb: 2,
+                color: 'error.main',
+                fontSize: 14,
+                textAlign: 'center',
+              }}
+            >
+              {errorMessage}
+            </Typography>
+          )}
 
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <TextField
               autoComplete="email"
               autoFocus
               fullWidth
-              label="Correo electrónico"
+              label="Email"
               onChange={(event) => setEmail(event.target.value)}
+              size="medium"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: '#ffffff',
+                },
+              }}
               type="email"
               value={email}
             />
@@ -109,22 +196,108 @@ export function LoginPage() {
               fullWidth
               label="Contraseña"
               onChange={(event) => setPassword(event.target.value)}
-              type="password"
+              size="medium"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: '#ffffff',
+                },
+              }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        edge="end"
+                        onClick={() => setShowPassword((current) => !current)}
+                        onMouseDown={(event) => event.preventDefault()}
+                      >
+                        {showPassword ? <VisibilityOffRoundedIcon /> : <VisibilityRoundedIcon />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
+              }}
+              type={showPassword ? 'text' : 'password'}
               value={password}
             />
 
-            <LoadingButton
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                color: '#374151',
+              }}
+            >
+              <Checkbox
+                checked={rememberMe}
+                disableRipple
+                onChange={(event) => setRememberMe(event.target.checked)}
+                sx={{
+                  p: 0,
+                  color: '#9ca3af',
+                  '&.Mui-checked': {
+                    color: '#eb7a3c',
+                  },
+                }}
+              />
+              <Typography sx={{ fontSize: 16 }}>Recordarme</Typography>
+            </Box>
+
+            <Button
+              disabled={isSubmitDisabled}
               fullWidth
-              loading={loading}
               size="large"
               type="submit"
               variant="contained"
+              sx={{
+                minHeight: 52,
+                mt: 0.5,
+                borderRadius: 1.5,
+                boxShadow: 'none',
+                backgroundColor: '#eb7a3c',
+                color: '#ffffff',
+                fontSize: 16,
+                fontWeight: 700,
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#d9682e',
+                  boxShadow: 'none',
+                },
+                '&.Mui-disabled': {
+                  backgroundColor: '#f3b18d',
+                  color: '#ffffff',
+                },
+              }}
             >
-              Iniciar sesión
-            </LoadingButton>
-          </Stack>
-        </CardContent>
-      </Card>
+              {loading ? <CircularProgress color="inherit" size={22} /> : 'Iniciar sesión'}
+            </Button>
+
+            <Typography
+              sx={{
+                color: '#374151',
+                fontSize: { xs: 14, sm: 15 },
+                textAlign: 'center',
+              }}
+            >
+              ¿No tienes una cuenta?{' '}
+              <Box
+                component="a"
+                href="#"
+                sx={{
+                  color: '#eb7a3c',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                Crear cuenta
+              </Box>
+            </Typography>
+          </Box>
+        </Box>
+      </Paper>
     </Box>
   );
 }
