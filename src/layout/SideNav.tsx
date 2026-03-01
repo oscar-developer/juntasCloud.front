@@ -42,21 +42,21 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        background: 'linear-gradient(180deg, #0f172a 0%, #111827 100%)',
-        color: '#f8fafc',
+        bgcolor: 'background.paper',
+        color: 'text.primary',
       }}
     >
       <Box sx={{ px: 3, py: 3 }}>
-        <Typography variant="overline" sx={{ color: 'rgba(248, 250, 252, 0.72)', letterSpacing: 1.6 }}>
+        <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 1.6 }}>
           Plataforma
         </Typography>
         <Typography sx={{ fontSize: 24, fontWeight: 800 }}>JuntasCloud</Typography>
-        <Typography sx={{ color: 'rgba(248, 250, 252, 0.68)', mt: 0.5 }} variant="body2">
+        <Typography color="text.secondary" sx={{ mt: 0.5 }} variant="body2">
           Gestión sobria y clara para la junta directiva.
         </Typography>
       </Box>
 
-      <Divider sx={{ borderColor: 'rgba(248, 250, 252, 0.08)' }} />
+      <Divider />
 
       <List sx={{ px: 2, py: 2, flexGrow: 1 }}>
         {navItems.map((item) => {
@@ -72,13 +72,14 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
               to={item.path}
               sx={{
                 borderRadius: 2.5,
-                color: 'rgba(248, 250, 252, 0.9)',
+                color: 'text.primary',
                 mb: 0.75,
                 '&.active, &.Mui-selected': {
-                  backgroundColor: 'rgba(148, 163, 184, 0.18)',
+                  bgcolor: 'action.selected',
+                  color: 'primary.main',
                 },
                 '&:hover': {
-                  backgroundColor: 'rgba(148, 163, 184, 0.12)',
+                  bgcolor: 'action.hover',
                 },
               }}
             >
@@ -94,8 +95,12 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           onClick={logout}
           sx={{
             borderRadius: 2.5,
-            color: 'rgba(248, 250, 252, 0.9)',
-            border: '1px solid rgba(248, 250, 252, 0.08)',
+            color: 'text.primary',
+            border: '1px solid',
+            borderColor: 'divider',
+            '&:hover': {
+              bgcolor: 'action.hover',
+            },
           }}
         >
           <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
@@ -115,7 +120,13 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
         open={mobileOpen}
         sx={{
           display: { xs: 'block', md: 'none' },
-          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 0 },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            borderRight: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+          },
         }}
         variant="temporary"
       >
@@ -129,7 +140,9 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           '& .MuiDrawer-paper': {
             boxSizing: 'border-box',
             width: drawerWidth,
-            borderRight: 0,
+            borderRight: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
           },
         }}
         variant="permanent"

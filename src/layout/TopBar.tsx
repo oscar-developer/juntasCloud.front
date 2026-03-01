@@ -42,7 +42,7 @@ export function TopBar({ drawerWidth, onMenuClick, isDesktop }: TopBarProps) {
         borderBottom: '1px solid',
         borderColor: 'divider',
         backdropFilter: 'blur(12px)',
-        backgroundColor: 'rgba(248, 250, 252, 0.92)',
+        bgcolor: 'background.paper',
       }}
     >
       <Toolbar sx={{ minHeight: 72 }}>
