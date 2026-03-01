@@ -30,6 +30,7 @@ npm run dev
 ## Variables de entorno
 
 - `VITE_API_BASE_URL`: URL base del backend NestJS. Ejemplo: `http://localhost:3000`
+- `VITE_PORT`: Puerto del servidor frontend en desarrollo. Ejemplo: `5173`
 
 ## Estructura principal
 
