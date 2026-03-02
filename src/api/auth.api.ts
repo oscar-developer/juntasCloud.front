@@ -1,9 +1,12 @@
-import { apiClient } from './axios';
+import { request } from '../shared/api/httpClient';
 import type { LoginRequest, LoginResponse } from '../types/auth.types';
 
 export const authApi = {
   async login(payload: LoginRequest) {
-    const response = await apiClient.post<LoginResponse>('/auth/login', payload);
-    return response.data;
+    return request<LoginResponse>({
+      path: '/auth/login',
+      method: 'POST',
+      body: payload,
+    });
   },
 };

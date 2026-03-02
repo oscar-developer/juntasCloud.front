@@ -1,5 +1,6 @@
 import { Navigate, useRoutes } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { TenantsPage } from '../features/juntas/pages/TenantsPage';
 import { AppLayout } from '../layout/AppLayout';
 import { AccountLoginsPage } from '../pages/AccountLoginsPage';
 import { AccountProfilePage } from '../pages/AccountProfilePage';
@@ -8,7 +9,6 @@ import { HelpPage } from '../pages/HelpPage';
 import { InvitationsPage } from '../pages/InvitationsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { TenantDashboardPage } from '../pages/TenantDashboardPage';
-import { TenantsPage } from '../pages/TenantsPage';
 
 export function AppRoutes() {
   return useRoutes([

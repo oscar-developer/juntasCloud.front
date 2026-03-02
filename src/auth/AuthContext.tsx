@@ -1,6 +1,6 @@
 import { createContext, useEffect, useState, type PropsWithChildren } from 'react';
 import { authApi } from '../api/auth.api';
-import { TOKEN_STORAGE_KEY } from '../api/axios';
+import { clearToken, getToken, setToken } from '../shared/auth/authStorage';
 import type { AuthUser, LoginRequest } from '../types/auth.types';
 
 const USER_STORAGE_KEY = 'juntascloud.user';
@@ -31,20 +31,18 @@ function readStoredUser() {
 }
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [accessToken, setAccessToken] = useState<string | null>(() =>
-    localStorage.getItem(TOKEN_STORAGE_KEY),
-  );
+  const [accessToken, setAccessToken] = useState<string | null>(() => getToken());
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
 
   useEffect(() => {
     if (!accessToken) {
       setUser(null);
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      clearToken();
       localStorage.removeItem(USER_STORAGE_KEY);
       return;
     }
 
-    localStorage.setItem(TOKEN_STORAGE_KEY, accessToken);
+    setToken(accessToken);
   }, [accessToken]);
 
   useEffect(() => {

@@ -11,15 +11,15 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { isAxiosError } from 'axios';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import juntascloudCloudSvg from '../assets/juntascloud-cloud.svg';
 import { useAuth } from '../auth/useAuth';
+import { HttpError } from '../shared/api/httpClient';
 
 function getFriendlyErrorMessage(error: unknown) {
-  if (isAxiosError(error)) {
-    const status = error.response?.status;
+  if (error instanceof HttpError) {
+    const { status } = error;
 
     if (status === 400) {
       return 'Verifica los datos ingresados e inténtalo de nuevo.';
