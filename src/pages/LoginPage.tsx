@@ -49,7 +49,8 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const fromPath = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/';
+  const fromPath =
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/app/tenants';
   const isSubmitDisabled = loading || !email.trim() || !password.trim();
 
   if (isAuthenticated) {

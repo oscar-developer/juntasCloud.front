@@ -1,31 +1,14 @@
-import { Box, Card, CardContent, Typography } from '@mui/material';
 import { Navigate, useRoutes } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { AppLayout } from '../layout/AppLayout';
-import { DashboardPage } from '../pages/DashboardPage';
+import { AccountLoginsPage } from '../pages/AccountLoginsPage';
+import { AccountProfilePage } from '../pages/AccountProfilePage';
+import { AccountSecurityPage } from '../pages/AccountSecurityPage';
+import { HelpPage } from '../pages/HelpPage';
+import { InvitationsPage } from '../pages/InvitationsPage';
 import { LoginPage } from '../pages/LoginPage';
-
-function PlaceholderPage({ title }: { title: string }) {
-  return (
-    <Box sx={{ pt: { xs: 2, md: 3 } }}>
-      <Card
-        elevation={0}
-        sx={{
-          borderRadius: 4,
-          border: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <CardContent sx={{ p: 3 }}>
-          <Typography sx={{ fontSize: 28, fontWeight: 800 }}>{title}</Typography>
-          <Typography color="text.secondary" sx={{ mt: 1 }}>
-            Esta sección queda preparada como placeholder para la siguiente etapa del proyecto.
-          </Typography>
-        </CardContent>
-      </Card>
-    </Box>
-  );
-}
+import { TenantDashboardPage } from '../pages/TenantDashboardPage';
+import { TenantsPage } from '../pages/TenantsPage';
 
 export function AppRoutes() {
   return useRoutes([
@@ -34,6 +17,11 @@ export function AppRoutes() {
       element: <LoginPage />,
     },
     {
+      path: '/',
+      element: <Navigate replace to="/app/tenants" />,
+    },
+    {
+      path: '/app',
       element: <ProtectedRoute />,
       children: [
         {
@@ -41,31 +29,49 @@ export function AppRoutes() {
           children: [
             {
               index: true,
-              element: <DashboardPage />,
+              element: <Navigate replace to="/app/tenants" />,
             },
             {
-              path: 'juntas',
-              element: <PlaceholderPage title="Juntas" />,
+              path: 'tenants',
+              element: <TenantsPage />,
             },
             {
-              path: 'personas',
-              element: <PlaceholderPage title="Personas" />,
+              path: 'invitations',
+              element: <InvitationsPage />,
             },
             {
-              path: 'terrenos',
-              element: <PlaceholderPage title="Terrenos" />,
+              path: 'account/profile',
+              element: <AccountProfilePage />,
             },
             {
-              path: 'configuracion',
-              element: <PlaceholderPage title="Configuración" />,
+              path: 'account/security',
+              element: <AccountSecurityPage />,
+            },
+            {
+              path: 'account/logins',
+              element: <AccountLoginsPage />,
+            },
+            {
+              path: 'help',
+              element: <HelpPage />,
             },
           ],
         },
       ],
     },
     {
+      path: '/t/:tenantId/dashboard',
+      element: <ProtectedRoute />,
+      children: [
+        {
+          index: true,
+          element: <TenantDashboardPage />,
+        },
+      ],
+    },
+    {
       path: '*',
-      element: <Navigate replace to="/" />,
+      element: <Navigate replace to="/app/tenants" />,
     },
   ]);
 }

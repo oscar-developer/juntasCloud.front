@@ -57,7 +57,7 @@ export function TopBar({ drawerWidth, onMenuClick, isDesktop }: TopBarProps) {
             JuntasCloud
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Panel de gestión directiva
+            Dashboard global
           </Typography>
         </Box>
 
