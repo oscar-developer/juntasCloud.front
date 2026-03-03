@@ -19,6 +19,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useEffect, useState, type ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
@@ -69,19 +70,31 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
         color: 'text.primary',
       }}
     >
-      <Box sx={{ px: 3, py: 3 }}>
-        <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 1.6 }}>
+      <Box
+        sx={{
+          px: 3,
+          py: 3,
+          background:
+            'linear-gradient(180deg, rgba(248,250,252,0.92) 0%, rgba(255,255,255,1) 100%)',
+        }}
+      >
+        <Typography
+          variant="overline"
+          sx={{ color: 'text.secondary', letterSpacing: 1.8, fontSize: 11, fontWeight: 700 }}
+        >
           Plataforma
         </Typography>
-        <Typography sx={{ fontSize: 24, fontWeight: 800 }}>JuntasCloud</Typography>
-        <Typography color="text.secondary" sx={{ mt: 0.5 }} variant="body2">
+        <Typography sx={{ mt: 0.5, fontSize: 22, fontWeight: 800, lineHeight: 1.08 }}>
+          JuntasCloud
+        </Typography>
+        <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 190, fontSize: 13.5 }} variant="body2">
           Accesos globales y navegación general de tu cuenta.
         </Typography>
       </Box>
 
       <Divider />
 
-      <List sx={{ px: 2, py: 2, flexGrow: 1 }}>
+      <List sx={{ px: 2, py: 2.5, flexGrow: 1 }}>
         {primaryItems.slice(0, 2).map((item) => {
           const selected = location.pathname === item.path;
 
@@ -93,8 +106,12 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
               selected={selected}
               to={item.path}
               sx={{
-                mb: 0.75,
+                mb: 1,
+                minHeight: 52,
                 color: selected ? 'primary.main' : 'text.primary',
+                '& .MuiListItemText-primary': {
+                  fontWeight: selected ? 700 : 600,
+                },
               }}
             >
               <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>{item.icon}</ListItemIcon>
@@ -107,8 +124,13 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           onClick={() => setAccountOpen((current) => !current)}
           selected={isAccountRoute}
           sx={{
+            mt: 1.25,
             mb: 0.75,
+            minHeight: 52,
             color: isAccountRoute ? 'primary.main' : 'text.primary',
+            '& .MuiListItemText-primary': {
+              fontWeight: isAccountRoute ? 700 : 600,
+            },
           }}
         >
           <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>
@@ -131,9 +153,14 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
                   selected={selected}
                   to={item.path}
                   sx={{
-                    pl: 4.5,
+                    pl: 4.75,
+                    minHeight: 46,
                     mb: 0.5,
                     color: selected ? 'primary.main' : 'text.secondary',
+                    '& .MuiListItemText-primary': {
+                      fontSize: 14,
+                      fontWeight: selected ? 700 : 500,
+                    },
                   }}
                 >
                   <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
@@ -155,8 +182,12 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
               selected={selected}
               to={item.path}
               sx={{
-                mt: 0.5,
+                mt: 1.25,
+                minHeight: 52,
                 color: selected ? 'primary.main' : 'text.primary',
+                '& .MuiListItemText-primary': {
+                  fontWeight: selected ? 700 : 600,
+                },
               }}
             >
               <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>{item.icon}</ListItemIcon>
@@ -173,8 +204,13 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
             color: 'text.primary',
             border: '1px solid',
             borderColor: 'divider',
+            minHeight: 52,
+            bgcolor: alpha('#F8FAFC', 0.9),
             '&:hover': {
               bgcolor: 'action.hover',
+            },
+            '& .MuiListItemText-primary': {
+              fontWeight: 600,
             },
           }}
         >
@@ -201,6 +237,7 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
             borderRight: '1px solid',
             borderColor: 'divider',
             bgcolor: 'background.paper',
+            boxShadow: '6px 0 24px rgba(15, 23, 42, 0.04)',
           },
         }}
         variant="temporary"
@@ -218,6 +255,7 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
             borderRight: '1px solid',
             borderColor: 'divider',
             bgcolor: 'background.paper',
+            boxShadow: '6px 0 24px rgba(15, 23, 42, 0.04)',
           },
         }}
         variant="permanent"

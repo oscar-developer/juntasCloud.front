@@ -99,11 +99,11 @@ export const appTheme = createTheme({
           paddingInline: 18,
         },
         contained: {
-          boxShadow: '0 10px 24px rgba(235, 122, 60, 0.18)',
+          boxShadow: '0 8px 20px rgba(235, 122, 60, 0.16)',
         },
         containedPrimary: {
           '&:hover': {
-            boxShadow: '0 12px 28px rgba(217, 104, 46, 0.22)',
+            boxShadow: '0 10px 24px rgba(217, 104, 46, 0.2)',
           },
         },
         outlined: {
@@ -120,13 +120,13 @@ export const appTheme = createTheme({
           borderRadius: 16,
         },
         elevation1: {
-          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
+          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.05)',
         },
         elevation2: {
-          boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
+          boxShadow: '0 12px 28px rgba(15, 23, 42, 0.07)',
         },
         elevation3: {
-          boxShadow: '0 18px 40px rgba(15, 23, 42, 0.10)',
+          boxShadow: '0 16px 38px rgba(15, 23, 42, 0.09)',
         },
       },
     },
@@ -136,7 +136,7 @@ export const appTheme = createTheme({
           backgroundImage: 'none',
           border: '1px solid #E2E8F0',
           borderRadius: 16,
-          boxShadow: '0 8px 24px rgba(15, 23, 42, 0.06)',
+          boxShadow: '0 10px 26px rgba(15, 23, 42, 0.06)',
         },
       },
     },
@@ -173,12 +173,17 @@ export const appTheme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 14,
+          paddingInline: 10,
           '&.Mui-selected': {
-            backgroundColor: alpha('#EB7A3C', 0.12),
+            backgroundColor: alpha('#EB7A3C', 0.14),
             color: '#EB7A3C',
+            boxShadow: 'inset 0 0 0 1px rgba(235, 122, 60, 0.08)',
           },
           '&.Mui-selected:hover': {
-            backgroundColor: alpha('#EB7A3C', 0.16),
+            backgroundColor: alpha('#EB7A3C', 0.18),
+          },
+          '&:hover': {
+            backgroundColor: alpha('#EB7A3C', 0.05),
           },
         },
       },

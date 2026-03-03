@@ -8,6 +8,7 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 import { useAuth } from '../auth/useAuth';
@@ -41,48 +42,75 @@ export function TopBar({ drawerWidth, onMenuClick, isDesktop }: TopBarProps) {
         ml: { md: `${drawerWidth}px` },
         borderBottom: '1px solid',
         borderColor: 'divider',
-        backdropFilter: 'blur(12px)',
-        bgcolor: 'background.paper',
+        backdropFilter: 'blur(18px)',
+        bgcolor: alpha('#FFFFFF', 0.9),
       }}
     >
-      <Toolbar sx={{ minHeight: 72 }}>
-        {!isDesktop && (
-          <IconButton edge="start" onClick={onMenuClick} sx={{ mr: 1.5 }}>
-            <MenuRoundedIcon />
-          </IconButton>
-        )}
+      <Toolbar sx={{ minHeight: 80, px: { xs: 1, sm: 1.5, md: 0 } }}>
+        <Stack
+          alignItems="center"
+          direction="row"
+          spacing={2}
+          sx={{ width: '100%', minWidth: 0, maxWidth: 1440, mx: 'auto' }}
+        >
+          {!isDesktop && (
+            <IconButton edge="start" onClick={onMenuClick}>
+              <MenuRoundedIcon />
+            </IconButton>
+          )}
 
-        <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" fontWeight={700}>
-            JuntasCloud
-          </Typography>
-          <Typography color="text.secondary" variant="body2">
-            Dashboard global
-          </Typography>
-        </Box>
+          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Typography sx={{ fontSize: { xs: 22, md: 24 }, fontWeight: 800, lineHeight: 1.05 }}>
+              JuntasCloud
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 0.5, fontSize: 13.5 }} variant="body2">
+              Dashboard global y accesos de plataforma
+            </Typography>
+          </Box>
 
-        <Stack alignItems="center" direction="row" spacing={1.5}>
-          {user && (
-            <Tooltip title={fullName}>
-              <Avatar
+          <Stack
+            alignItems="center"
+            direction="row"
+            spacing={1}
+            sx={{
+              px: { xs: 0.5, md: 1 },
+              py: 0.5,
+              borderRadius: 999,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: alpha('#FFFFFF', 0.78),
+            }}
+          >
+            {user && (
+              <Tooltip title={fullName}>
+                <Avatar
+                  sx={{
+                    bgcolor: 'primary.main',
+                    color: 'primary.contrastText',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    width: 42,
+                    height: 42,
+                  }}
+                >
+                  {getInitials(fullName)}
+                </Avatar>
+              </Tooltip>
+            )}
+            <Tooltip title="Cerrar sesión">
+              <IconButton
+                color="primary"
+                onClick={logout}
                 sx={{
-                  bgcolor: 'primary.main',
-                  color: 'primary.contrastText',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  width: 40,
-                  height: 40,
+                  border: '1px solid',
+                  borderColor: alpha('#EB7A3C', 0.18),
+                  bgcolor: alpha('#EB7A3C', 0.06),
                 }}
               >
-                {getInitials(fullName)}
-              </Avatar>
+                <LogoutRoundedIcon />
+              </IconButton>
             </Tooltip>
-          )}
-          <Tooltip title="Cerrar sesión">
-            <IconButton color="primary" onClick={logout}>
-              <LogoutRoundedIcon />
-            </IconButton>
-          </Tooltip>
+          </Stack>
         </Stack>
       </Toolbar>
     </AppBar>

@@ -14,6 +14,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import type { Tenant } from '../api/types';
 
 type TenantCardProps = {
@@ -34,18 +35,35 @@ export function TenantCard({
   onDelete,
 }: TenantCardProps) {
   return (
-    <Card elevation={0}>
-      <CardContent sx={{ p: 3, pb: 2 }}>
-        <Stack spacing={2}>
+    <Card
+      elevation={0}
+      sx={{
+        height: '100%',
+        minHeight: { md: 280 },
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease',
+        '&:hover': {
+          transform: 'translateY(-2px)',
+          borderColor: alpha('#EB7A3C', 0.22),
+          boxShadow: '0 14px 32px rgba(15, 23, 42, 0.1)',
+        },
+      }}
+    >
+      <CardContent sx={{ p: 3.25, pb: 2.25, display: 'flex', flex: 1, minWidth: 0 }}>
+        <Stack spacing={2.25} sx={{ width: '100%', minWidth: 0 }}>
           <Stack
             alignItems={{ xs: 'flex-start', sm: 'center' }}
             direction={{ xs: 'column', sm: 'row' }}
             justifyContent="space-between"
-            spacing={1}
+            spacing={1.25}
+            sx={{ minWidth: 0 }}
           >
-            <Box>
-              <Typography variant="h6">{tenant.nombre}</Typography>
-              <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mt: 0.75 }}>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography sx={{ fontSize: 22, fontWeight: 800, lineHeight: 1.1 }} variant="h6">
+                {tenant.nombre}
+              </Typography>
+              <Stack alignItems="center" direction="row" spacing={0.75} sx={{ mt: 1 }}>
                 {isOwner ? (
                   <AdminPanelSettingsRoundedIcon color="primary" fontSize="small" />
                 ) : (
@@ -60,24 +78,71 @@ export function TenantCard({
               color={tenant.estado === 'ACTIVO' ? 'success' : 'default'}
               label={tenant.estado}
               size="small"
+              sx={{
+                fontWeight: 700,
+                bgcolor:
+                  tenant.estado === 'ACTIVO' ? alpha('#22C55E', 0.12) : alpha('#64748B', 0.12),
+                color: 'text.primary',
+              }}
             />
           </Stack>
 
-          <Typography color="text.secondary" minHeight={40} variant="body2">
-            {tenant.observaciones?.trim() || 'Sin observaciones'}
-          </Typography>
+          <Box
+            sx={{
+              flex: 1,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              bgcolor: alpha('#F8FAFC', 0.9),
+              px: 2,
+              py: 1,
+            }}
+          >
+            <Typography color="text.secondary" sx={{ fontSize: 12, fontWeight: 700, letterSpacing: 1.1 }}>
+              OBSERVACIONES
+            </Typography>
+            <Typography color="text.secondary" minHeight={52} sx={{ mt: 1 }} variant="body2">
+              {tenant.observaciones?.trim() || 'Sin observaciones por el momento.'}
+            </Typography>
+          </Box>
         </Stack>
       </CardContent>
 
-      <CardActions sx={{ px: 3, pb: 3, pt: 0 }}>
-        <Stack alignItems="center" direction="row" justifyContent="space-between" sx={{ width: '100%' }}>
-          <Button endIcon={<ArrowForwardRoundedIcon />} onClick={onEnter} variant="contained">
+      <CardActions sx={{ px: 3.25, pb: 3.25, pt: 0 }}>
+        <Stack
+          alignItems="center"
+          direction="row"
+          justifyContent="space-between"
+          sx={{ width: '100%', flexWrap: 'wrap', gap: 1.25 }}
+        >
+          <Button
+            endIcon={<ArrowForwardRoundedIcon />}
+            onClick={onEnter}
+            sx={{ minWidth: 118 }}
+            variant="contained"
+          >
             Entrar
           </Button>
 
           {isOwner && (
-            <Stack alignItems="center" direction="row" spacing={0.5}>
-              <IconButton aria-label="Editar junta" onClick={onEdit}>
+            <Stack
+              alignItems="center"
+              direction="row"
+              spacing={0.5}
+              sx={{
+                px: 0.5,
+                py: 0.25,
+                borderRadius: 999,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: alpha('#FFFFFF', 0.92),
+              }}
+            >
+              <IconButton
+                aria-label="Editar junta"
+                onClick={onEdit}
+                sx={{ color: 'text.secondary' }}
+              >
                 <EditRoundedIcon />
               </IconButton>
               <IconButton

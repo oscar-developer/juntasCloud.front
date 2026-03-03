@@ -5,7 +5,9 @@ import {
   Button,
   Card,
   CardContent,
+  Container,
   Fab,
+  Grid,
   LinearProgress,
   Stack,
   Typography,
@@ -161,72 +163,96 @@ export function TenantsPage() {
   };
 
   return (
-    <Box sx={{ pt: { xs: 2, md: 3 }, pb: { xs: 10, md: 2 } }}>
-      <Stack
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent="space-between"
-        spacing={2}
-        sx={{ mb: 3 }}
-      >
-        <Box sx={{ width: '100%' }}>
-          <Typography variant="h4">Mis juntas</Typography>
-          <Typography color="text.secondary" sx={{ mt: 0.75 }} variant="body1">
-            Administra tus accesos globales y entra a cada junta cuando lo necesites.
-          </Typography>
-          {loading && <LinearProgress sx={{ mt: 2, borderRadius: 999 }} />}
-        </Box>
+    <Box sx={{ pt: { xs: 2, md: 0 }, pb: { xs: 10, md: 0 } }}>
+      <Container maxWidth="xl" >
+        <Grid container spacing={3}>
+          <Grid size={{ xs: 12 }}>
+            <Card
+              elevation={0}
+              sx={{
+                borderColor: 'divider',
+                background:
+                  'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.96) 52%, rgba(243,244,246,0.9) 100%)',
+              }}
+            >
+              <CardContent sx={{ p: { xs: 3, md: 3 } }}>
+                <Stack
+                  alignItems={{ xs: 'stretch', md: 'center' }}
+                  direction={{ xs: 'column', md: 'row' }}
+                  justifyContent="space-between"
+                  gap={{ xs: 2, md: 3 }}
+                >
+                  <Box sx={{ width: '100%', minWidth: 0, maxWidth: { md: 820 } }}>                    
+                    <Typography
+                      sx={{  fontSize: { xs: 30, md: 38 }, fontWeight: 800, lineHeight: 1.05 }}
+                    >
+                      Mis juntas
+                    </Typography>
+                    <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 700 }} variant="body1">
+                      Administra tus accesos globales.
+                    </Typography>
+                    {loading && <LinearProgress sx={{ mt: 2.5, borderRadius: 999, maxWidth: 320 }} />}
+                  </Box>
 
-        {isDesktop && (
-          <Button onClick={handleOpenCreateDialog} startIcon={<AddRoundedIcon />} variant="contained">
-            Crear junta
-          </Button>
-        )}
-      </Stack>
+                  {isDesktop && (
+                    <Box sx={{ flexShrink: 0, minWidth: 0 }}>
+                      <Button
+                        onClick={handleOpenCreateDialog}
+                        startIcon={<AddRoundedIcon />}
+                        sx={{ minWidth: 168 }}
+                        variant="contained"
+                      >
+                        Crear junta
+                      </Button>
+                    </Box>
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
-        </Alert>
-      )}
+          {error && (
+            <Grid size={{ xs: 12 }}>
+              <Alert severity="error">{error}</Alert>
+            </Grid>
+          )}
 
-      {!loading && tenants.length === 0 ? (
-        <Card elevation={0}>
-          <CardContent sx={{ p: 4, textAlign: 'center' }}>
-            <Typography variant="h6">Aún no tienes juntas</Typography>
-            <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-              Crea tu primera junta para comenzar a gestionar tus espacios.
-            </Typography>
-            <Button onClick={handleOpenCreateDialog} sx={{ mt: 2 }} variant="contained">
-              Crear junta
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, minmax(0, 1fr))',
-              xl: 'repeat(3, minmax(0, 1fr))',
-            },
-            gap: 2,
-          }}
-        >
-          {tenants.map((tenant) => (
-            <TenantCard
-              isDeleting={deleteLoadingId !== null && String(deleteLoadingId) === String(tenant.idTenant)}
-              isOwner={isTenantOwner(tenant)}
-              key={tenant.idTenant}
-              onDelete={() => handleRequestDelete(tenant)}
-              onEdit={() => handleEditTenant(tenant)}
-              onEnter={() => navigate(`/t/${tenant.idTenant}/dashboard`)}
-              tenant={tenant}
-            />
-          ))}
-        </Box>
-      )}
+          {!loading && tenants.length === 0 ? (
+            <Grid size={{ xs: 12 }}>
+              <Card elevation={0} sx={{ maxWidth: 760, mx: 'auto' }}>
+                <CardContent sx={{ p: { xs: 4, md: 5 }, textAlign: 'center' }}>
+                  <Typography variant="h5">Aún no tienes juntas</Typography>
+                  <Typography
+                    color="text.secondary"
+                    sx={{ mt: 1, mx: 'auto', maxWidth: 420 }}
+                    variant="body2"
+                  >
+                    Crea tu primera junta para comenzar a gestionar tus espacios.
+                  </Typography>
+                  <Button onClick={handleOpenCreateDialog} sx={{ mt: 3 }} variant="contained">
+                    Crear junta
+                  </Button>
+                </CardContent>
+              </Card>
+            </Grid>
+          ) : (
+            tenants.map((tenant) => (
+              <Grid key={tenant.idTenant} size={{ xs: 12, sm: 6, md: 4, lg: 4, xl: 4 }}>
+                <TenantCard
+                  isDeleting={
+                    deleteLoadingId !== null && String(deleteLoadingId) === String(tenant.idTenant)
+                  }
+                  isOwner={isTenantOwner(tenant)}
+                  onDelete={() => handleRequestDelete(tenant)}
+                  onEdit={() => handleEditTenant(tenant)}
+                  onEnter={() => navigate(`/t/${tenant.idTenant}/dashboard`)}
+                  tenant={tenant}
+                />
+              </Grid>
+            ))
+          )}
+        </Grid>
+      </Container>
 
       {!isDesktop && (
         <Fab
