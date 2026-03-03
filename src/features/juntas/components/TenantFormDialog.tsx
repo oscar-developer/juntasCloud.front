@@ -11,8 +11,8 @@ import {
 } from '@mui/material';
 import { useEffect, useState, type FormEvent } from 'react';
 import { HttpError } from '../../../shared/api/httpClient';
-import { createTenant, updateTenant } from '../api/tenantsApi';
-import type { CreateTenantPayload, Tenant, TenantStatus } from '../api/types';
+import { createTenant, updateTenant } from '../services/juntasApi';
+import type { CreateTenantPayload, Tenant, TenantStatus } from '../types';
 
 type MessageSeverity = 'success' | 'error';
 type DialogMode = 'create' | 'edit';

@@ -37,7 +37,7 @@ type NavItem = {
 };
 
 const primaryItems: NavItem[] = [
-  { label: 'Juntas', path: '/app/tenants', icon: <DashboardRoundedIcon /> },
+  { label: 'Juntas', path: '/app/juntas', icon: <DashboardRoundedIcon /> },
   { label: 'Invitaciones', path: '/app/invitations', icon: <MailOutlineRoundedIcon /> },
   { label: 'Ayuda', path: '/app/help', icon: <HelpOutlineRoundedIcon /> },
 ];
@@ -85,7 +85,18 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           Plataforma
         </Typography>
         <Typography sx={{ mt: 0.5, fontSize: 22, fontWeight: 800, lineHeight: 1.08 }}>
-          JuntasCloud
+          <Box component="span" sx={{ fontWeight: 700 }}>
+            Juntas
+          </Box>
+          <Box
+            component="span"
+            sx={{
+              fontWeight: 400,
+              color: 'text.secondary',
+            }}
+          >
+            Cloud
+          </Box>
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 190, fontSize: 13.5 }} variant="body2">
           Accesos globales y navegación general de tu cuenta.

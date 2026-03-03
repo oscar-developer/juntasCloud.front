@@ -7,6 +7,7 @@ export const authApi = {
       path: '/auth/login',
       method: 'POST',
       body: payload,
+      requiresAuth: false,
     });
   },
 };

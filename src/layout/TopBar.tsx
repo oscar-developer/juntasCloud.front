@@ -61,10 +61,22 @@ export function TopBar({ drawerWidth, onMenuClick, isDesktop }: TopBarProps) {
 
           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
             <Typography sx={{ fontSize: { xs: 22, md: 24 }, fontWeight: 800, lineHeight: 1.05 }}>
-              JuntasCloud
+              
+              <Box component="span" sx={{ fontWeight: 700 }}>
+                  Juntas
+                </Box>
+                <Box
+                  component="span"
+                  sx={{
+                    fontWeight: 400,
+                    color: 'text.secondary',
+                  }}
+                >
+                  Cloud
+                </Box>
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 0.5, fontSize: 13.5 }} variant="body2">
-              Dashboard global y accesos de plataforma
+              Dashboard global y accesos
             </Typography>
           </Box>
 

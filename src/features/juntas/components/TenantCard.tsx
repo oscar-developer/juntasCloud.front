@@ -15,7 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
-import type { Tenant } from '../api/types';
+import type { Tenant } from '../types';
 
 type TenantCardProps = {
   tenant: Tenant;

@@ -8,6 +8,7 @@ type RequestOptions = {
   method: HttpMethod;
   body?: unknown;
   signal?: AbortSignal;
+  requiresAuth?: boolean;
 };
 
 type ErrorResponse = {
@@ -35,6 +36,23 @@ function getBaseUrl(): string {
   }
 
   return baseUrl;
+}
+
+function normalizeApiPath(path: string): string {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const baseUrl = getBaseUrl();
+  const basePathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+  const hasApiInBase = basePathname === '/api' || basePathname.endsWith('/api');
+
+  if (hasApiInBase) {
+    return normalizedPath;
+  }
+
+  if (normalizedPath === '/api' || normalizedPath.startsWith('/api/')) {
+    return normalizedPath;
+  }
+
+  return `/api${normalizedPath}`;
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {
@@ -73,13 +91,25 @@ function getErrorMessage(status: number, data: unknown): string {
   return `Request failed with status ${status}`;
 }
 
-export async function request<T>({ path, method, body, signal }: RequestOptions): Promise<T> {
+export async function request<T>({
+  path,
+  method,
+  body,
+  signal,
+  requiresAuth = true,
+}: RequestOptions): Promise<T> {
   const token = getToken();
   const headers = new Headers({
     Accept: 'application/json',
   });
 
-  if (token) {
+  if (requiresAuth) {
+    if (!token) {
+      clearToken();
+      navigateToLogin();
+      throw new HttpError('Authentication required', 401);
+    }
+
     headers.set('Authorization', `Bearer ${token}`);
   }
 
@@ -87,7 +117,7 @@ export async function request<T>({ path, method, body, signal }: RequestOptions)
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${getBaseUrl()}${path}`, {
+  const response = await fetch(`${getBaseUrl().replace(/\/+$/, '')}${normalizeApiPath(path)}`, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),

@@ -20,8 +20,8 @@ import { HttpError } from '../../../shared/api/httpClient';
 import { getToken } from '../../../shared/auth/authStorage';
 import { getUserIdFromToken } from '../../../shared/auth/jwt';
 import { Toast } from '../../../shared/ui/Toast';
-import { deleteTenant, getTenants } from '../api/tenantsApi';
-import type { Tenant } from '../api/types';
+import { deleteTenant, getTenants } from '../services/juntasApi';
+import type { Tenant } from '../types';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { TenantCard } from '../components/TenantCard';
 import { TenantFormDialog } from '../components/TenantFormDialog';
@@ -245,7 +245,7 @@ export function TenantsPage() {
                   isOwner={isTenantOwner(tenant)}
                   onDelete={() => handleRequestDelete(tenant)}
                   onEdit={() => handleEditTenant(tenant)}
-                  onEnter={() => navigate(`/t/${tenant.idTenant}/dashboard`)}
+                  onEnter={() => navigate(`/app/juntas/${tenant.idTenant}/dashboard`)}
                   tenant={tenant}
                 />
               </Grid>

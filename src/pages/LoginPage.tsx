@@ -49,7 +49,7 @@ export function LoginPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fromPath =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/app/tenants';
+    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/app/juntas';
   const isSubmitDisabled = loading || !email.trim() || !password.trim();
 
   if (isAuthenticated) {
