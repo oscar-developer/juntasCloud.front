@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import juntascloudCloudSvg from '../assets/juntascloud-cloud.svg';
 import { useAuth } from '../auth/useAuth';
 import { HttpError } from '../shared/api/httpClient';
@@ -39,7 +39,6 @@ function getFriendlyErrorMessage(error: unknown) {
 
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   // const [email, setEmail] = useState('oscar@villaunion.pe');
   const [email, setEmail] = useState('');
@@ -64,7 +63,6 @@ export function LoginPage() {
 
     try {
       await login({ email, password });
-      navigate(fromPath, { replace: true });
     } catch (error) {
       setErrorMessage(getFriendlyErrorMessage(error));
     } finally {

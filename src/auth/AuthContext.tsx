@@ -11,6 +11,7 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
   logout: () => void;
+  handleUnauthorized: () => void;
 }
 
 export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -60,10 +61,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     isAuthenticated: Boolean(accessToken),
     async login(credentials) {
       const response = await authApi.login(credentials);
+      setToken(response.accessToken);
       setAccessToken(response.accessToken);
       setUser(response.user);
     },
     logout() {
+      setAccessToken(null);
+      setUser(null);
+    },
+    handleUnauthorized() {
       setAccessToken(null);
       setUser(null);
     },
