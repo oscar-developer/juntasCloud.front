@@ -1,4 +1,5 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import {
   Alert,
   Box,
@@ -15,13 +16,20 @@ import {
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Toast } from '../../../shared/ui/Toast';
+import { useTenant } from '../../tenant/context/TenantContext';
 import { ConfirmRetireDialog } from '../components/ConfirmRetireDialog';
+import { ExportPersonasDialog } from '../components/ExportPersonasDialog';
 import { PersonaDetailDialog } from '../components/PersonaDetailDialog';
 import { PersonaFiltersCard } from '../components/PersonaFiltersCard';
 import { PersonaFormDialog } from '../components/PersonaFormDialog';
 import { PersonaMobileList } from '../components/PersonaMobileList';
 import { PersonaTable } from '../components/PersonaTable';
 import { getFullName, getPersonaErrorMessage } from '../components/personaUi';
+import {
+  exportPersonasToExcel,
+  exportPersonasToPdf,
+  getPersonasForExport,
+} from '../services/personasExport';
 import { getPersonas, retirePersona } from '../services/personasApi';
 import type { ListQuery, Persona } from '../types';
 
@@ -59,6 +67,7 @@ function buildListQuery(
 
 export function PersonasPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
+  const { tenant } = useTenant();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [rows, setRows] = useState<Persona[]>([]);
@@ -81,6 +90,8 @@ export function PersonasPage() {
   const [detailPersonaId, setDetailPersonaId] = useState<string | number | null>(null);
   const [retireTarget, setRetireTarget] = useState<Persona | null>(null);
   const [retireLoading, setRetireLoading] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(initialToastState);
 
   useEffect(() => {
@@ -232,6 +243,50 @@ export function PersonasPage() {
     setPage(1);
   };
 
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    if (!tenantId) {
+      handleShowMessage('No se pudo identificar la junta activa.', 'error');
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      const personas = await getPersonasForExport(tenantId, {
+        search: debouncedSearch,
+        dni: isDesktop ? dniFilter : '',
+        estado: isDesktop ? estadoFilter : 'TODOS',
+        tipoParticipante: isDesktop ? tipoParticipanteFilter : 'TODOS',
+      });
+
+      if (personas.length === 0) {
+        handleShowMessage('No hay personas para exportar con los filtros actuales.', 'info');
+        return;
+      }
+
+      const reportMetadata = {
+        tenantName: tenant?.nombre ?? 'Junta activa',
+      };
+
+      if (format === 'pdf') {
+        exportPersonasToPdf(personas, reportMetadata);
+        handleShowMessage('Listado exportado en formato PDF.', 'success');
+      } else {
+        exportPersonasToExcel(personas, reportMetadata);
+        handleShowMessage('Listado exportado en formato Excel.', 'success');
+      }
+
+      setExportOpen(false);
+    } catch (exportError) {
+      handleShowMessage(
+        getPersonaErrorMessage(exportError, 'No se pudo exportar el listado de personas.'),
+        'error',
+      );
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const showEmptyState = !loading && !error && rows.length === 0;
 
   return (
@@ -261,11 +316,16 @@ export function PersonasPage() {
                 </Typography>
                 {loading && <LinearProgress sx={{ mt: 2.5, borderRadius: 999, maxWidth: 320 }} />}
               </Box>
-              {isDesktop && (
-                <Button onClick={handleOpenCreateDialog} startIcon={<AddRoundedIcon />} variant="contained">
-                  Nueva persona
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <Button onClick={() => setExportOpen(true)} startIcon={<DownloadRoundedIcon />} variant="outlined">
+                  Exportar
                 </Button>
-              )}
+                {isDesktop && (
+                  <Button onClick={handleOpenCreateDialog} startIcon={<AddRoundedIcon />} variant="contained">
+                    Nueva persona
+                  </Button>
+                )}
+              </Stack>
             </Stack>
           </CardContent>
         </Card>
@@ -349,6 +409,17 @@ export function PersonasPage() {
 
       {tenantId && (
         <>
+          <ExportPersonasDialog
+            loading={exportLoading}
+            onClose={() => setExportOpen(false)}
+            onExportExcel={() => {
+              void handleExport('excel');
+            }}
+            onExportPdf={() => {
+              void handleExport('pdf');
+            }}
+            open={exportOpen}
+          />
           <PersonaFormDialog
             mode={formMode}
             onClose={() => {
