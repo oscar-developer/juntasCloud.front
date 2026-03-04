@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { env } from '../config/env';
-
-const TOKEN_STORAGE_KEY = 'juntascloud.accessToken';
+import { getToken } from '../shared/auth/authStorage';
 
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
@@ -11,7 +10,7 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const token = getToken();
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -19,5 +18,3 @@ apiClient.interceptors.request.use((config) => {
 
   return config;
 });
-
-export { TOKEN_STORAGE_KEY };

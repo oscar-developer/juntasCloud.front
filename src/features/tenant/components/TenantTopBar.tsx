@@ -39,13 +39,17 @@ export function TenantTopBar({ drawerWidth, isMobile, onMenuClick }: TenantTopBa
     >
       <Toolbar sx={{ minHeight: 80, px: { xs: 1, sm: 1.5, md: 3 } }}>
         <Stack
-          alignItems="center"
           direction="row"
           spacing={1.5}
-          sx={{ width: '100%', minWidth: 0, flexWrap: { xs: 'wrap', sm: 'nowrap' } }}
+          alignItems="center" // Mantiene todo centrado verticalmente si el texto crece
+          sx={{ 
+            width: '100%', 
+            minWidth: 0, 
+            flexWrap: 'nowrap' // <-- CAMBIO CLAVE: Evita que el botón baje
+          }}
         >
           {isMobile && (
-            <IconButton edge="start" onClick={onMenuClick}>
+            <IconButton edge="start" onClick={onMenuClick} sx={{ flexShrink: 0 }}>
               <MenuRoundedIcon />
             </IconButton>
           )}
@@ -58,10 +62,19 @@ export function TenantTopBar({ drawerWidth, isMobile, onMenuClick }: TenantTopBa
               </>
             ) : (
               <>
-                <Typography sx={{ fontSize: { xs: 21, md: 26 }, fontWeight: 800, lineHeight: 1.05 }}>
+                <Typography
+                  sx={{
+                    fontSize: { xs: 19, md: 26 }, // Bajé un poco el min en mobile para dar aire
+                    fontWeight: 800,
+                    lineHeight: 1.1,
+                    wordBreak: 'break-word', // <-- Permite que el texto largo se rompa en palabras
+                    overflowWrap: 'anywhere'
+                  }}
+                >
                   {tenant?.nombre ?? 'Junta'}
                 </Typography>
-                <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 1 }}>
+                
+                <Stack alignItems="center" direction="row" spacing={1} sx={{ mt: 0.5 }}>
                   <Typography color="text.secondary" variant="body2">
                     Junta
                   </Typography>
@@ -70,7 +83,7 @@ export function TenantTopBar({ drawerWidth, isMobile, onMenuClick }: TenantTopBa
                       color={tenant.estado === 'ACTIVO' ? 'success' : 'default'}
                       label={tenant.estado}
                       size="small"
-                      sx={{ fontWeight: 700 }}
+                      sx={{ fontWeight: 700, height: 20, fontSize: '0.65rem' }}
                     />
                   )}
                 </Stack>
@@ -82,13 +95,19 @@ export function TenantTopBar({ drawerWidth, isMobile, onMenuClick }: TenantTopBa
             onClick={leaveTenant}
             size={isMobile ? 'small' : 'medium'}
             startIcon={<SwapHorizRoundedIcon />}
-            sx={{ flexShrink: 0, ml: 'auto' }}
             variant="outlined"
+            sx={{ 
+              flexShrink: 0, // <-- CRÍTICO: Evita que el botón se comprima
+              ml: 1,
+              whiteSpace: 'nowrap' // Evita que el texto del botón se rompa
+            }}
           >
-            Cambiar junta
+            {!isMobile && "Cambiar junta"}
+            {isMobile && "Cambiar"} 
           </Button>
         </Stack>
       </Toolbar>
+      
     </AppBar>
   );
 }
