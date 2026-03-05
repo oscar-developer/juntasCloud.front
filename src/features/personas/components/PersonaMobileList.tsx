@@ -1,5 +1,6 @@
 import { Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
-import { type ListChildComponentProps, type ListOnItemsRenderedProps, FixedSizeList } from 'react-window';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useEffect, useRef } from 'react';
 import type { Persona } from '../types';
 import { PersonaActions } from './PersonaActions';
 import { getEstadoChipProps, getFullName, getTipoChipProps } from './personaUi';
@@ -27,56 +28,89 @@ export function PersonaMobileList({
   onEdit,
   onRetire,
 }: PersonaMobileListProps) {
-  const handleItemsRendered = ({ visibleStopIndex }: ListOnItemsRenderedProps) => {
+  const listHeight = Math.min(LIST_HEIGHT, Math.max(CARD_HEIGHT * 3, rows.length * CARD_HEIGHT));
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => CARD_HEIGHT,
+    overscan: PREFETCH_THRESHOLD,
+  });
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
+  useEffect(() => {
+    const lastItem = virtualItems[virtualItems.length - 1];
+
+    if (!lastItem) {
+      return;
+    }
+
     if (!hasMore || loadingMore || rows.length === 0) {
       return;
     }
 
-    if (visibleStopIndex >= rows.length - PREFETCH_THRESHOLD) {
+    if (lastItem.index >= rows.length - PREFETCH_THRESHOLD) {
       onReachEnd();
     }
-  };
-
-  const listHeight = Math.min(LIST_HEIGHT, Math.max(CARD_HEIGHT * 3, rows.length * CARD_HEIGHT));
+  }, [hasMore, loadingMore, onReachEnd, rows.length, virtualItems]);
 
   return (
     <Stack spacing={2}>
-      <FixedSizeList
-        height={listHeight}
-        itemCount={rows.length}
-        itemSize={CARD_HEIGHT}
-        onItemsRendered={handleItemsRendered}
-        width="100%"
-      >
-        {({ index, style }: ListChildComponentProps) => {
-          const persona = rows[index];
-
-          return (
-            <Box key={persona.idPersona} style={style} sx={{ px: 0.25, py: 0.75 }}>
-              <Card elevation={0}>
-                <CardContent sx={{ p: 2.5 }}>
-                  <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Stack spacing={1.5}>
-                        <Typography noWrap sx={{ fontSize: 18, fontWeight: 800 }} title={getFullName(persona)}>
-                          {getFullName(persona)}
-                        </Typography>
-                        <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
-                          <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />
-                          <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
-                        </Stack>
-                      </Stack>
-                    </Box>
-                    <Box sx={{ flexShrink: 0 }}>
-                      <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
-                    </Box>
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Box>
-          );
+      <Box
+        ref={parentRef}
+        sx={{
+          height: listHeight,
+          overflow: 'auto',
+          position: 'relative',
         }}
-      </FixedSizeList>
+      >
+        <Box sx={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
+          {virtualItems.map((virtualRow) => {
+            const persona = rows[virtualRow.index];
+
+            if (!persona) {
+              return null;
+            }
+
+            return (
+              <Box
+                key={persona.idPersona}
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: `${virtualRow.size}px`,
+                  transform: `translateY(${virtualRow.start}px)`,
+                  px: 0.25,
+                  py: 0.75,
+                }}
+              >
+                <Card elevation={0}>
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Stack spacing={1.5}>
+                          <Typography noWrap sx={{ fontSize: 18, fontWeight: 800 }} title={getFullName(persona)}>
+                            {getFullName(persona)}
+                          </Typography>
+                          <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+                            <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />
+                            <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
+                          </Stack>
+                        </Stack>
+                      </Box>
+                      <Box sx={{ flexShrink: 0 }}>
+                        <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Box>
+            );
+          })}
+        </Box>
+      </Box>
 
       {loadingMore && (
         <Stack alignItems="center" direction="row" justifyContent="center" spacing={1} sx={{ py: 0.5 }}>
