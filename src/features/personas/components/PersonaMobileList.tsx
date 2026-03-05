@@ -1,15 +1,18 @@
-import { Box, Card, CardContent, Chip, Stack, TablePagination, Typography } from '@mui/material';
+import { Box, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import { type ListChildComponentProps, type ListOnItemsRenderedProps, FixedSizeList } from 'react-window';
 import type { Persona } from '../types';
 import { PersonaActions } from './PersonaActions';
 import { getEstadoChipProps, getFullName, getTipoChipProps } from './personaUi';
 
+const CARD_HEIGHT = 132;
+const LIST_HEIGHT = 560;
+const PREFETCH_THRESHOLD = 8;
+
 type PersonaMobileListProps = {
   rows: Persona[];
-  total: number;
-  page: number;
-  pageSize: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onReachEnd: () => void;
   onView: (persona: Persona) => void;
   onEdit: (persona: Persona) => void;
   onRetire: (persona: Persona) => void;
@@ -17,52 +20,72 @@ type PersonaMobileListProps = {
 
 export function PersonaMobileList({
   rows,
-  total,
-  page,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
+  hasMore = false,
+  loadingMore = false,
+  onReachEnd,
   onView,
   onEdit,
   onRetire,
 }: PersonaMobileListProps) {
+  const handleItemsRendered = ({ visibleStopIndex }: ListOnItemsRenderedProps) => {
+    if (!hasMore || loadingMore || rows.length === 0) {
+      return;
+    }
+
+    if (visibleStopIndex >= rows.length - PREFETCH_THRESHOLD) {
+      onReachEnd();
+    }
+  };
+
+  const listHeight = Math.min(LIST_HEIGHT, Math.max(CARD_HEIGHT * 3, rows.length * CARD_HEIGHT));
+
   return (
     <Stack spacing={2}>
-      {rows.map((persona) => (
-        <Card elevation={0} key={persona.idPersona}>
-          <CardContent sx={{ p: 2.5 }}>
-            <Stack spacing={1.5}>
-              <Box>
-                <Typography sx={{ fontSize: 18, fontWeight: 800 }}>{getFullName(persona)}</Typography>
-                <Typography color="text.secondary" sx={{ mt: 0.5 }} variant="body2">
-                  DNI: {persona.dni || 'No registrado'}
-                </Typography>
-                <Typography color="text.secondary" variant="body2">
-                  Teléfono: {persona.telefono || 'No registrado'}
-                </Typography>
-              </Box>
-              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />
-                <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
-              </Stack>
-              <Stack direction="row" justifyContent="flex-end">
-                <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
-      ))}
-      <Card elevation={0}>
-        <TablePagination
-          component="div"
-          count={total}
-          onPageChange={(_, nextPage) => onPageChange(nextPage + 1)}
-          onRowsPerPageChange={(event) => onPageSizeChange(Number(event.target.value))}
-          page={Math.max(page - 1, 0)}
-          rowsPerPage={pageSize}
-          rowsPerPageOptions={[10, 20, 50]}
-        />
-      </Card>
+      <FixedSizeList
+        height={listHeight}
+        itemCount={rows.length}
+        itemSize={CARD_HEIGHT}
+        onItemsRendered={handleItemsRendered}
+        width="100%"
+      >
+        {({ index, style }: ListChildComponentProps) => {
+          const persona = rows[index];
+
+          return (
+            <Box key={persona.idPersona} style={style} sx={{ px: 0.25, py: 0.75 }}>
+              <Card elevation={0}>
+                <CardContent sx={{ p: 2.5 }}>
+                  <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={2}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Stack spacing={1.5}>
+                        <Typography noWrap sx={{ fontSize: 18, fontWeight: 800 }} title={getFullName(persona)}>
+                          {getFullName(persona)}
+                        </Typography>
+                        <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+                          <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />
+                          <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
+                        </Stack>
+                      </Stack>
+                    </Box>
+                    <Box sx={{ flexShrink: 0 }}>
+                      <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
+                    </Box>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
+          );
+        }}
+      </FixedSizeList>
+
+      {loadingMore && (
+        <Stack alignItems="center" direction="row" justifyContent="center" spacing={1} sx={{ py: 0.5 }}>
+          <CircularProgress size={16} />
+          <Typography color="text.secondary" variant="caption">
+            Cargando más personas...
+          </Typography>
+        </Stack>
+      )}
     </Stack>
   );
 }

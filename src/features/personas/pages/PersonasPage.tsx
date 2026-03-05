@@ -1,5 +1,4 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
-import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import {
   Alert,
   Box,
@@ -13,7 +12,7 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Toast } from '../../../shared/ui/Toast';
 import { useTenant } from '../../tenant/context/TenantContext';
@@ -40,6 +39,7 @@ type ToastState = {
 };
 
 type FormMode = 'create' | 'edit';
+const PAGE_SIZE = 20;
 
 const initialToastState: ToastState = {
   open: false,
@@ -71,11 +71,11 @@ export function PersonasPage() {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [rows, setRows] = useState<Persona[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [total, setTotal] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<ListQuery['estado']>('TODOS');
@@ -93,6 +93,7 @@ export function PersonasPage() {
   const [exportOpen, setExportOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(initialToastState);
+  const nextPageLockRef = useRef(false);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -105,10 +106,6 @@ export function PersonasPage() {
   }, [searchInput]);
 
   useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch, dniFilter, estadoFilter, tipoParticipanteFilter, pageSize]);
-
-  useEffect(() => {
     if (isDesktop) {
       return;
     }
@@ -119,18 +116,35 @@ export function PersonasPage() {
   }, [isDesktop]);
 
   useEffect(() => {
+    setRows([]);
+    setPage(1);
+    setHasMore(true);
+    setError(null);
+    setInitialLoading(true);
+    setLoadingMore(false);
+    nextPageLockRef.current = false;
+  }, [debouncedSearch, dniFilter, estadoFilter, isDesktop, reloadKey, tenantId, tipoParticipanteFilter]);
+
+  useEffect(() => {
     if (!tenantId) {
       setRows([]);
-      setTotal(0);
-      setLoading(false);
+      setHasMore(false);
+      setInitialLoading(false);
+      setLoadingMore(false);
       setError('No se pudo identificar la junta activa.');
       return;
     }
 
     const controller = new AbortController();
+    const isFirstPage = page === 1;
 
     const loadPersonas = async () => {
-      setLoading(true);
+      if (isFirstPage) {
+        setInitialLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
       setError(null);
 
       try {
@@ -138,7 +152,7 @@ export function PersonasPage() {
           tenantId,
           buildListQuery(
             page,
-            pageSize,
+            PAGE_SIZE,
             debouncedSearch,
             isDesktop ? dniFilter : '',
             isDesktop ? estadoFilter : 'TODOS',
@@ -148,8 +162,11 @@ export function PersonasPage() {
         );
 
         if (!controller.signal.aborted) {
-          setRows(response.items);
-          setTotal(response.total);
+          setRows((currentRows) => {
+            const nextRows = isFirstPage ? response.items : [...currentRows, ...response.items];
+            setHasMore(response.items.length > 0 && nextRows.length < response.total);
+            return nextRows;
+          });
         }
       } catch (loadError) {
         if (!controller.signal.aborted) {
@@ -157,7 +174,9 @@ export function PersonasPage() {
         }
       } finally {
         if (!controller.signal.aborted) {
-          setLoading(false);
+          setInitialLoading(false);
+          setLoadingMore(false);
+          nextPageLockRef.current = false;
         }
       }
     };
@@ -173,8 +192,6 @@ export function PersonasPage() {
     estadoFilter,
     isDesktop,
     page,
-    pageSize,
-    reloadKey,
     tenantId,
     tipoParticipanteFilter,
   ]);
@@ -187,9 +204,13 @@ export function PersonasPage() {
     });
   };
 
-  const handlePageSizeChange = (nextPageSize: number) => {
-    setPageSize(nextPageSize);
-    setPage(1);
+  const handleReachEnd = () => {
+    if (nextPageLockRef.current || initialLoading || loadingMore || !hasMore || Boolean(error)) {
+      return;
+    }
+
+    nextPageLockRef.current = true;
+    setPage((current) => current + 1);
   };
 
   const handleOpenCreateDialog = () => {
@@ -240,7 +261,6 @@ export function PersonasPage() {
     setDniFilter('');
     setEstadoFilter('TODOS');
     setTipoParticipanteFilter('TODOS');
-    setPage(1);
   };
 
   const handleExport = async (format: 'pdf' | 'excel') => {
@@ -287,56 +307,28 @@ export function PersonasPage() {
     }
   };
 
-  const showEmptyState = !loading && !error && rows.length === 0;
+  const showEmptyState = !initialLoading && !error && rows.length === 0;
 
   return (
     <Box sx={{ pb: { xs: 10, md: 0 } }}>
       <Stack spacing={3}>
-        <Card
-          elevation={0}
-          sx={{
-            borderColor: 'divider',
-            background:
-              'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(248,250,252,0.96) 52%, rgba(243,244,246,0.9) 100%)',
-          }}
-        >
-          <CardContent sx={{ p: { xs: 3, md: 3.5 } }}>
-            <Stack
-              alignItems={{ xs: 'stretch', md: 'center' }}
-              direction={{ xs: 'column', md: 'row' }}
-              justifyContent="space-between"
-              spacing={2}
-            >
-              <Box sx={{ minWidth: 0 }}>
-                <Typography sx={{ fontSize: { xs: 30, md: 36 }, fontWeight: 800, lineHeight: 1.05 }}>
-                  Personas
-                </Typography>
-                <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-                  Gestiona personas, invitados y sus estados dentro de la junta activa.
-                </Typography>
-                {loading && <LinearProgress sx={{ mt: 2.5, borderRadius: 999, maxWidth: 320 }} />}
-              </Box>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                <Button onClick={() => setExportOpen(true)} startIcon={<DownloadRoundedIcon />} variant="outlined">
-                  Exportar
-                </Button>
-                {isDesktop && (
-                  <Button onClick={handleOpenCreateDialog} startIcon={<AddRoundedIcon />} variant="contained">
-                    Nueva persona
-                  </Button>
-                )}
-              </Stack>
-            </Stack>
-          </CardContent>
-        </Card>
+        {isDesktop && (
+          <Stack direction="row" justifyContent="flex-end">
+            <Button onClick={handleOpenCreateDialog} startIcon={<AddRoundedIcon />} variant="contained">
+              Nueva persona
+            </Button>
+          </Stack>
+        )}
 
         <PersonaFiltersCard
           dniValue={dniFilter}
+          exportLoading={exportLoading}
           estadoValue={estadoFilter}
           isDesktop={isDesktop}
           onClear={handleClearFilters}
           onDniChange={setDniFilter}
           onEstadoChange={setEstadoFilter}
+          onExportClick={() => setExportOpen(true)}
           onSearchChange={setSearchInput}
           onTipoChange={setTipoParticipanteFilter}
           searchValue={searchInput}
@@ -356,7 +348,13 @@ export function PersonasPage() {
           </Alert>
         )}
 
-        {showEmptyState ? (
+        {initialLoading ? (
+          <Card elevation={0}>
+            <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+              <LinearProgress sx={{ borderRadius: 999 }} />
+            </CardContent>
+          </Card>
+        ) : showEmptyState ? (
           <Card elevation={0}>
             <CardContent sx={{ p: { xs: 4, md: 5 }, textAlign: 'center' }}>
               <Typography variant="h5">No hay personas registradas</Typography>
@@ -371,28 +369,24 @@ export function PersonasPage() {
         ) : isDesktop ? (
           <Card elevation={0}>
             <PersonaTable
+              hasMore={hasMore}
               onEdit={handleOpenEditDialog}
-              onPageChange={setPage}
-              onPageSizeChange={handlePageSizeChange}
+              onReachEnd={handleReachEnd}
               onRetire={setRetireTarget}
               onView={handleOpenDetail}
-              page={page}
-              pageSize={pageSize}
+              loadingMore={loadingMore}
               rows={rows}
-              total={total}
             />
           </Card>
         ) : (
           <PersonaMobileList
+            hasMore={hasMore}
             onEdit={handleOpenEditDialog}
-            onPageChange={setPage}
-            onPageSizeChange={handlePageSizeChange}
+            onReachEnd={handleReachEnd}
             onRetire={setRetireTarget}
             onView={handleOpenDetail}
-            page={page}
-            pageSize={pageSize}
+            loadingMore={loadingMore}
             rows={rows}
-            total={total}
           />
         )}
       </Stack>
