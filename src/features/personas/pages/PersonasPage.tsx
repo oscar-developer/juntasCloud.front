@@ -196,6 +196,7 @@ export function PersonasPage() {
     estadoFilter,
     isDesktop,
     page,
+    reloadKey,
     tenantId,
     tipoParticipanteFilter,
   ]);

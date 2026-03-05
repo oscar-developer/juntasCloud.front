@@ -50,7 +50,7 @@ const defaultFormState: PersonaFormState = {
   dni: '',
   telefono: '',
   referenciaVivienda: '',
-  tipoParticipante: 'NO_PADRONADO',
+  tipoParticipante: 'PADRONADO',
   estado: 'ACTIVO',
   fechaRegistro: '',
   observaciones: '',
@@ -115,6 +115,13 @@ function validateForm(formState: PersonaFormState): PersonaFormErrors {
 
   return errors;
 }
+const getTodayDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export function PersonaFormDialog({
   open,
@@ -141,7 +148,8 @@ export function PersonaFormDialog({
     setSubmitting(false);
 
     if (mode === 'create') {
-      setFormState(defaultFormState);
+      setFormState({ ...defaultFormState, fechaRegistro: getTodayDateString() });
+      // setFormState(defaultFormState);
       setLoading(false);
       return;
     }
@@ -290,6 +298,18 @@ export function PersonaFormDialog({
                 value={formState.referenciaVivienda}
               />
               <TextField
+                error={Boolean(errors.fechaRegistro)}
+                fullWidth
+                helperText={errors.fechaRegistro ?? ' '}
+                label="Fecha de registro"
+                onBlur={() => setTouched(true)}
+                onChange={handleChange('fechaRegistro')}
+                required
+                slotProps={{ inputLabel: { shrink: true } }}
+                type="date"
+                value={formState.fechaRegistro}
+              />
+              <TextField
                 fullWidth
                 label="Tipo de participante"
                 onChange={handleChange('tipoParticipante')}
@@ -311,18 +331,7 @@ export function PersonaFormDialog({
                 <MenuItem value="SUSPENDIDO">SUSPENDIDO</MenuItem>
                 <MenuItem value="RETIRADO">RETIRADO</MenuItem>
               </TextField>
-              <TextField
-                error={Boolean(errors.fechaRegistro)}
-                fullWidth
-                helperText={errors.fechaRegistro ?? ' '}
-                label="Fecha de registro"
-                onBlur={() => setTouched(true)}
-                onChange={handleChange('fechaRegistro')}
-                required
-                slotProps={{ inputLabel: { shrink: true } }}
-                type="date"
-                value={formState.fechaRegistro}
-              />
+              
               <TextField
                 fullWidth
                 label="Observaciones"
