@@ -11,6 +11,7 @@ const PREFETCH_THRESHOLD = 8;
 
 type PersonaMobileListProps = {
   rows: Persona[];
+  total: number;
   hasMore?: boolean;
   loadingMore?: boolean;
   onReachEnd: () => void;
@@ -21,6 +22,7 @@ type PersonaMobileListProps = {
 
 export function PersonaMobileList({
   rows,
+  total,
   hasMore = false,
   loadingMore = false,
   onReachEnd,
@@ -67,6 +69,7 @@ export function PersonaMobileList({
         <Box sx={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
           {virtualItems.map((virtualRow) => {
             const persona = rows[virtualRow.index];
+            const displayNumber = Math.max(total - virtualRow.index, 1);
 
             if (!persona) {
               return null;
@@ -92,7 +95,7 @@ export function PersonaMobileList({
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Stack spacing={1.5}>
                           <Typography noWrap sx={{ fontSize: 18, fontWeight: 800 }} title={getFullName(persona)}>
-                            {getFullName(persona)}
+                            #{displayNumber} {getFullName(persona)}
                           </Typography>
                           <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
                             <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />

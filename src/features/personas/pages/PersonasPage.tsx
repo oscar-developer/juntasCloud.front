@@ -76,6 +76,7 @@ export function PersonasPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [estadoFilter, setEstadoFilter] = useState<ListQuery['estado']>('TODOS');
@@ -119,6 +120,7 @@ export function PersonasPage() {
     setRows([]);
     setPage(1);
     setHasMore(true);
+    setTotal(0);
     setError(null);
     setInitialLoading(true);
     setLoadingMore(false);
@@ -129,6 +131,7 @@ export function PersonasPage() {
     if (!tenantId) {
       setRows([]);
       setHasMore(false);
+      setTotal(0);
       setInitialLoading(false);
       setLoadingMore(false);
       setError('No se pudo identificar la junta activa.');
@@ -162,6 +165,7 @@ export function PersonasPage() {
         );
 
         if (!controller.signal.aborted) {
+          setTotal(response.total);
           setRows((currentRows) => {
             const nextRows = isFirstPage ? response.items : [...currentRows, ...response.items];
             setHasMore(response.items.length > 0 && nextRows.length < response.total);
@@ -387,6 +391,7 @@ export function PersonasPage() {
             onView={handleOpenDetail}
             loadingMore={loadingMore}
             rows={rows}
+            total={total}
           />
         )}
       </Stack>
