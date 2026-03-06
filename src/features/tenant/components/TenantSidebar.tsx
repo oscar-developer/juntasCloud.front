@@ -5,6 +5,8 @@ import CalendarMonthRoundedIcon from '@mui/icons-material/CalendarMonthRounded';
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
 import Diversity3RoundedIcon from '@mui/icons-material/Diversity3Rounded';
 import DoorFrontRoundedIcon from '@mui/icons-material/DoorFrontRounded';
+import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import GroupRoundedIcon from '@mui/icons-material/GroupRounded';
 import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
 import HomeWorkRoundedIcon from '@mui/icons-material/HomeWorkRounded';
@@ -12,15 +14,22 @@ import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import SupervisorAccountRoundedIcon from '@mui/icons-material/SupervisorAccountRounded';
-import { Box, Divider, Drawer, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-import type { ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useTenant } from '../context/TenantContext';
 import {
-  TenantNavAccordion,
-  type TenantNavEntry,
-} from './TenantNavAccordion';
+  Box,
+  Collapse,
+  Divider,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { useEffect, useState, type ReactNode } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { useTenant } from '../context/TenantContext';
 
 type TenantSidebarProps = {
   drawerWidth: number;
@@ -32,6 +41,13 @@ type TenantSidebarProps = {
 type NavSection = {
   title: string;
   entries: TenantNavEntry[];
+};
+
+type TenantNavEntry = {
+  label: string;
+  to?: string;
+  icon?: ReactNode;
+  disabled?: boolean;
 };
 
 function sectionHasActiveRoute(section: NavSection, pathname: string) {
@@ -47,19 +63,15 @@ export function TenantSidebar({
   const location = useLocation();
   const { isAdmin, tenantId, tenant } = useTenant();
   const tenantBasePath = `/app/juntas/${tenantId}`;
+  const dashboardPath = `${tenantBasePath}/dashboard`;
   const handleNavigate = isMobile ? onClose : undefined;
+  const dashboardEntry: TenantNavEntry = {
+    label: 'Dashboard',
+    to: dashboardPath,
+    icon: <DashboardRoundedIcon />,
+  };
 
   const sections: NavSection[] = [
-    {
-      title: 'Dashboard',
-      entries: [
-        {
-          label: 'Dashboard',
-          to: `${tenantBasePath}/dashboard`,
-          icon: <DashboardRoundedIcon />,
-        },
-      ],
-    },
     {
       title: 'Catálogos',
       entries: [
@@ -185,6 +197,46 @@ export function TenantSidebar({
     });
   }
 
+  const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(sections.map((section) => [section.title, sectionHasActiveRoute(section, location.pathname)])),
+  );
+
+  useEffect(() => {
+    setSectionOpen((current) => {
+      const next = Object.fromEntries(
+        sections.map((section) => [section.title, current[section.title] ?? sectionHasActiveRoute(section, location.pathname)]),
+      );
+      let changed = false;
+
+      sections.forEach((section) => {
+        if (sectionHasActiveRoute(section, location.pathname) && !next[section.title]) {
+          next[section.title] = true;
+          changed = true;
+        }
+      });
+
+      const currentKeys = Object.keys(current);
+      const nextKeys = Object.keys(next);
+
+      if (!changed && currentKeys.length === nextKeys.length) {
+        const sameValues = nextKeys.every((key) => current[key] === next[key]);
+
+        if (sameValues) {
+          return current;
+        }
+      }
+
+      return next;
+    });
+  }, [isAdmin, location.pathname, tenantBasePath]);
+
+  const toggleSection = (title: string) => {
+    setSectionOpen((current) => ({
+      ...current,
+      [title]: !current[title],
+    }));
+  };
+
   const drawerContent = (
     <Box
       sx={{
@@ -227,19 +279,104 @@ export function TenantSidebar({
 
       <Divider />
 
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', px: 2, py: 2, minWidth: 0 }}>
-        <Stack spacing={1.25}>
-          {sections.map((section) => (
-            <TenantNavAccordion
-              defaultExpanded={isMobile ? sectionHasActiveRoute(section, location.pathname) : true}
-              entries={section.entries}
-              key={section.title}
-              onNavigate={handleNavigate}
-              title={section.title}
-            />
-          ))}
-        </Stack>
-      </Box>
+      <List sx={{ px: 2, py: 2.5, flexGrow: 1, overflowY: 'auto', minWidth: 0 }}>
+        <ListItemButton
+          component={NavLink}
+          onClick={handleNavigate}
+          selected={location.pathname === dashboardPath}
+          to={dashboardPath}
+          sx={{
+            mb: 1.25,
+            minHeight: 52,
+            color: location.pathname === dashboardPath ? 'primary.main' : 'text.primary',
+            '& .MuiListItemText-primary': {
+              fontWeight: location.pathname === dashboardPath ? 700 : 600,
+            },
+          }}
+        >
+          <ListItemIcon sx={{ color: 'inherit', minWidth: 40 }}>{dashboardEntry.icon}</ListItemIcon>
+          <ListItemText primary={dashboardEntry.label} />
+        </ListItemButton>
+
+        {sections.map((section) => {
+          const isSectionActive = sectionHasActiveRoute(section, location.pathname);
+          const isOpen = sectionOpen[section.title] ?? false;
+
+          return (
+            <Box key={section.title} sx={{ mb: 0.75 }}>
+              <ListItemButton
+                onClick={() => toggleSection(section.title)}
+                selected={isSectionActive}
+                sx={{
+                  minHeight: 52,
+                  color: isSectionActive ? 'primary.main' : 'text.primary',
+                  '& .MuiListItemText-primary': {
+                    fontWeight: isSectionActive ? 700 : 600,
+                  },
+                }}
+              >
+                <ListItemText primary={section.title} />
+                {isOpen ? <ExpandLessRoundedIcon /> : <ExpandMoreRoundedIcon />}
+              </ListItemButton>
+
+              <Collapse in={isOpen} timeout="auto" unmountOnExit>
+                <List disablePadding>
+                  {section.entries.map((entry) => {
+                    const entryTo = entry.to;
+                    const selected = Boolean(entryTo) && location.pathname === entryTo;
+
+                    if (!entryTo || entry.disabled) {
+                      return (
+                        <ListItemButton
+                          disabled
+                          key={entry.label}
+                          sx={{
+                            pl: 4.75,
+                            minHeight: 46,
+                            mb: 0.5,
+                            opacity: 0.72,
+                            color: 'text.disabled',
+                            '& .MuiListItemText-primary': {
+                              fontSize: 14,
+                              fontWeight: 500,
+                            },
+                          }}
+                        >
+                          <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{entry.icon}</ListItemIcon>
+                          <ListItemText primary={entry.label} />
+                        </ListItemButton>
+                      );
+                    }
+
+                    return (
+                      <ListItemButton
+                        component={NavLink}
+                        key={entryTo}
+                        onClick={handleNavigate}
+                        selected={selected}
+                        to={entryTo}
+                        sx={{
+                          pl: 4.75,
+                          minHeight: 46,
+                          mb: 0.5,
+                          color: selected ? 'primary.main' : 'text.secondary',
+                          '& .MuiListItemText-primary': {
+                            fontSize: 14,
+                            fontWeight: selected ? 700 : 500,
+                          },
+                        }}
+                      >
+                        <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{entry.icon}</ListItemIcon>
+                        <ListItemText primary={entry.label} />
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
+              </Collapse>
+            </Box>
+          );
+        })}
+      </List>
 
       <Stack sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         <Typography
