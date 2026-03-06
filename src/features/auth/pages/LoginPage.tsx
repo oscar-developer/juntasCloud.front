@@ -13,9 +13,9 @@ import {
 } from '@mui/material';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import juntascloudCloudSvg from '../assets/juntascloud-cloud.svg';
-import { useAuth } from '../auth/useAuth';
-import { HttpError } from '../shared/api/httpClient';
+import juntascloudCloudSvg from '../../../assets/juntascloud-cloud.svg';
+import { useAuth } from '../../../auth/useAuth';
+import { HttpError } from '../../../shared/api/httpClient';
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof HttpError) {

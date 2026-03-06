@@ -1,16 +1,16 @@
 import { Navigate, useParams, useRoutes } from 'react-router-dom';
 import { ProtectedRoute } from '../auth/ProtectedRoute';
+import { AccountLoginsPage } from '../features/account/pages/AccountLoginsPage';
+import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
+import { AccountSecurityPage } from '../features/account/pages/AccountSecurityPage';
+import { LoginPage } from '../features/auth/pages/LoginPage';
+import { HelpPage } from '../features/help/pages/HelpPage';
+import { InvitationsPage } from '../features/invitations/pages/InvitationsPage';
 import { JuntasListPage } from '../features/juntas/pages/JuntasListPage';
 import { TenantProvider } from '../features/tenant/context/TenantContext';
 import { TenantLayout } from '../features/tenant/layout/TenantLayout';
 import { tenantRouteChildren } from '../features/tenant/routes/tenantRoutes';
 import { AppLayout } from '../layout/AppLayout';
-import { AccountLoginsPage } from '../pages/AccountLoginsPage';
-import { AccountProfilePage } from '../pages/AccountProfilePage';
-import { AccountSecurityPage } from '../pages/AccountSecurityPage';
-import { HelpPage } from '../pages/HelpPage';
-import { InvitationsPage } from '../pages/InvitationsPage';
-import { LoginPage } from '../pages/LoginPage';
 
 function LegacyTenantRedirect() {
   const { tenantId } = useParams<{ tenantId: string }>();
