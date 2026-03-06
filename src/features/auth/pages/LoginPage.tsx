@@ -20,6 +20,10 @@ import { Toast } from '../../../shared/ui/Toast';
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof HttpError) {
+    if (error.message.trim()) {
+      return error.message;
+    }
+
     const { status } = error;
 
     if (status === 400) {
