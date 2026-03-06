@@ -4,6 +4,8 @@ import { AccountLoginsPage } from '../features/account/pages/AccountLoginsPage';
 import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
 import { AccountSecurityPage } from '../features/account/pages/AccountSecurityPage';
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { RegisterPage } from '../features/auth/pages/RegisterPage';
+import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage';
 import { HelpPage } from '../features/help/pages/HelpPage';
 import { InvitationsPage } from '../features/invitations/pages/InvitationsPage';
 import { JuntasListPage } from '../features/juntas/pages/JuntasListPage';
@@ -27,6 +29,14 @@ export function AppRoutes() {
     {
       path: '/login',
       element: <LoginPage />,
+    },
+    {
+      path: '/register',
+      element: <RegisterPage />,
+    },
+    {
+      path: '/verify-email',
+      element: <VerifyEmailPage />,
     },
     {
       path: '/',

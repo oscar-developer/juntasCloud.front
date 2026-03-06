@@ -15,3 +15,22 @@ export interface LoginResponse {
   accessToken: string;
   user: AuthUser;
 }
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  nombres: string;
+  apellidos: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+}

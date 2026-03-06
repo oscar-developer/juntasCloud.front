@@ -11,11 +11,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { useState, type FormEvent } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link as RouterLink, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import juntascloudCloudSvg from '../../../assets/juntascloud-cloud.svg';
 import { useAuth } from '../../../auth/useAuth';
 import { HttpError } from '../../../shared/api/httpClient';
+import { Toast } from '../../../shared/ui/Toast';
 
 function getFriendlyErrorMessage(error: unknown) {
   if (error instanceof HttpError) {
@@ -37,9 +38,16 @@ function getFriendlyErrorMessage(error: unknown) {
   return 'No se pudo iniciar sesión. Inténtalo nuevamente.';
 }
 
+type LoginLocationState = {
+  from?: { pathname?: string };
+  authSuccessMessage?: string;
+} | null;
+
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
+  const locationState = location.state as LoginLocationState;
   // const [email, setEmail] = useState('oscar@villaunion.pe');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,14 +55,30 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successToastOpen, setSuccessToastOpen] = useState(Boolean(locationState?.authSuccessMessage));
 
-  const fromPath =
-    (location.state as { from?: { pathname?: string } } | null)?.from?.pathname || '/app/juntas';
+  const fromPath = locationState?.from?.pathname || '/app/juntas';
+  const authSuccessMessage = locationState?.authSuccessMessage ?? '';
   const isSubmitDisabled = loading || !email.trim() || !password.trim();
+
+  useEffect(() => {
+    setSuccessToastOpen(Boolean(authSuccessMessage));
+  }, [authSuccessMessage]);
 
   if (isAuthenticated) {
     return <Navigate replace to={fromPath} />;
   }
+
+  const handleSuccessToastClose = () => {
+    setSuccessToastOpen(false);
+
+    if (authSuccessMessage) {
+      navigate(location.pathname, {
+        replace: true,
+        state: locationState?.from ? { from: locationState.from } : null,
+      });
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -71,208 +95,216 @@ export function LoginPage() {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        px: { xs: 2, sm: 3 },
-        py: { xs: 3, sm: 4 },
-        bgcolor: 'background.default',
-      }}
-    >
-      <Paper
-        elevation={2}
+    <>
+      <Box
         sx={{
-          width: '100%',
-          maxWidth: 420,
-          borderRadius: { xs: 3, sm: 4 },
-          px: { xs: 3, sm: 5 },
-          py: { xs: 4, sm: 5 },
-          boxShadow: { xs: 2, sm: 3 },
-          bgcolor: 'background.paper',
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          px: { xs: 2, sm: 3 },
+          py: { xs: 3, sm: 4 },
+          bgcolor: 'background.default',
         }}
       >
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
+        <Paper
+          elevation={2}
           sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'stretch',
+            width: '100%',
+            maxWidth: 420,
+            borderRadius: { xs: 3, sm: 4 },
+            px: { xs: 3, sm: 5 },
+            py: { xs: 4, sm: 5 },
+            boxShadow: { xs: 2, sm: 3 },
+            bgcolor: 'background.paper',
           }}
         >
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 1.25,
-                mb: 4,
-              }}
-            >
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'stretch',
+            }}
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
               <Box
-                alt="JuntasCloud"
-                component="img"
-                src={juntascloudCloudSvg}
                 sx={{
-                  width: { xs: 60, sm: 80 },
-                  height: 'auto',
-                  display: 'block',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 1.25,
+                  mb: 4,
                 }}
-              />
+              >
+                <Box
+                  alt="JuntasCloud"
+                  component="img"
+                  src={juntascloudCloudSvg}
+                  sx={{
+                    width: { xs: 60, sm: 80 },
+                    height: 'auto',
+                    display: 'block',
+                  }}
+                />
+                <Typography
+                  sx={{
+                    color: 'text.primary',
+                    fontSize: { xs: 25, sm: 28 },
+                    lineHeight: 1,
+                  }}
+                >
+                  <Box component="span" sx={{ fontWeight: 700 }}>
+                    Juntas
+                  </Box>
+                  <Box
+                    component="span"
+                    sx={{
+                      fontWeight: 400,
+                      color: 'text.secondary',
+                    }}
+                  >
+                    Cloud
+                  </Box>
+                </Typography>
+              </Box>
               <Typography
                 sx={{
                   color: 'text.primary',
-                  fontSize: { xs: 25, sm: 28 },
-                  lineHeight: 1,
+                  fontSize: { xs: 32, sm: 36 },
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                  textAlign: 'center',
                 }}
               >
-                <Box component="span" sx={{ fontWeight: 700 }}>
-                  Juntas
-                </Box>
-                <Box
-                  component="span"
-                  sx={{
-                    fontWeight: 400,
-                    color: 'text.secondary',
-                  }}
-                >
-                  Cloud
-                </Box>
+                Bienvenido
               </Typography>
             </Box>
-            <Typography
-              sx={{
-                color: 'text.primary',
-                fontSize: { xs: 32, sm: 36 },
-                fontWeight: 700,
-                lineHeight: 1.1,
-                textAlign: 'center',
-              }}
-            >
-              Bienvenido
-            </Typography>
-          </Box>
 
-          {errorMessage && (
-            <Typography
-              sx={{
-                mb: 2,
-                color: 'error.main',
-                fontSize: 14,
-                textAlign: 'center',
-              }}
-            >
-              {errorMessage}
-            </Typography>
-          )}
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              autoComplete="email"
-              autoFocus
-              fullWidth
-              label="Email"
-              onChange={(event) => setEmail(event.target.value)}
-              size="medium"
-              type="email"
-              value={email}
-            />
-
-            <TextField
-              autoComplete="current-password"
-              fullWidth
-              label="Contraseña"
-              onChange={(event) => setPassword(event.target.value)}
-              size="medium"
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        edge="end"
-                        onClick={() => setShowPassword((current) => !current)}
-                        onMouseDown={(event) => event.preventDefault()}
-                      >
-                        {showPassword ? <VisibilityOffRoundedIcon /> : <VisibilityRoundedIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                },
-              }}
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-            />
-
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                color: 'text.secondary',
-              }}
-            >
-              <Checkbox
-                checked={rememberMe}
-                disableRipple
-                onChange={(event) => setRememberMe(event.target.checked)}
-                sx={{ p: 0 }}
-              />
-              <Typography sx={{ fontSize: 16 }}>Recordarme</Typography>
-            </Box>
-
-            <Button
-              disabled={isSubmitDisabled}
-              fullWidth
-              size="large"
-              type="submit"
-              variant="contained"
-              sx={{
-                minHeight: 52,
-                mt: 0.5,
-                borderRadius: 1.5,
-                fontSize: 16,
-                fontWeight: 700,
-                '&:hover': {
-                  bgcolor: 'primary.dark',
-                },
-                '&.Mui-disabled': {
-                  bgcolor: 'primary.light',
-                  color: 'primary.contrastText',
-                },
-              }}
-            >
-              {loading ? <CircularProgress color="inherit" size={22} /> : 'Iniciar sesión'}
-            </Button>
-
-            <Typography
-              sx={{
-                color: 'text.secondary',
-                fontSize: { xs: 14, sm: 15 },
-                textAlign: 'center',
-              }}
-            >
-              ¿No tienes una cuenta?{' '}
-              <Box
-                component="a"
-                href="#"
+            {errorMessage && (
+              <Typography
                 sx={{
-                  color: 'primary.main',
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  cursor: 'pointer',
+                  mb: 2,
+                  color: 'error.main',
+                  fontSize: 14,
+                  textAlign: 'center',
                 }}
               >
-                Crear cuenta
+                {errorMessage}
+              </Typography>
+            )}
+
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <TextField
+                autoComplete="email"
+                autoFocus
+                fullWidth
+                label="Email"
+                onChange={(event) => setEmail(event.target.value)}
+                size="medium"
+                type="email"
+                value={email}
+              />
+
+              <TextField
+                autoComplete="current-password"
+                fullWidth
+                label="Contraseña"
+                onChange={(event) => setPassword(event.target.value)}
+                size="medium"
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                          edge="end"
+                          onClick={() => setShowPassword((current) => !current)}
+                          onMouseDown={(event) => event.preventDefault()}
+                        >
+                          {showPassword ? <VisibilityOffRoundedIcon /> : <VisibilityRoundedIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+              />
+
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  color: 'text.secondary',
+                }}
+              >
+                <Checkbox
+                  checked={rememberMe}
+                  disableRipple
+                  onChange={(event) => setRememberMe(event.target.checked)}
+                  sx={{ p: 0 }}
+                />
+                <Typography sx={{ fontSize: 16 }}>Recordarme</Typography>
               </Box>
-            </Typography>
+
+              <Button
+                disabled={isSubmitDisabled}
+                fullWidth
+                size="large"
+                type="submit"
+                variant="contained"
+                sx={{
+                  minHeight: 52,
+                  mt: 0.5,
+                  borderRadius: 1.5,
+                  fontSize: 16,
+                  fontWeight: 700,
+                  '&:hover': {
+                    bgcolor: 'primary.dark',
+                  },
+                  '&.Mui-disabled': {
+                    bgcolor: 'primary.light',
+                    color: 'primary.contrastText',
+                  },
+                }}
+              >
+                {loading ? <CircularProgress color="inherit" size={22} /> : 'Iniciar sesión'}
+              </Button>
+
+              <Box
+                sx={{
+                  color: 'text.secondary',
+                  fontSize: { xs: 14, sm: 15 },
+                  textAlign: 'center',
+                }}
+              >
+                ¿No tienes una cuenta?{' '}
+                <Box
+                  component={RouterLink}
+                  sx={{
+                    color: 'primary.main',
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                  to="/register"
+                >
+                  Crear cuenta
+                </Box>
+              </Box>
+            </Box>
           </Box>
-        </Box>
-      </Paper>
-    </Box>
+        </Paper>
+      </Box>
+      <Toast
+        message={authSuccessMessage}
+        onClose={handleSuccessToastClose}
+        open={successToastOpen}
+        severity="success"
+      />
+    </>
   );
 }
