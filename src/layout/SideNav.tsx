@@ -1,4 +1,5 @@
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+import { Avatar } from '@mui/material';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
 import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
@@ -48,11 +49,21 @@ const accountItems: NavItem[] = [
   { label: 'Historial de accesos', path: '/app/account/logins', icon: <LoginHistoryRoundedIcon /> },
 ];
 
+function getInitials(fullName: string) {
+  return fullName
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase())
+    .join('');
+}
+
 export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const location = useLocation();
   const isAccountRoute = location.pathname.startsWith('/app/account/');
   const [accountOpen, setAccountOpen] = useState(isAccountRoute);
+  const fullName = [user?.nombres, user?.apellidos].filter(Boolean).join(' ').trim();
 
   useEffect(() => {
     if (isAccountRoute) {
@@ -99,8 +110,59 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           </Box>
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 190, fontSize: 13.5 }} variant="body2">
-          Accesos globales y navegación general de tu cuenta.
+          Accesos globales.
         </Typography>
+        {user && (
+          <Stack
+            direction="row"
+            spacing={1.25}
+            sx={{
+              mt: 1.25,
+              alignItems: 'center',
+              minWidth: 0,
+            }}
+          >
+            <Avatar
+              sx={{
+                bgcolor: alpha('#EB7A3C', 0.12),
+                color: 'primary.main',
+                fontSize: 12,
+                fontWeight: 700,
+                width: 32,
+                height: 32,
+                flexShrink: 0,
+              }}
+            >
+              {getInitials(fullName || user.email)}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography
+                sx={{
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  lineHeight: 1.25,
+                  color: 'text.primary',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {fullName || user.email}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  color: 'text.secondary',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user.email}
+              </Typography>
+            </Box>
+          </Stack>
+        )}
       </Box>
 
       <Divider />
