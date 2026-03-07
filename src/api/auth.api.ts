@@ -1,7 +1,11 @@
 import { request } from '../shared/api/httpClient';
 import type {
+  ForgotPasswordRequest,
+  ForgotPasswordResponse,
   LoginRequest,
   LoginResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
   RegisterRequest,
   RegisterResponse,
   VerifyEmailRequest,
@@ -12,6 +16,22 @@ export const authApi = {
   async login(payload: LoginRequest) {
     return request<LoginResponse>({
       path: '/auth/login',
+      method: 'POST',
+      body: payload,
+      requiresAuth: false,
+    });
+  },
+  async forgotPassword(payload: ForgotPasswordRequest) {
+    return request<ForgotPasswordResponse>({
+      path: '/auth/forgot-password',
+      method: 'POST',
+      body: payload,
+      requiresAuth: false,
+    });
+  },
+  async resetPassword(payload: ResetPasswordRequest) {
+    return request<ResetPasswordResponse>({
+      path: '/auth/reset-password',
       method: 'POST',
       body: payload,
       requiresAuth: false,

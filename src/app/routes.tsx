@@ -3,7 +3,9 @@ import { ProtectedRoute } from '../auth/ProtectedRoute';
 import { AccountLoginsPage } from '../features/account/pages/AccountLoginsPage';
 import { AccountProfilePage } from '../features/account/pages/AccountProfilePage';
 import { AccountSecurityPage } from '../features/account/pages/AccountSecurityPage';
+import { ForgotPasswordPage } from '../features/auth/pages/ForgotPasswordPage';
 import { LoginPage } from '../features/auth/pages/LoginPage';
+import { ResetPasswordPage } from '../features/auth/pages/ResetPasswordPage';
 import { RegisterPage } from '../features/auth/pages/RegisterPage';
 import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage';
 import { HelpPage } from '../features/help/pages/HelpPage';
@@ -29,6 +31,14 @@ export function AppRoutes() {
     {
       path: '/login',
       element: <LoginPage />,
+    },
+    {
+      path: '/auth/forgot-password',
+      element: <ForgotPasswordPage />,
+    },
+    {
+      path: '/reset-password',
+      element: <ResetPasswordPage />,
     },
     {
       path: '/register',

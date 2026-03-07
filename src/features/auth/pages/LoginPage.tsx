@@ -47,6 +47,11 @@ type LoginLocationState = {
   authSuccessMessage?: string;
 } | null;
 
+type ForgotPasswordLocationState = {
+  email?: string;
+  from?: { pathname?: string };
+};
+
 export function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -58,6 +63,7 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hasFailedLogin, setHasFailedLogin] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successToastOpen, setSuccessToastOpen] = useState(Boolean(locationState?.authSuccessMessage));
 
@@ -92,6 +98,7 @@ export function LoginPage() {
     try {
       await login({ email, password });
     } catch (error) {
+      setHasFailedLogin(true);
       setErrorMessage(getFriendlyErrorMessage(error));
     } finally {
       setLoading(false);
@@ -277,6 +284,28 @@ export function LoginPage() {
               >
                 {loading ? <CircularProgress color="inherit" size={22} /> : 'Iniciar sesión'}
               </Button>
+
+              {hasFailedLogin && (
+                <Box sx={{ textAlign: 'center' }}>
+                  <Box
+                    component={RouterLink}
+                    state={{
+                      email: email.trim(),
+                      from: locationState?.from,
+                    } satisfies ForgotPasswordLocationState}
+                    sx={{
+                      color: 'primary.main',
+                      fontSize: 14,
+                      fontWeight: 600,
+                      textDecoration: 'none',
+                      cursor: 'pointer',
+                    }}
+                    to="/auth/forgot-password"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Box>
+                </Box>
+              )}
 
               <Box
                 sx={{
