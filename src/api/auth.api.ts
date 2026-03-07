@@ -1,5 +1,7 @@
 import { request } from '../shared/api/httpClient';
 import type {
+  ChangePasswordRequest,
+  ChangePasswordResponse,
   ForgotPasswordRequest,
   ForgotPasswordResponse,
   LoginRequest,
@@ -19,6 +21,13 @@ export const authApi = {
       method: 'POST',
       body: payload,
       requiresAuth: false,
+    });
+  },
+  async changePassword(payload: ChangePasswordRequest) {
+    return request<ChangePasswordResponse>({
+      path: '/auth/change-password',
+      method: 'POST',
+      body: payload,
     });
   },
   async forgotPassword(payload: ForgotPasswordRequest) {
