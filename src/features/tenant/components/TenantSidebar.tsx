@@ -54,6 +54,10 @@ function sectionHasActiveRoute(section: NavSection, pathname: string) {
   return section.entries.some((entry) => entry.to === pathname);
 }
 
+function getActiveSectionTitle(sections: NavSection[], pathname: string) {
+  return sections.find((section) => sectionHasActiveRoute(section, pathname))?.title ?? null;
+}
+
 export function TenantSidebar({
   drawerWidth,
   isMobile,
@@ -197,44 +201,16 @@ export function TenantSidebar({
     });
   }
 
-  const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(sections.map((section) => [section.title, sectionHasActiveRoute(section, location.pathname)])),
+  const [openSectionTitle, setOpenSectionTitle] = useState<string | null>(() =>
+    getActiveSectionTitle(sections, location.pathname),
   );
 
   useEffect(() => {
-    setSectionOpen((current) => {
-      const next = Object.fromEntries(
-        sections.map((section) => [section.title, current[section.title] ?? sectionHasActiveRoute(section, location.pathname)]),
-      );
-      let changed = false;
-
-      sections.forEach((section) => {
-        if (sectionHasActiveRoute(section, location.pathname) && !next[section.title]) {
-          next[section.title] = true;
-          changed = true;
-        }
-      });
-
-      const currentKeys = Object.keys(current);
-      const nextKeys = Object.keys(next);
-
-      if (!changed && currentKeys.length === nextKeys.length) {
-        const sameValues = nextKeys.every((key) => current[key] === next[key]);
-
-        if (sameValues) {
-          return current;
-        }
-      }
-
-      return next;
-    });
+    setOpenSectionTitle(getActiveSectionTitle(sections, location.pathname));
   }, [isAdmin, location.pathname, tenantBasePath]);
 
   const toggleSection = (title: string) => {
-    setSectionOpen((current) => ({
-      ...current,
-      [title]: !current[title],
-    }));
+    setOpenSectionTitle((current) => (current === title ? null : title));
   };
 
   const drawerContent = (
@@ -300,7 +276,7 @@ export function TenantSidebar({
 
         {sections.map((section) => {
           const isSectionActive = sectionHasActiveRoute(section, location.pathname);
-          const isOpen = sectionOpen[section.title] ?? false;
+          const isOpen = openSectionTitle === section.title;
 
           return (
             <Box key={section.title} sx={{ mb: 0.75 }}>
