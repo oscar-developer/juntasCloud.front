@@ -73,6 +73,7 @@ export function PersonaFiltersCard({
                       <MenuItem value="ACTIVO">ACTIVO</MenuItem>
                       <MenuItem value="SUSPENDIDO">SUSPENDIDO</MenuItem>
                       <MenuItem value="RETIRADO">RETIRADO</MenuItem>
+                      <MenuItem value="FALLECIDO">FALLECIDO</MenuItem>
                     </TextField>
                     <TextField
                       fullWidth

@@ -1,4 +1,4 @@
-export type PersonaEstado = 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO';
+export type PersonaEstado = 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO' | 'FALLECIDO';
 
 export type PersonaTipoParticipante = 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
 
@@ -9,11 +9,14 @@ export type Persona = {
   apellidoPaterno: string;
   apellidoMaterno: string;
   dni?: string | null;
+  email?: string | null;
   telefono?: string | null;
+  direccion?: string | null;
   referenciaVivienda?: string | null;
   tipoParticipante: PersonaTipoParticipante;
   estado: PersonaEstado;
   fechaRegistro: string;
+  fechaBaja?: string | null;
   observaciones?: string | null;
 };
 
@@ -22,11 +25,14 @@ export type PersonaCreateDto = {
   apellidoPaterno: string;
   apellidoMaterno: string;
   dni?: string;
+  email?: string;
   telefono?: string;
+  direccion?: string;
   referenciaVivienda?: string;
   tipoParticipante: PersonaTipoParticipante;
   estado: PersonaEstado;
   fechaRegistro: string;
+  fechaBaja?: string;
   observaciones?: string;
 };
 

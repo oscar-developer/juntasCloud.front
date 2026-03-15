@@ -24,11 +24,14 @@ function normalizePersona(raw: PersonaApiShape): Persona {
     apellidoPaterno: raw.apellidoPaterno ?? raw.apellido_paterno ?? '',
     apellidoMaterno: raw.apellidoMaterno ?? raw.apellido_materno ?? '',
     dni: raw.dni ?? null,
+    email: raw.email ?? null,
     telefono: raw.telefono ?? null,
+    direccion: raw.direccion ?? null,
     referenciaVivienda: raw.referenciaVivienda ?? raw.referencia_vivienda ?? null,
     tipoParticipante: raw.tipoParticipante ?? raw.tipo_participante ?? 'NO_PADRONADO',
     estado: raw.estado ?? 'ACTIVO',
     fechaRegistro: raw.fechaRegistro ?? raw.fecha_registro ?? '',
+    fechaBaja: raw.fechaBaja ?? raw.fecha_baja ?? null,
     observaciones: raw.observaciones ?? null,
   };
 }
@@ -48,11 +51,14 @@ function normalizePayload(payload: PersonaCreateDto | PersonaUpdateDto) {
   assign('apellidoPaterno', payload.apellidoPaterno?.trim());
   assign('apellidoMaterno', payload.apellidoMaterno?.trim());
   assign('dni', payload.dni?.trim() || undefined);
+  assign('email', payload.email?.trim() || undefined);
   assign('telefono', payload.telefono?.trim() || undefined);
+  assign('direccion', payload.direccion?.trim() || undefined);
   assign('referenciaVivienda', payload.referenciaVivienda?.trim() || undefined);
   assign('tipoParticipante', payload.tipoParticipante);
   assign('estado', payload.estado);
   assign('fechaRegistro', payload.fechaRegistro);
+  assign('fechaBaja', payload.fechaBaja || undefined);
   assign('observaciones', payload.observaciones?.trim() || undefined);
 
   return normalizedPayload;

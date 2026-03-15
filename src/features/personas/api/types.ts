@@ -9,14 +9,18 @@ export type PersonaApiShape = {
   apellidoMaterno?: string;
   apellido_materno?: string;
   dni?: string | null;
+  email?: string | null;
   telefono?: string | null;
+  direccion?: string | null;
   referenciaVivienda?: string | null;
   referencia_vivienda?: string | null;
   tipoParticipante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
   tipo_participante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
-  estado?: 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO';
+  estado?: 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO' | 'FALLECIDO';
   fechaRegistro?: string;
   fecha_registro?: string;
+  fechaBaja?: string | null;
+  fecha_baja?: string | null;
   observaciones?: string | null;
 };
 

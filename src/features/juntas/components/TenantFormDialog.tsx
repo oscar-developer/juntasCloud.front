@@ -12,7 +12,12 @@ import {
 import { useEffect, useState, type FormEvent } from 'react';
 import { HttpError } from '../../../shared/api/httpClient';
 import { createTenant, updateTenant } from '../services/juntasApi';
-import type { CreateTenantPayload, Tenant, TenantStatus } from '../types';
+import type {
+  CreateTenantPayload,
+  Tenant,
+  TenantDocumentType,
+  TenantStatus,
+} from '../types';
 
 type MessageSeverity = 'success' | 'error';
 type DialogMode = 'create' | 'edit';
@@ -29,16 +34,16 @@ type TenantFormDialogProps = {
 
 type FormState = {
   nombre: string;
-  ruc: string;
-  dni: string;
+  tipoDocumento: TenantDocumentType;
+  numeroDocumento: string;
   observaciones: string;
   estado: TenantStatus;
 };
 
 const defaultFormState: FormState = {
   nombre: '',
-  ruc: '',
-  dni: '',
+  tipoDocumento: 'RUC',
+  numeroDocumento: '',
   observaciones: '',
   estado: 'ACTIVO',
 };
@@ -46,8 +51,8 @@ const defaultFormState: FormState = {
 function mapInitialValues(initialValues?: Partial<Tenant>): FormState {
   return {
     nombre: initialValues?.nombre ?? defaultFormState.nombre,
-    ruc: initialValues?.ruc ?? defaultFormState.ruc,
-    dni: initialValues?.dni ?? defaultFormState.dni,
+    tipoDocumento: initialValues?.tipoDocumento ?? defaultFormState.tipoDocumento,
+    numeroDocumento: initialValues?.numeroDocumento ?? defaultFormState.numeroDocumento,
     observaciones: initialValues?.observaciones ?? defaultFormState.observaciones,
     estado: initialValues?.estado ?? defaultFormState.estado,
   };
@@ -56,20 +61,12 @@ function mapInitialValues(initialValues?: Partial<Tenant>): FormState {
 function buildPayload(formState: FormState): CreateTenantPayload {
   const payload: CreateTenantPayload = {
     nombre: formState.nombre.trim(),
+    tipoDocumento: formState.tipoDocumento,
+    numeroDocumento: formState.numeroDocumento.trim(),
     estado: formState.estado,
   };
 
-  const ruc = formState.ruc.trim();
-  const dni = formState.dni.trim();
   const observaciones = formState.observaciones.trim();
-
-  if (ruc) {
-    payload.ruc = ruc;
-  }
-
-  if (dni) {
-    payload.dni = dni;
-  }
 
   if (observaciones) {
     payload.observaciones = observaciones;
@@ -110,12 +107,13 @@ export function TenantFormDialog({
   }, [initialValues, mode, open]);
 
   const hasNameError = touched && !formState.nombre.trim();
+  const hasDocumentNumberError = touched && !formState.numeroDocumento.trim();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTouched(true);
 
-    if (!formState.nombre.trim() || submitting) {
+    if (!formState.nombre.trim() || !formState.numeroDocumento.trim() || submitting) {
       return;
     }
 
@@ -168,19 +166,32 @@ export function TenantFormDialog({
             />
             <TextField
               fullWidth
-              label="RUC"
+              label="Tipo de documento"
               onChange={(event) =>
-                setFormState((current) => ({ ...current, ruc: event.target.value }))
+                setFormState((current) => ({
+                  ...current,
+                  tipoDocumento: event.target.value as TenantDocumentType,
+                }))
               }
-              value={formState.ruc}
-            />
+              required
+              select
+              value={formState.tipoDocumento}
+            >
+              <MenuItem value="RUC">RUC</MenuItem>
+              <MenuItem value="DNI">DNI</MenuItem>
+              <MenuItem value="OTRO">OTRO</MenuItem>
+            </TextField>
             <TextField
+              error={hasDocumentNumberError}
               fullWidth
-              label="DNI"
+              helperText={hasDocumentNumberError ? 'El numero de documento es requerido.' : ' '}
+              label="Numero de documento"
+              onBlur={() => setTouched(true)}
               onChange={(event) =>
-                setFormState((current) => ({ ...current, dni: event.target.value }))
+                setFormState((current) => ({ ...current, numeroDocumento: event.target.value }))
               }
-              value={formState.dni}
+              required
+              value={formState.numeroDocumento}
             />
             <TextField
               fullWidth
@@ -214,7 +225,7 @@ export function TenantFormDialog({
             Cancelar
           </Button>
           <Button
-            disabled={submitting || !formState.nombre.trim()}
+            disabled={submitting || !formState.nombre.trim() || !formState.numeroDocumento.trim()}
             type="submit"
             variant="contained"
           >

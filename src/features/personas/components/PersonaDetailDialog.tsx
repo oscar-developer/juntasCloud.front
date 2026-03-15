@@ -108,9 +108,12 @@ export function PersonaDetailDialog({
               </Stack>
             </Box>
             <DetailRow label="DNI" value={persona.dni} />
+            <DetailRow label="Email" value={persona.email} />
             <DetailRow label="Teléfono" value={persona.telefono} />
+            <DetailRow label="Dirección" value={persona.direccion} />
             <DetailRow label="Referencia de vivienda" value={persona.referenciaVivienda} />
             <DetailRow label="Fecha de registro" value={persona.fechaRegistro?.slice(0, 10)} />
+            <DetailRow label="Fecha de baja" value={persona.fechaBaja?.slice(0, 10)} />
             <DetailRow label="Observaciones" value={persona.observaciones} />
           </Stack>
         ) : (

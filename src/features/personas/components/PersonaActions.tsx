@@ -37,7 +37,7 @@ export function PersonaActions({
         <span>
           <IconButton
             color="error"
-            disabled={persona.estado === 'RETIRADO'}
+            disabled={persona.estado === 'RETIRADO' || persona.estado === 'FALLECIDO'}
             onClick={() => onRetire(persona)}
             size="small"
           >

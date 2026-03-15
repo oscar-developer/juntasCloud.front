@@ -23,11 +23,14 @@ type PersonaFormState = {
   apellidoPaterno: string;
   apellidoMaterno: string;
   dni: string;
+  email: string;
   telefono: string;
+  direccion: string;
   referenciaVivienda: string;
   tipoParticipante: PersonaTipoParticipante;
   estado: PersonaEstado;
   fechaRegistro: string;
+  fechaBaja: string;
   observaciones: string;
 };
 
@@ -48,13 +51,18 @@ const defaultFormState: PersonaFormState = {
   apellidoPaterno: '',
   apellidoMaterno: '',
   dni: '',
+  email: '',
   telefono: '',
+  direccion: '',
   referenciaVivienda: '',
   tipoParticipante: 'PADRONADO',
   estado: 'ACTIVO',
   fechaRegistro: '',
+  fechaBaja: '',
   observaciones: '',
 };
+
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function mapPersonaToFormState(persona: Persona): PersonaFormState {
   return {
@@ -62,11 +70,14 @@ function mapPersonaToFormState(persona: Persona): PersonaFormState {
     apellidoPaterno: persona.apellidoPaterno,
     apellidoMaterno: persona.apellidoMaterno,
     dni: persona.dni ?? '',
+    email: persona.email ?? '',
     telefono: persona.telefono ?? '',
+    direccion: persona.direccion ?? '',
     referenciaVivienda: persona.referenciaVivienda ?? '',
     tipoParticipante: persona.tipoParticipante,
     estado: persona.estado,
     fechaRegistro: persona.fechaRegistro ? persona.fechaRegistro.slice(0, 10) : '',
+    fechaBaja: persona.fechaBaja ? persona.fechaBaja.slice(0, 10) : '',
     observaciones: persona.observaciones ?? '',
   };
 }
@@ -77,11 +88,14 @@ function mapFormToPayload(formState: PersonaFormState): PersonaCreateDto {
     apellidoPaterno: formState.apellidoPaterno.trim(),
     apellidoMaterno: formState.apellidoMaterno.trim(),
     dni: formState.dni.trim() || undefined,
+    email: formState.email.trim() || undefined,
     telefono: formState.telefono.trim() || undefined,
+    direccion: formState.direccion.trim() || undefined,
     referenciaVivienda: formState.referenciaVivienda.trim() || undefined,
     tipoParticipante: formState.tipoParticipante,
     estado: formState.estado,
     fechaRegistro: formState.fechaRegistro,
+    fechaBaja: formState.fechaBaja || undefined,
     observaciones: formState.observaciones.trim() || undefined,
   };
 }
@@ -107,6 +121,10 @@ function validateForm(formState: PersonaFormState): PersonaFormErrors {
 
   if (formState.dni.trim().length > 15) {
     errors.dni = 'El DNI no puede superar 15 caracteres.';
+  }
+
+  if (formState.email.trim() && !emailPattern.test(formState.email.trim())) {
+    errors.email = 'Ingresa un email valido.';
   }
 
   if (formState.telefono.trim().length > 20) {
@@ -282,6 +300,16 @@ export function PersonaFormDialog({
                 value={formState.dni}
               />
               <TextField
+                error={Boolean(errors.email)}
+                fullWidth
+                helperText={errors.email ?? ' '}
+                label="Email"
+                onBlur={() => setTouched(true)}
+                onChange={handleChange('email')}
+                type="email"
+                value={formState.email}
+              />
+              <TextField
                 error={Boolean(errors.telefono)}
                 fullWidth
                 helperText={errors.telefono ?? ' '}
@@ -290,6 +318,12 @@ export function PersonaFormDialog({
                 onBlur={() => setTouched(true)}
                 onChange={handleChange('telefono')}
                 value={formState.telefono}
+              />
+              <TextField
+                fullWidth
+                label="Dirección"
+                onChange={handleChange('direccion')}
+                value={formState.direccion}
               />
               <TextField
                 fullWidth
@@ -308,6 +342,14 @@ export function PersonaFormDialog({
                 slotProps={{ inputLabel: { shrink: true } }}
                 type="date"
                 value={formState.fechaRegistro}
+              />
+              <TextField
+                fullWidth
+                label="Fecha de baja"
+                onChange={handleChange('fechaBaja')}
+                slotProps={{ inputLabel: { shrink: true } }}
+                type="date"
+                value={formState.fechaBaja}
               />
               <TextField
                 fullWidth
@@ -330,6 +372,7 @@ export function PersonaFormDialog({
                 <MenuItem value="ACTIVO">ACTIVO</MenuItem>
                 <MenuItem value="SUSPENDIDO">SUSPENDIDO</MenuItem>
                 <MenuItem value="RETIRADO">RETIRADO</MenuItem>
+                <MenuItem value="FALLECIDO">FALLECIDO</MenuItem>
               </TextField>
               
               <TextField

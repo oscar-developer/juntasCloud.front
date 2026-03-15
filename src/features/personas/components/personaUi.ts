@@ -19,6 +19,10 @@ export function getEstadoChipProps(estado: PersonaEstado): Pick<ChipProps, 'colo
     return { color: 'warning', label: 'SUSPENDIDO' };
   }
 
+  if (estado === 'FALLECIDO') {
+    return { color: 'error', label: 'FALLECIDO' };
+  }
+
   return { color: 'default', label: 'RETIRADO' };
 }
 

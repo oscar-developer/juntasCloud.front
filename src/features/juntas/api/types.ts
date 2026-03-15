@@ -1,10 +1,11 @@
 export type TenantStatus = 'ACTIVO' | 'INACTIVO';
+export type TenantDocumentType = 'RUC' | 'DNI' | 'OTRO';
 
 export type Tenant = {
   idTenant: string | number;
   nombre: string;
-  ruc?: string | null;
-  dni?: string | null;
+  tipoDocumento?: TenantDocumentType | null;
+  numeroDocumento?: string | null;
   estado: TenantStatus;
   createdAt?: string;
   observaciones?: string | null;
@@ -13,16 +14,16 @@ export type Tenant = {
 
 export type CreateTenantPayload = {
   nombre: string;
-  ruc?: string;
-  dni?: string;
+  tipoDocumento: TenantDocumentType;
+  numeroDocumento: string;
   estado: TenantStatus;
   observaciones?: string;
 };
 
 export type UpdateTenantPayload = {
   nombre: string;
-  ruc?: string;
-  dni?: string;
+  tipoDocumento: TenantDocumentType;
+  numeroDocumento: string;
   estado: TenantStatus;
   observaciones?: string;
 };
