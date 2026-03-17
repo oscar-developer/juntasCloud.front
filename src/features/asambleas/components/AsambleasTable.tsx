@@ -15,6 +15,7 @@ type AsambleasTableProps = {
   onView: (asamblea: Asamblea) => void;
   onEdit: (asamblea: Asamblea) => void;
   onDelete: (asamblea: Asamblea) => void;
+  attendanceBasePath?: string;
 };
 
 export function AsambleasTable({
@@ -22,6 +23,7 @@ export function AsambleasTable({
   onView,
   onEdit,
   onDelete,
+  attendanceBasePath,
 }: AsambleasTableProps) {
   const gridTemplateColumns = '2.2fr 1.2fr 1fr 1fr 1fr 1fr 1fr 1.1fr 160px';
 
@@ -95,7 +97,15 @@ export function AsambleasTable({
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1, textAlign: 'right' }}>
             <Stack alignItems="flex-end">
-              <AsambleaActions asamblea={asamblea} onDelete={onDelete} onEdit={onEdit} onView={onView} />
+              <AsambleaActions
+                asamblea={asamblea}
+                attendanceTo={
+                  attendanceBasePath ? `${attendanceBasePath}?idAsamblea=${asamblea.idAsamblea}` : undefined
+                }
+                onDelete={onDelete}
+                onEdit={onEdit}
+                onView={onView}
+              />
             </Stack>
           </TableCell>
         </Box>

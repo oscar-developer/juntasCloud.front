@@ -23,6 +23,7 @@ type AsambleasMobileListProps = {
   onView: (asamblea: Asamblea) => void;
   onEdit: (asamblea: Asamblea) => void;
   onDelete: (asamblea: Asamblea) => void;
+  attendanceBasePath?: string;
 };
 
 export function AsambleasMobileList({
@@ -32,6 +33,7 @@ export function AsambleasMobileList({
   onView,
   onEdit,
   onDelete,
+  attendanceBasePath,
 }: AsambleasMobileListProps) {
   const hasExtraFilters =
     activeFilters.tipo !== 'TODOS' ||
@@ -64,7 +66,15 @@ export function AsambleasMobileList({
                     {asamblea.lugar?.trim() || 'Lugar no registrado'}
                   </Typography>
                 </Box>
-                <AsambleaActions asamblea={asamblea} onDelete={onDelete} onEdit={onEdit} onView={onView} />
+                <AsambleaActions
+                  asamblea={asamblea}
+                  attendanceTo={
+                    attendanceBasePath ? `${attendanceBasePath}?idAsamblea=${asamblea.idAsamblea}` : undefined
+                  }
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onView={onView}
+                />
               </Stack>
 
               <Typography color="text.secondary" variant="body2">

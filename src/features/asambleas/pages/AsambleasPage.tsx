@@ -104,6 +104,7 @@ export function AsambleasPage() {
   const [deleteTarget, setDeleteTarget] = useState<Asamblea | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(initialToastState);
+  const attendanceBasePath = tenantId ? `/app/juntas/${tenantId}/asamblea-asistencia` : undefined;
 
   useEffect(() => {
     if (!mobileFiltersOpen) {
@@ -301,6 +302,7 @@ export function AsambleasPage() {
         ) : isDesktop ? (
           <Card elevation={0}>
             <AsambleasTable
+              attendanceBasePath={attendanceBasePath}
               onDelete={setDeleteTarget}
               onEdit={handleOpenEditDialog}
               onView={handleOpenDetail}
@@ -310,6 +312,7 @@ export function AsambleasPage() {
         ) : (
           <AsambleasMobileList
             activeFilters={appliedFiltersSummary}
+            attendanceBasePath={attendanceBasePath}
             onDelete={setDeleteTarget}
             onEdit={handleOpenEditDialog}
             onView={handleOpenDetail}
