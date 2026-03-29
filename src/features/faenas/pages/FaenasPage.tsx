@@ -99,6 +99,7 @@ export function FaenasPage() {
   const [deleteTarget, setDeleteTarget] = useState<Faena | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(initialToastState);
+  const attendanceBasePath = tenantId ? `/app/juntas/${tenantId}/faena-asistencia` : undefined;
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -310,6 +311,7 @@ export function FaenasPage() {
         ) : isDesktop ? (
           <Card elevation={0}>
             <FaenaTable
+              attendanceBasePath={attendanceBasePath}
               onDelete={setDeleteTarget}
               onEdit={handleOpenEditDialog}
               onView={handleOpenDetail}
@@ -319,6 +321,7 @@ export function FaenasPage() {
         ) : (
           <FaenaMobileList
             activeFilters={appliedFiltersSummary}
+            attendanceBasePath={attendanceBasePath}
             onDelete={setDeleteTarget}
             onEdit={handleOpenEditDialog}
             onView={handleOpenDetail}

@@ -1,30 +1,25 @@
 import { Box, Chip, Stack, TableCell, Typography } from '@mui/material';
-import type { Faena } from '../types';
-import { FaenaActions } from './FaenaActions';
+import type { Persona } from '../../personas/types';
+import type { FaenaParticipacion } from '../types';
+import { FaenaParticipacionActions } from './FaenaParticipacionActions';
 import {
-  formatFaenaDate,
-  getFaenaEstadoChipProps,
-  getFaenaMultaLabel,
-  getFaenaScheduleLabel,
-  getFaenaTipoChipProps,
-} from './faenasUi';
+  formatFaenaParticipacionTime,
+  getAnuladoChipProps,
+  getFaenaParticipacionEstadoChipProps,
+  getFaenaParticipacionMultaLabel,
+  getPersonaLabelById,
+} from './faenaParticipacionUi';
 
-type FaenaTableProps = {
-  rows: Faena[];
-  onView: (faena: Faena) => void;
-  onEdit: (faena: Faena) => void;
-  onDelete: (faena: Faena) => void;
-  attendanceBasePath?: string;
+type FaenaParticipacionTableProps = {
+  rows: FaenaParticipacion[];
+  personas: Persona[] | Record<string, Persona>;
+  onView: (participacion: FaenaParticipacion) => void;
+  onEdit: (participacion: FaenaParticipacion) => void;
+  onAnnul: (participacion: FaenaParticipacion) => void;
 };
 
-export function FaenaTable({
-  rows,
-  onView,
-  onEdit,
-  onDelete,
-  attendanceBasePath,
-}: FaenaTableProps) {
-  const gridTemplateColumns = '2.3fr 1.2fr 1fr 1fr 1fr 1fr 1fr 160px';
+export function FaenaParticipacionTable({ rows, personas, onView, onEdit, onAnnul }: FaenaParticipacionTableProps) {
+  const gridTemplateColumns = '2.2fr 1fr 1fr 1fr 1.3fr 1fr 160px';
 
   return (
     <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'auto' }}>
@@ -37,10 +32,10 @@ export function FaenaTable({
           borderBottom: 1,
           borderColor: 'divider',
           backgroundColor: 'grey.50',
-          minWidth: 1080,
+          minWidth: 1050,
         }}
       >
-        {['Descripción', 'Lugar', 'Fecha', 'Horario', 'Tipo', 'Estado', 'Multa base', 'Acciones'].map((label) => (
+        {['Persona', 'Estado', 'Hora llegada', 'Personas extra', 'Multa', 'Anulado', 'Acciones'].map((label) => (
           <TableCell
             key={label}
             component="div"
@@ -51,9 +46,9 @@ export function FaenaTable({
         ))}
       </Box>
 
-      {rows.map((faena) => (
+      {rows.map((participacion) => (
         <Box
-          key={faena.idFaena}
+          key={participacion.idFaenaParticipacion}
           sx={{
             display: 'grid',
             gridTemplateColumns,
@@ -62,43 +57,39 @@ export function FaenaTable({
             alignItems: 'center',
             borderBottom: 1,
             borderColor: 'divider',
-            minWidth: 1080,
+            minWidth: 1050,
             '&:last-of-type': { borderBottom: 0 },
             '&:hover': { backgroundColor: 'action.hover' },
           }}
         >
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            <Typography sx={{ fontWeight: 700 }}>{faena.descripcion || 'Faena sin descripción'}</Typography>
+            <Typography sx={{ fontWeight: 700 }}>{getPersonaLabelById(personas, participacion.idPersona)}</Typography>
             <Typography color="text.secondary" variant="body2">
-              {faena.observaciones?.trim() || 'Sin observaciones'}
+              {participacion.observaciones?.trim() || 'Sin observaciones'}
             </Typography>
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            {faena.lugar?.trim() || 'No registrado'}
+            <Chip size="small" variant="outlined" {...getFaenaParticipacionEstadoChipProps(participacion.estado)} />
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            {formatFaenaDate(faena.fechaProgramada)}
+            {formatFaenaParticipacionTime(participacion.horaLlegada)}
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            {getFaenaScheduleLabel(faena)}
+            {participacion.cantPersonasExtra}
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            <Chip size="small" variant="outlined" {...getFaenaTipoChipProps(faena.tipoFaena)} />
+            {getFaenaParticipacionMultaLabel(participacion)}
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            <Chip size="small" variant="outlined" {...getFaenaEstadoChipProps(faena.estado)} />
-          </TableCell>
-          <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-            {getFaenaMultaLabel(faena.montoMultaBase)}
+            <Chip size="small" variant="outlined" {...getAnuladoChipProps(participacion.anulado)} />
           </TableCell>
           <TableCell component="div" sx={{ borderBottom: 0, px: 1, textAlign: 'right' }}>
             <Stack alignItems="flex-end">
-              <FaenaActions
-                attendanceTo={attendanceBasePath ? `${attendanceBasePath}?idFaena=${faena.idFaena}` : undefined}
-                faena={faena}
-                onDelete={onDelete}
+              <FaenaParticipacionActions
+                onAnnul={onAnnul}
                 onEdit={onEdit}
                 onView={onView}
+                participacion={participacion}
               />
             </Stack>
           </TableCell>

@@ -22,6 +22,7 @@ type FaenaMobileListProps = {
   onView: (faena: Faena) => void;
   onEdit: (faena: Faena) => void;
   onDelete: (faena: Faena) => void;
+  attendanceBasePath?: string;
 };
 
 export function FaenaMobileList({
@@ -31,6 +32,7 @@ export function FaenaMobileList({
   onView,
   onEdit,
   onDelete,
+  attendanceBasePath,
 }: FaenaMobileListProps) {
   const hasExtraFilters =
     activeFilters.tipoFaena !== 'TODOS' ||
@@ -51,7 +53,7 @@ export function FaenaMobileList({
       </Box>
 
       {rows.map((faena) => (
-        <Card key={faena.idFaena} elevation={0} >
+        <Card key={faena.idFaena} elevation={0}>
           <CardContent sx={{ p: 2.25 }}>
             <Stack spacing={1.25}>
               <Stack alignItems="flex-start" direction="row" justifyContent="space-between" spacing={1.5}>
@@ -63,7 +65,13 @@ export function FaenaMobileList({
                     {faena.lugar?.trim() || 'Lugar no registrado'}
                   </Typography>
                 </Box>
-                <FaenaActions faena={faena} onDelete={onDelete} onEdit={onEdit} onView={onView} />
+                <FaenaActions
+                  attendanceTo={attendanceBasePath ? `${attendanceBasePath}?idFaena=${faena.idFaena}` : undefined}
+                  faena={faena}
+                  onDelete={onDelete}
+                  onEdit={onEdit}
+                  onView={onView}
+                />
               </Stack>
 
               <Typography color="text.secondary" variant="body2">

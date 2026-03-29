@@ -1,7 +1,9 @@
 import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import HowToRegRoundedIcon from '@mui/icons-material/HowToRegRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { IconButton, Stack, Tooltip } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import type { Faena } from '../types';
 
 type FaenaActionsProps = {
@@ -9,6 +11,7 @@ type FaenaActionsProps = {
   onView: (faena: Faena) => void;
   onEdit: (faena: Faena) => void;
   onDelete: (faena: Faena) => void;
+  attendanceTo?: string;
 };
 
 export function FaenaActions({
@@ -16,9 +19,19 @@ export function FaenaActions({
   onView,
   onEdit,
   onDelete,
+  attendanceTo,
 }: FaenaActionsProps) {
   return (
     <Stack direction="row" spacing={0.5}>
+      {attendanceTo ? (
+        <Tooltip title="Registrar asistencia">
+          <span>
+            <IconButton component={RouterLink} size="small" to={attendanceTo}>
+              <HowToRegRoundedIcon fontSize="small" />
+            </IconButton>
+          </span>
+        </Tooltip>
+      ) : null}
       <Tooltip title="Ver detalle">
         <span>
           <IconButton onClick={() => onView(faena)} size="small">
