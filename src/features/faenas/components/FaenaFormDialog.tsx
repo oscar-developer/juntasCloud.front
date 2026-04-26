@@ -13,15 +13,12 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { createFaena, getFaenaById, updateFaena } from '../services/faenasApi';
 import type { Faena, FaenaCreateDto, FaenaEstado, FaenaTipo } from '../types';
 import {
   formatFaenaDateInput,
   formatFaenaTimeInput,
-  getFaenaErrorMessage,
 } from './faenasUi';
 
-type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
 type FormMode = 'create' | 'edit';
 
 type FaenaFormState = {
@@ -42,11 +39,12 @@ type FaenaFormErrors = Partial<Record<keyof FaenaFormState, string>>;
 type FaenaFormDialogProps = {
   open: boolean;
   mode: FormMode;
-  tenantId: string;
-  faenaId?: string | number | null;
+  faena?: Faena | null;
+  loading: boolean;
+  submitting: boolean;
+  loadError?: string | null;
   onClose: () => void;
-  onSaved: (message: string) => void;
-  onShowMessage: (message: string, severity: ToastSeverity) => void;
+  onSubmit: (payload: FaenaCreateDto) => Promise<void>;
 };
 
 const defaultFormState: FaenaFormState = {
@@ -129,16 +127,14 @@ function validateForm(formState: FaenaFormState): FaenaFormErrors {
 export function FaenaFormDialog({
   open,
   mode,
-  tenantId,
-  faenaId,
+  faena,
+  loading,
+  submitting,
+  loadError,
   onClose,
-  onSaved,
-  onShowMessage,
+  onSubmit,
 }: FaenaFormDialogProps) {
   const [formState, setFormState] = useState<FaenaFormState>(defaultFormState);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -147,49 +143,16 @@ export function FaenaFormDialog({
     }
 
     setTouched(false);
-    setLoadError(null);
-    setSubmitting(false);
 
     if (mode === 'create') {
       setFormState({ ...defaultFormState, fechaProgramada: getTodayDateString() });
-      setLoading(false);
       return;
     }
 
-    if (!faenaId) {
-      setLoadError('No se pudo identificar la faena a editar.');
-      setLoading(false);
-      return;
+    if (faena) {
+      setFormState(mapFaenaToFormState(faena));
     }
-
-    const controller = new AbortController();
-
-    const loadFaena = async () => {
-      setLoading(true);
-
-      try {
-        const faena = await getFaenaById(tenantId, faenaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setFormState(mapFaenaToFormState(faena));
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(getFaenaErrorMessage(error, 'No se pudo cargar la faena.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadFaena();
-
-    return () => {
-      controller.abort();
-    };
-  }, [faenaId, mode, open, tenantId]);
+  }, [faena, mode, open]);
 
   const errors = touched ? validateForm(formState) : {};
   const hasErrors = Object.keys(validateForm(formState)).length > 0;
@@ -218,26 +181,7 @@ export function FaenaFormDialog({
       return;
     }
 
-    if (mode === 'edit' && !faenaId) {
-      onShowMessage('No se pudo identificar la faena a editar.', 'error');
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        await updateFaena(tenantId, faenaId!, mapFormToPayload(formState));
-        onSaved('Faena actualizada correctamente');
-      } else {
-        await createFaena(tenantId, mapFormToPayload(formState));
-        onSaved('Faena creada correctamente');
-      }
-    } catch (error) {
-      onShowMessage(getFaenaErrorMessage(error, 'No se pudo guardar la faena.'), 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(mapFormToPayload(formState));
   };
 
   return (

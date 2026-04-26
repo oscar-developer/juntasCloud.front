@@ -1,19 +1,63 @@
 import axios from 'axios';
-import {
-  fetchFaenaParticipacionById,
-  fetchFaenaParticipaciones,
-  patchFaenaParticipacion as patchFaenaParticipacionRequest,
-  postAnularFaenaParticipacion,
-  postFaenaParticipacion,
-} from '../api/faenaAsistenciaApi';
-import type { FaenaParticipacionApiShape } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
   AnularFaenaParticipacionDto,
   FaenaParticipacion,
+  FaenaParticipacionApiShape,
   FaenaParticipacionCreateDto,
   FaenaParticipacionListQuery,
   FaenaParticipacionUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveFaenasBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/faenas';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    return hasApiInBase ? '/faenas' : '/api/faenas';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/faenas' : '/api/faenas';
+  }
+}
+
+function resolveFaenaParticipacionesBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/faena-participaciones';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    return hasApiInBase ? '/faena-participaciones' : '/api/faena-participaciones';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+      ? '/faena-participaciones'
+      : '/api/faena-participaciones';
+  }
+}
+
+function createTenantConfig(tenantId: string | number, signal?: AbortSignal): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
 
 function normalizeBoolean(value: boolean | null | undefined, fallback = false) {
   return typeof value === 'boolean' ? value : fallback;
@@ -152,6 +196,9 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operación de participaciones de faena.';
 }
 
+const FAENAS_BASE_PATH = resolveFaenasBasePath();
+const FAENA_PARTICIPACIONES_BASE_PATH = resolveFaenaParticipacionesBasePath();
+
 export async function getFaenaParticipaciones(
   tenantId: string | number,
   idFaena: string | number,
@@ -159,8 +206,15 @@ export async function getFaenaParticipaciones(
   signal?: AbortSignal,
 ): Promise<FaenaParticipacion[]> {
   try {
-    const data = await fetchFaenaParticipaciones(tenantId, idFaena, buildListParams(query), signal);
-    return data.map(normalizeFaenaParticipacion);
+    const response = await apiClient.get<FaenaParticipacionApiShape[]>(
+      `${FAENAS_BASE_PATH}/${idFaena}/participaciones`,
+      {
+        ...createTenantConfig(tenantId, signal),
+        params: buildListParams(query),
+      },
+    );
+
+    return response.data.map(normalizeFaenaParticipacion);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -172,8 +226,12 @@ export async function getFaenaParticipacionById(
   signal?: AbortSignal,
 ): Promise<FaenaParticipacion> {
   try {
-    const data = (await fetchFaenaParticipacionById(tenantId, idFaenaParticipacion, signal)) as FaenaParticipacionApiShape;
-    return normalizeFaenaParticipacion(data);
+    const response = await apiClient.get<FaenaParticipacionApiShape>(
+      `${FAENA_PARTICIPACIONES_BASE_PATH}/${idFaenaParticipacion}`,
+      createTenantConfig(tenantId, signal),
+    );
+
+    return normalizeFaenaParticipacion(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -185,8 +243,13 @@ export async function createFaenaParticipacion(
   payload: FaenaParticipacionCreateDto,
 ): Promise<FaenaParticipacion> {
   try {
-    const data = (await postFaenaParticipacion(tenantId, idFaena, normalizePayload(payload))) as FaenaParticipacionApiShape;
-    return normalizeFaenaParticipacion(data);
+    const response = await apiClient.post<FaenaParticipacionApiShape>(
+      `${FAENAS_BASE_PATH}/${idFaena}/participaciones`,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeFaenaParticipacion(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -198,8 +261,13 @@ export async function updateFaenaParticipacion(
   payload: FaenaParticipacionUpdateDto,
 ): Promise<FaenaParticipacion> {
   try {
-    const data = (await patchFaenaParticipacionRequest(tenantId, idFaenaParticipacion, normalizePayload(payload))) as FaenaParticipacionApiShape;
-    return normalizeFaenaParticipacion(data);
+    const response = await apiClient.patch<FaenaParticipacionApiShape>(
+      `${FAENA_PARTICIPACIONES_BASE_PATH}/${idFaenaParticipacion}`,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeFaenaParticipacion(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -211,11 +279,15 @@ export async function anularFaenaParticipacion(
   payload: AnularFaenaParticipacionDto,
 ): Promise<FaenaParticipacion> {
   try {
-    const data = (await postAnularFaenaParticipacion(tenantId, idFaenaParticipacion, {
-      motivoAnulacion: payload.motivoAnulacion.trim(),
-    })) as FaenaParticipacionApiShape;
+    const response = await apiClient.post<FaenaParticipacionApiShape>(
+      `${FAENA_PARTICIPACIONES_BASE_PATH}/${idFaenaParticipacion}/anular`,
+      {
+        motivoAnulacion: payload.motivoAnulacion.trim(),
+      },
+      createTenantConfig(tenantId),
+    );
 
-    return normalizeFaenaParticipacion(data);
+    return normalizeFaenaParticipacion(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

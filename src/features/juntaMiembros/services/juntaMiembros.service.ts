@@ -1,18 +1,113 @@
 import axios from 'axios';
-import {
-  deleteJuntaMiembro as deleteJuntaMiembroRequest,
-  fetchJuntaMiembroById,
-  fetchJuntaMiembros,
-  patchJuntaMiembro,
-  postJuntaMiembro,
-} from '../api/juntaMiembrosApi';
-import type { JuntaMiembroApiShape, JuntaMiembrosListEnvelope } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
   JuntaMiembro,
+  JuntaMiembroApiShape,
   JuntaMiembroCreateDto,
+  JuntaMiembrosListEnvelope,
   JuntaMiembrosListQuery,
+  JuntaMiembrosListResponse,
   JuntaMiembroUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveJuntaMiembrosBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/junta-miembros';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+
+    return hasApiInBase ? '/junta-miembros' : '/api/junta-miembros';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+      ? '/junta-miembros'
+      : '/api/junta-miembros';
+  }
+}
+
+function createTenantConfig(
+  tenantId: string | number,
+  signal?: AbortSignal,
+): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
+
+const JUNTA_MIEMBROS_BASE_PATH = resolveJuntaMiembrosBasePath();
+
+async function fetchJuntaMiembros(
+  tenantId: string | number,
+  params: Record<string, string>,
+  signal?: AbortSignal,
+) {
+  const response = await apiClient.get<JuntaMiembrosListEnvelope>(JUNTA_MIEMBROS_BASE_PATH, {
+    ...createTenantConfig(tenantId, signal),
+    params,
+  });
+
+  return response.data;
+}
+
+async function fetchJuntaMiembroById(
+  tenantId: string | number,
+  idJuntaMiembro: string | number,
+  signal?: AbortSignal,
+) {
+  const response = await apiClient.get(`${JUNTA_MIEMBROS_BASE_PATH}/${idJuntaMiembro}`, {
+    ...createTenantConfig(tenantId, signal),
+  });
+
+  return response.data;
+}
+
+async function postJuntaMiembro(
+  tenantId: string | number,
+  payload: Record<string, unknown>,
+) {
+  const response = await apiClient.post(
+    JUNTA_MIEMBROS_BASE_PATH,
+    payload,
+    createTenantConfig(tenantId),
+  );
+
+  return response.data;
+}
+
+async function patchJuntaMiembro(
+  tenantId: string | number,
+  idJuntaMiembro: string | number,
+  payload: Record<string, unknown>,
+) {
+  const response = await apiClient.patch(
+    `${JUNTA_MIEMBROS_BASE_PATH}/${idJuntaMiembro}`,
+    payload,
+    createTenantConfig(tenantId),
+  );
+
+  return response.data;
+}
+
+async function deleteJuntaMiembroRequest(
+  tenantId: string | number,
+  idJuntaMiembro: string | number,
+) {
+  await apiClient.delete(`${JUNTA_MIEMBROS_BASE_PATH}/${idJuntaMiembro}`, createTenantConfig(tenantId));
+}
 
 function normalizeJuntaMiembro(raw: JuntaMiembroApiShape): JuntaMiembro {
   return {
@@ -124,7 +219,7 @@ export async function getJuntaMiembros(
   tenantId: string | number,
   query: JuntaMiembrosListQuery,
   signal?: AbortSignal,
-): Promise<JuntaMiembro[]> {
+): Promise<JuntaMiembrosListResponse> {
   try {
     const data = await fetchJuntaMiembros(tenantId, buildListParams(query), signal);
     return extractItems(data).map(normalizeJuntaMiembro);

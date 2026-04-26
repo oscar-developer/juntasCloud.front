@@ -19,7 +19,7 @@ import {
   createFaenaParticipacion,
   getFaenaParticipacionById,
   updateFaenaParticipacion,
-} from '../services/faenaAsistenciaApi';
+} from '../services/faenaAsistencia.service';
 import type {
   FaenaParticipacion,
   FaenaParticipacionCreateDto,

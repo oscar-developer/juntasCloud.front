@@ -11,15 +11,12 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { createAsamblea, getAsambleaById, updateAsamblea } from '../services/asambleasApi';
 import type { Asamblea, AsambleaConvocatoria, AsambleaCreateDto, AsambleaEstado, AsambleaTipo } from '../types';
 import {
   formatAsambleaDateInput,
   formatAsambleaTimeInput,
-  getAsambleaErrorMessage,
 } from './asambleasUi';
 
-type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
 type FormMode = 'create' | 'edit';
 
 type AsambleaFormState = {
@@ -42,11 +39,12 @@ type AsambleaFormErrors = Partial<Record<keyof AsambleaFormState, string>>;
 type AsambleaFormDialogProps = {
   open: boolean;
   mode: FormMode;
-  tenantId: string;
-  asambleaId?: string | number | null;
+  asamblea?: Asamblea | null;
+  loading: boolean;
+  submitting: boolean;
+  loadError?: string | null;
   onClose: () => void;
-  onSaved: (message: string) => void;
-  onShowMessage: (message: string, severity: ToastSeverity) => void;
+  onSubmit: (payload: AsambleaCreateDto) => Promise<void>;
 };
 
 const defaultFormState: AsambleaFormState = {
@@ -143,16 +141,14 @@ function validateForm(formState: AsambleaFormState): AsambleaFormErrors {
 export function AsambleaFormDialog({
   open,
   mode,
-  tenantId,
-  asambleaId,
+  asamblea,
+  loading,
+  submitting,
+  loadError,
   onClose,
-  onSaved,
-  onShowMessage,
+  onSubmit,
 }: AsambleaFormDialogProps) {
   const [formState, setFormState] = useState<AsambleaFormState>(defaultFormState);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -161,49 +157,16 @@ export function AsambleaFormDialog({
     }
 
     setTouched(false);
-    setLoadError(null);
-    setSubmitting(false);
 
     if (mode === 'create') {
       setFormState({ ...defaultFormState, fechaProgramada: getTodayDateString() });
-      setLoading(false);
       return;
     }
 
-    if (!asambleaId) {
-      setLoadError('No se pudo identificar la asamblea a editar.');
-      setLoading(false);
-      return;
+    if (asamblea) {
+      setFormState(mapAsambleaToFormState(asamblea));
     }
-
-    const controller = new AbortController();
-
-    const loadAsamblea = async () => {
-      setLoading(true);
-
-      try {
-        const asamblea = await getAsambleaById(tenantId, asambleaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setFormState(mapAsambleaToFormState(asamblea));
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(getAsambleaErrorMessage(error, 'No se pudo cargar la asamblea.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadAsamblea();
-
-    return () => {
-      controller.abort();
-    };
-  }, [asambleaId, mode, open, tenantId]);
+  }, [asamblea, mode, open]);
 
   const errors = touched ? validateForm(formState) : {};
   const hasErrors = Object.keys(validateForm(formState)).length > 0;
@@ -225,26 +188,7 @@ export function AsambleaFormDialog({
       return;
     }
 
-    if (mode === 'edit' && !asambleaId) {
-      onShowMessage('No se pudo identificar la asamblea a editar.', 'error');
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        await updateAsamblea(tenantId, asambleaId!, mapFormToPayload(formState));
-        onSaved('Asamblea actualizada correctamente');
-      } else {
-        await createAsamblea(tenantId, mapFormToPayload(formState));
-        onSaved('Asamblea creada correctamente');
-      }
-    } catch (error) {
-      onShowMessage(getAsambleaErrorMessage(error, 'No se pudo guardar la asamblea.'), 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(mapFormToPayload(formState));
   };
 
   return (

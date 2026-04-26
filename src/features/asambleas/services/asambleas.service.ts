@@ -1,18 +1,45 @@
 import axios from 'axios';
-import {
-  deleteAsamblea as deleteAsambleaRequest,
-  fetchAsambleaById,
-  fetchAsambleas,
-  patchAsamblea,
-  postAsamblea,
-} from '../api/asambleasApi';
-import type { AsambleaApiShape, AsambleasListEnvelope } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
   Asamblea,
+  AsambleaApiShape,
   AsambleaCreateDto,
   AsambleaListQuery,
+  AsambleasListEnvelope,
   AsambleaUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveAsambleasBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/asambleas';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    return hasApiInBase ? '/asambleas' : '/api/asambleas';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/asambleas' : '/api/asambleas';
+  }
+}
+
+function createTenantConfig(tenantId: string | number, signal?: AbortSignal): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
 
 function normalizeNumber(value: number | string | null | undefined): number | null {
   if (value === null || value === undefined || value === '') {
@@ -203,14 +230,20 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operación de asambleas.';
 }
 
+const ASAMBLEAS_BASE_PATH = resolveAsambleasBasePath();
+
 export async function getAsambleas(
   tenantId: string | number,
   query: AsambleaListQuery,
   signal?: AbortSignal,
 ): Promise<Asamblea[]> {
   try {
-    const data = await fetchAsambleas(tenantId, buildListParams(query), signal);
-    return extractItems(data).map(normalizeAsamblea);
+    const response = await apiClient.get<AsambleasListEnvelope>(ASAMBLEAS_BASE_PATH, {
+      ...createTenantConfig(tenantId, signal),
+      params: buildListParams(query),
+    });
+
+    return extractItems(response.data).map(normalizeAsamblea);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -222,8 +255,11 @@ export async function getAsambleaById(
   signal?: AbortSignal,
 ): Promise<Asamblea> {
   try {
-    const data = (await fetchAsambleaById(tenantId, idAsamblea, signal)) as AsambleaApiShape;
-    return normalizeAsamblea(data);
+    const response = await apiClient.get<AsambleaApiShape>(`${ASAMBLEAS_BASE_PATH}/${idAsamblea}`, {
+      ...createTenantConfig(tenantId, signal),
+    });
+
+    return normalizeAsamblea(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -234,8 +270,13 @@ export async function createAsamblea(
   payload: AsambleaCreateDto,
 ): Promise<Asamblea> {
   try {
-    const data = (await postAsamblea(tenantId, normalizePayload(payload))) as AsambleaApiShape;
-    return normalizeAsamblea(data);
+    const response = await apiClient.post<AsambleaApiShape>(
+      ASAMBLEAS_BASE_PATH,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeAsamblea(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -247,8 +288,13 @@ export async function updateAsamblea(
   payload: AsambleaUpdateDto,
 ): Promise<Asamblea> {
   try {
-    const data = (await patchAsamblea(tenantId, idAsamblea, normalizePayload(payload))) as AsambleaApiShape;
-    return normalizeAsamblea(data);
+    const response = await apiClient.patch<AsambleaApiShape>(
+      `${ASAMBLEAS_BASE_PATH}/${idAsamblea}`,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeAsamblea(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -256,7 +302,7 @@ export async function updateAsamblea(
 
 export async function deleteAsamblea(tenantId: string | number, idAsamblea: string | number): Promise<void> {
   try {
-    await deleteAsambleaRequest(tenantId, idAsamblea);
+    await apiClient.delete(`${ASAMBLEAS_BASE_PATH}/${idAsamblea}`, createTenantConfig(tenantId));
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

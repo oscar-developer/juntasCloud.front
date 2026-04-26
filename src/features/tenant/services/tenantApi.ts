@@ -1,4 +1,4 @@
-import { getTenantById as getTenantByIdRequest } from '../../juntas/services/juntasApi';
+import { getTenantById as getTenantByIdRequest } from '../../juntas/services/juntas.service';
 import type { TenantSummary } from '../types';
 
 export async function getTenantById(

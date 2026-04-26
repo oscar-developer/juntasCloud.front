@@ -11,15 +11,12 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getAsambleaById } from '../services/asambleasApi';
 import type { Asamblea } from '../types';
 import {
   formatAsambleaDate,
   formatAsambleaDateTime,
   formatAsambleaTime,
   getAsambleaConvocatoriaChipProps,
-  getAsambleaErrorMessage,
   getAsambleaEstadoChipProps,
   getAsambleaQuorumLabel,
   getAsambleaTipoChipProps,
@@ -27,8 +24,9 @@ import {
 
 type AsambleaDetailDialogProps = {
   open: boolean;
-  tenantId: string;
-  asambleaId?: string | number | null;
+  asamblea?: Asamblea | null;
+  loading: boolean;
+  error?: string | null;
   onClose: () => void;
 };
 
@@ -47,56 +45,11 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 
 export function AsambleaDetailDialog({
   open,
-  tenantId,
-  asambleaId,
+  asamblea,
+  loading,
+  error,
   onClose,
 }: AsambleaDetailDialogProps) {
-  const [asamblea, setAsamblea] = useState<Asamblea | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setAsamblea(null);
-      setError(null);
-      return;
-    }
-
-    if (!asambleaId) {
-      setError('No se pudo identificar la asamblea solicitada.');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadAsamblea = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getAsambleaById(tenantId, asambleaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setAsamblea(response);
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(getAsambleaErrorMessage(loadError, 'No se pudo cargar el detalle de la asamblea.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadAsamblea();
-
-    return () => {
-      controller.abort();
-    };
-  }, [asambleaId, open, tenantId]);
-
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
       <DialogTitle>Detalle de asamblea</DialogTitle>

@@ -1,18 +1,46 @@
 import axios from 'axios';
-import {
-  deleteFaena as deleteFaenaRequest,
-  fetchFaenaById,
-  fetchFaenas,
-  patchFaena,
-  postFaena,
-} from '../api/faenasApi';
-import type { FaenaApiShape, FaenasListEnvelope } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
   Faena,
+  FaenaApiShape,
   FaenaCreateDto,
   FaenaListQuery,
+  FaenasListEnvelope,
   FaenaUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveFaenasBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/faenas';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+
+    return hasApiInBase ? '/faenas' : '/api/faenas';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/faenas' : '/api/faenas';
+  }
+}
+
+function createTenantConfig(tenantId: string | number, signal?: AbortSignal): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
 
 function normalizeNumber(value: number | string | null | undefined): number | null {
   if (value === null || value === undefined || value === '') {
@@ -179,14 +207,20 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operacion de faenas.';
 }
 
+const FAENAS_BASE_PATH = resolveFaenasBasePath();
+
 export async function getFaenas(
   tenantId: string | number,
   query: FaenaListQuery,
   signal?: AbortSignal,
 ): Promise<Faena[]> {
   try {
-    const data = await fetchFaenas(tenantId, buildListParams(query), signal);
-    return extractItems(data).map(normalizeFaena);
+    const response = await apiClient.get<FaenasListEnvelope>(FAENAS_BASE_PATH, {
+      ...createTenantConfig(tenantId, signal),
+      params: buildListParams(query),
+    });
+
+    return extractItems(response.data).map(normalizeFaena);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -198,8 +232,11 @@ export async function getFaenaById(
   signal?: AbortSignal,
 ): Promise<Faena> {
   try {
-    const data = (await fetchFaenaById(tenantId, idFaena, signal)) as FaenaApiShape;
-    return normalizeFaena(data);
+    const response = await apiClient.get<FaenaApiShape>(`${FAENAS_BASE_PATH}/${idFaena}`, {
+      ...createTenantConfig(tenantId, signal),
+    });
+
+    return normalizeFaena(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -210,8 +247,13 @@ export async function createFaena(
   payload: FaenaCreateDto,
 ): Promise<Faena> {
   try {
-    const data = (await postFaena(tenantId, normalizePayload(payload))) as FaenaApiShape;
-    return normalizeFaena(data);
+    const response = await apiClient.post<FaenaApiShape>(
+      FAENAS_BASE_PATH,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeFaena(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -223,8 +265,13 @@ export async function updateFaena(
   payload: FaenaUpdateDto,
 ): Promise<Faena> {
   try {
-    const data = (await patchFaena(tenantId, idFaena, normalizePayload(payload))) as FaenaApiShape;
-    return normalizeFaena(data);
+    const response = await apiClient.patch<FaenaApiShape>(
+      `${FAENAS_BASE_PATH}/${idFaena}`,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeFaena(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -235,7 +282,7 @@ export async function deleteFaena(
   idFaena: string | number,
 ): Promise<void> {
   try {
-    await deleteFaenaRequest(tenantId, idFaena);
+    await apiClient.delete(`${FAENAS_BASE_PATH}/${idFaena}`, createTenantConfig(tenantId));
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

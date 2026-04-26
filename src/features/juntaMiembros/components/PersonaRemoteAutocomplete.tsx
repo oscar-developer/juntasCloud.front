@@ -4,16 +4,15 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { getPersonaOptionLabel } from './juntaMiembrosUi';
 
 type PersonaRemoteAutocompleteProps = {
-  tenantId: string;
   initialOptions?: Persona[];
   label: string;
   value: Persona | null;
   onChange: (persona: Persona | null) => void;
+  onSearch: (search: string, signal?: AbortSignal) => Promise<Persona[]>;
   disabled?: boolean;
   required?: boolean;
   error?: boolean;
@@ -36,11 +35,11 @@ function mergeUniquePersonas(personas: Array<Persona | null | undefined>) {
 }
 
 export function PersonaRemoteAutocomplete({
-  tenantId,
   initialOptions = [],
   label,
   value,
   onChange,
+  onSearch,
   disabled = false,
   required = false,
   error = false,
@@ -96,22 +95,11 @@ export function PersonaRemoteAutocomplete({
       setLoadError(null);
 
       try {
-        const response = await getPersonas(
-          tenantId,
-          {
-            page: 1,
-            pageSize: 20,
-            search: debouncedSearch,
-            dni: '',
-            estado: 'ACTIVO',
-            tipoParticipante: 'PADRONADO',
-          },
-          controller.signal,
-        );
+        const personas = await onSearch(debouncedSearch, controller.signal);
 
         if (!controller.signal.aborted) {
           setHasLoaded(true);
-          setOptions(mergeUniquePersonas([value, ...response.items]));
+          setOptions(mergeUniquePersonas([value, ...personas]));
         }
       } catch (loadOptionsError) {
         if (!controller.signal.aborted) {
@@ -134,7 +122,7 @@ export function PersonaRemoteAutocomplete({
     return () => {
       controller.abort();
     };
-  }, [debouncedSearch, disabled, open, tenantId, value]);
+  }, [debouncedSearch, disabled, onSearch, open, value]);
 
   const noOptionsText = useMemo(() => {
     if (loadError) {

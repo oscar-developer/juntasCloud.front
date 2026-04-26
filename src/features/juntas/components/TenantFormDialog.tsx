@@ -10,8 +10,6 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type FormEvent } from 'react';
-import { HttpError } from '../../../shared/api/httpClient';
-import { createTenant, updateTenant } from '../services/juntasApi';
 import type {
   CreateTenantPayload,
   Tenant,
@@ -19,17 +17,15 @@ import type {
   TenantStatus,
 } from '../types';
 
-type MessageSeverity = 'success' | 'error';
 type DialogMode = 'create' | 'edit';
 
 type TenantFormDialogProps = {
   open: boolean;
   mode?: DialogMode;
   initialValues?: Partial<Tenant>;
+  submitting: boolean;
   onClose: () => void;
-  onCreated: (tenant: Tenant) => void;
-  onUpdated: (tenant: Tenant) => void;
-  onShowMessage: (message: string, severity: MessageSeverity) => void;
+  onSubmit: (payload: CreateTenantPayload) => Promise<void>;
 };
 
 type FormState = {
@@ -75,25 +71,15 @@ function buildPayload(formState: FormState): CreateTenantPayload {
   return payload;
 }
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof HttpError) {
-    return error.message;
-  }
-
-  return 'No se pudo guardar la junta. Inténtalo nuevamente.';
-}
-
 export function TenantFormDialog({
   open,
   mode = 'create',
   initialValues,
+  submitting,
   onClose,
-  onCreated,
-  onUpdated,
-  onShowMessage,
+  onSubmit,
 }: TenantFormDialogProps) {
   const [formState, setFormState] = useState<FormState>(defaultFormState);
-  const [submitting, setSubmitting] = useState(false);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -102,7 +88,6 @@ export function TenantFormDialog({
     }
 
     setFormState(mode === 'edit' ? mapInitialValues(initialValues) : defaultFormState);
-    setSubmitting(false);
     setTouched(false);
   }, [initialValues, mode, open]);
 
@@ -117,32 +102,7 @@ export function TenantFormDialog({
       return;
     }
 
-    if (mode === 'edit') {
-      if (initialValues?.idTenant === undefined || initialValues.idTenant === null) {
-        onShowMessage('No se pudo identificar la junta a editar.', 'error');
-        return;
-      }
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        const updatedTenant = await updateTenant(initialValues!.idTenant!, buildPayload(formState));
-        onShowMessage('Junta actualizada correctamente', 'success');
-        onUpdated(updatedTenant);
-      } else {
-        const createdTenant = await createTenant(buildPayload(formState));
-        onShowMessage('Junta creada correctamente', 'success');
-        onCreated(createdTenant);
-      }
-
-      onClose();
-    } catch (error) {
-      onShowMessage(getErrorMessage(error), 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(buildPayload(formState));
   };
 
   return (

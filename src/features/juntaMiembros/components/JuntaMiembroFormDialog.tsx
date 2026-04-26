@@ -12,28 +12,15 @@ import {
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import type { JuntaDirectiva } from '../../juntasDirectivas/types';
-import {
-  getPersonaById,
-  getPersonas,
-} from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
-import {
-  createJuntaMiembro,
-  getJuntaMiembroById,
-  updateJuntaMiembro,
-} from '../services/juntaMiembrosApi';
 import type {
   JuntaMiembro,
   JuntaMiembroCargo,
   JuntaMiembroCreateDto,
 } from '../types';
-import {
-  getJuntaLabel,
-  getJuntaMiembroErrorMessage,
-} from './juntaMiembrosUi';
+import { getJuntaLabel } from './juntaMiembrosUi';
 import { PersonaRemoteAutocomplete } from './PersonaRemoteAutocomplete';
 
-type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
 type FormMode = 'create' | 'edit';
 
 type JuntaMiembroFormState = {
@@ -50,15 +37,20 @@ type JuntaMiembroFormErrors = Partial<Record<keyof JuntaMiembroFormState, string
 type JuntaMiembroFormDialogProps = {
   open: boolean;
   mode: FormMode;
-  tenantId: string;
-  juntaMiembroId?: string | number | null;
   juntas: JuntaDirectiva[];
-  personaCache: Record<string, Persona>;
+  juntaMiembro?: JuntaMiembro | null;
+  selectedPersona: Persona | null;
+  initialPersonaOptions: Persona[];
   defaultJuntaId?: string | number | null;
+  loading: boolean;
+  submitting: boolean;
+  loadError?: string | null;
+  checkingAvailability: boolean;
+  hasEligiblePersonas: boolean;
   onClose: () => void;
-  onSaved: (message: string) => void;
-  onShowMessage: (message: string, severity: ToastSeverity) => void;
-  onPersonaResolved: (personas: Persona[]) => void;
+  onSubmit: (payload: JuntaMiembroCreateDto) => Promise<void>;
+  onPersonaChange: (persona: Persona | null) => void;
+  onSearchPersonas: (search: string, signal?: AbortSignal) => Promise<Persona[]>;
 };
 
 const defaultFormState: JuntaMiembroFormState = {
@@ -117,74 +109,23 @@ function validateForm(formState: JuntaMiembroFormState): JuntaMiembroFormErrors 
 export function JuntaMiembroFormDialog({
   open,
   mode,
-  tenantId,
-  juntaMiembroId,
   juntas,
-  personaCache,
+  juntaMiembro,
+  selectedPersona,
+  initialPersonaOptions,
   defaultJuntaId,
+  loading,
+  submitting,
+  loadError,
+  checkingAvailability,
+  hasEligiblePersonas,
   onClose,
-  onSaved,
-  onShowMessage,
-  onPersonaResolved,
+  onSubmit,
+  onPersonaChange,
+  onSearchPersonas,
 }: JuntaMiembroFormDialogProps) {
   const [formState, setFormState] = useState<JuntaMiembroFormState>(defaultFormState);
-  const [initialPersonaOptions, setInitialPersonaOptions] = useState<Persona[]>([]);
-  const [selectedPersona, setSelectedPersona] = useState<Persona | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [hasEligiblePersonas, setHasEligiblePersonas] = useState(true);
-
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const checkAvailability = async () => {
-      setCheckingAvailability(true);
-      setInitialPersonaOptions([]);
-
-      try {
-        const response = await getPersonas(
-          tenantId,
-          {
-            page: 1,
-            pageSize: 20,
-            search: '',
-            dni: '',
-            estado: 'ACTIVO',
-            tipoParticipante: 'PADRONADO',
-          },
-          controller.signal,
-        );
-
-        if (!controller.signal.aborted) {
-          setInitialPersonaOptions(response.items);
-          setHasEligiblePersonas(response.total > 0);
-          onPersonaResolved(response.items);
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setInitialPersonaOptions([]);
-          setHasEligiblePersonas(false);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCheckingAvailability(false);
-        }
-      }
-    };
-
-    void checkAvailability();
-
-    return () => {
-      controller.abort();
-    };
-  }, [open, tenantId]);
 
   useEffect(() => {
     if (!open) {
@@ -192,74 +133,19 @@ export function JuntaMiembroFormDialog({
     }
 
     setTouched(false);
-    setLoadError(null);
-    setSubmitting(false);
 
     if (mode === 'create') {
       setFormState({
         ...defaultFormState,
         idJunta: defaultJuntaId ? String(defaultJuntaId) : '',
       });
-      setSelectedPersona(null);
-      setLoading(false);
       return;
     }
 
-    if (!juntaMiembroId) {
-      setLoadError('No se pudo identificar el miembro de junta a editar.');
-      setLoading(false);
-      return;
+    if (juntaMiembro) {
+      setFormState(mapJuntaMiembroToFormState(juntaMiembro));
     }
-
-    const controller = new AbortController();
-
-    const loadJuntaMiembro = async () => {
-      setLoading(true);
-
-      try {
-        const juntaMiembro = await getJuntaMiembroById(tenantId, juntaMiembroId, controller.signal);
-
-        if (controller.signal.aborted) {
-          return;
-        }
-
-        setFormState(mapJuntaMiembroToFormState(juntaMiembro));
-
-        const cachedPersona = personaCache[String(juntaMiembro.idPersona)];
-
-        if (cachedPersona) {
-          setSelectedPersona(cachedPersona);
-        } else {
-          try {
-            const persona = await getPersonaById(tenantId, juntaMiembro.idPersona, controller.signal);
-
-            if (!controller.signal.aborted) {
-              setSelectedPersona(persona);
-              onPersonaResolved([persona]);
-            }
-          } catch {
-            setSelectedPersona(null);
-          }
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(
-            getJuntaMiembroErrorMessage(error, 'No se pudo cargar el miembro de junta.'),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadJuntaMiembro();
-
-    return () => {
-      controller.abort();
-    };
-  }, [defaultJuntaId, juntaMiembroId, mode, onPersonaResolved, open, tenantId]);
+  }, [defaultJuntaId, juntaMiembro, mode, open]);
 
   const errors = touched ? validateForm(formState) : {};
   const hasErrors = Object.keys(validateForm(formState)).length > 0;
@@ -272,15 +158,11 @@ export function JuntaMiembroFormDialog({
     };
 
   const handlePersonaChange = (persona: Persona | null) => {
-    setSelectedPersona(persona);
+    onPersonaChange(persona);
     setFormState((current) => ({
       ...current,
       idPersona: persona ? String(persona.idPersona) : '',
     }));
-
-    if (persona) {
-      onPersonaResolved([persona]);
-    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -297,29 +179,7 @@ export function JuntaMiembroFormDialog({
       return;
     }
 
-    if (mode === 'edit' && !juntaMiembroId) {
-      onShowMessage('No se pudo identificar el miembro de junta a editar.', 'error');
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        await updateJuntaMiembro(tenantId, juntaMiembroId!, mapFormToPayload(formState));
-        onSaved('Miembro de junta actualizado correctamente');
-      } else {
-        await createJuntaMiembro(tenantId, mapFormToPayload(formState));
-        onSaved('Miembro de junta creado correctamente');
-      }
-    } catch (error) {
-      onShowMessage(
-        getJuntaMiembroErrorMessage(error, 'No se pudo guardar el miembro de junta.'),
-        'error',
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(mapFormToPayload(formState));
   };
 
   return (
@@ -364,8 +224,8 @@ export function JuntaMiembroFormDialog({
                 label="Persona"
                 onBlur={() => setTouched(true)}
                 onChange={handlePersonaChange}
+                onSearch={onSearchPersonas}
                 required
-                tenantId={tenantId}
                 value={selectedPersona}
               />
               <TextField

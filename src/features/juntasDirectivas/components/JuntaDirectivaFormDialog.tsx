@@ -11,19 +11,12 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import {
-  createJuntaDirectiva,
-  getJuntaDirectivaById,
-  updateJuntaDirectiva,
-} from '../services/juntasDirectivasApi';
 import type {
   JuntaDirectiva,
   JuntaDirectivaCreateDto,
   JuntaDirectivaEstado,
 } from '../types';
-import { getJuntasDirectivasErrorMessage } from './juntasDirectivasUi';
 
-type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
 type FormMode = 'create' | 'edit';
 
 type JuntaDirectivaFormState = {
@@ -41,11 +34,12 @@ type JuntaDirectivaFormErrors = Partial<Record<keyof JuntaDirectivaFormState, st
 type JuntaDirectivaFormDialogProps = {
   open: boolean;
   mode: FormMode;
-  tenantId: string;
-  juntaId?: string | number | null;
+  junta?: JuntaDirectiva | null;
+  loading: boolean;
+  submitting: boolean;
+  loadError?: string | null;
   onClose: () => void;
-  onSaved: (message: string) => void;
-  onShowMessage: (message: string, severity: ToastSeverity) => void;
+  onSubmit: (payload: JuntaDirectivaCreateDto) => Promise<void>;
 };
 
 const defaultFormState: JuntaDirectivaFormState = {
@@ -107,16 +101,14 @@ function validateForm(formState: JuntaDirectivaFormState): JuntaDirectivaFormErr
 export function JuntaDirectivaFormDialog({
   open,
   mode,
-  tenantId,
-  juntaId,
+  junta,
+  loading,
+  submitting,
+  loadError,
   onClose,
-  onSaved,
-  onShowMessage,
+  onSubmit,
 }: JuntaDirectivaFormDialogProps) {
   const [formState, setFormState] = useState<JuntaDirectivaFormState>(defaultFormState);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -125,51 +117,16 @@ export function JuntaDirectivaFormDialog({
     }
 
     setTouched(false);
-    setLoadError(null);
-    setSubmitting(false);
 
     if (mode === 'create') {
       setFormState(defaultFormState);
-      setLoading(false);
       return;
     }
 
-    if (!juntaId) {
-      setLoadError('No se pudo identificar la junta directiva a editar.');
-      setLoading(false);
-      return;
+    if (junta) {
+      setFormState(mapJuntaToFormState(junta));
     }
-
-    const controller = new AbortController();
-
-    const loadJunta = async () => {
-      setLoading(true);
-
-      try {
-        const junta = await getJuntaDirectivaById(tenantId, juntaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setFormState(mapJuntaToFormState(junta));
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(
-            getJuntasDirectivasErrorMessage(error, 'No se pudo cargar la junta directiva.'),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadJunta();
-
-    return () => {
-      controller.abort();
-    };
-  }, [mode, open, juntaId, tenantId]);
+  }, [junta, mode, open]);
 
   const errors = touched ? validateForm(formState) : {};
   const hasErrors = Object.keys(validateForm(formState)).length > 0;
@@ -188,29 +145,7 @@ export function JuntaDirectivaFormDialog({
       return;
     }
 
-    if (mode === 'edit' && !juntaId) {
-      onShowMessage('No se pudo identificar la junta directiva a editar.', 'error');
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        await updateJuntaDirectiva(tenantId, juntaId!, mapFormToPayload(formState));
-        onSaved('Junta directiva actualizada correctamente');
-      } else {
-        await createJuntaDirectiva(tenantId, mapFormToPayload(formState));
-        onSaved('Junta directiva creada correctamente');
-      }
-    } catch (error) {
-      onShowMessage(
-        getJuntasDirectivasErrorMessage(error, 'No se pudo guardar la junta directiva.'),
-        'error',
-      );
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(mapFormToPayload(formState));
   };
 
   return (

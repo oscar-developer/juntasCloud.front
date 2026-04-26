@@ -11,13 +11,10 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getFaenaById } from '../services/faenasApi';
 import type { Faena } from '../types';
 import {
   formatFaenaDate,
   formatFaenaTime,
-  getFaenaErrorMessage,
   getFaenaEstadoChipProps,
   getFaenaMandatoryLabel,
   getFaenaMultaLabel,
@@ -26,8 +23,9 @@ import {
 
 type FaenaDetailDialogProps = {
   open: boolean;
-  tenantId: string;
-  faenaId?: string | number | null;
+  faena?: Faena | null;
+  loading: boolean;
+  error?: string | null;
   onClose: () => void;
 };
 
@@ -46,56 +44,11 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 
 export function FaenaDetailDialog({
   open,
-  tenantId,
-  faenaId,
+  faena,
+  loading,
+  error,
   onClose,
 }: FaenaDetailDialogProps) {
-  const [faena, setFaena] = useState<Faena | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setFaena(null);
-      setError(null);
-      return;
-    }
-
-    if (!faenaId) {
-      setError('No se pudo identificar la faena solicitada.');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadFaena = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getFaenaById(tenantId, faenaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setFaena(response);
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(getFaenaErrorMessage(loadError, 'No se pudo cargar el detalle de la faena.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadFaena();
-
-    return () => {
-      controller.abort();
-    };
-  }, [faenaId, open, tenantId]);
-
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
       <DialogTitle>Detalle de faena</DialogTitle>

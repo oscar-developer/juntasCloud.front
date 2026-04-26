@@ -10,28 +10,24 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
 import type { JuntaDirectiva } from '../../juntasDirectivas/types';
-import { getPersonaById } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
-import { getJuntaMiembroById } from '../services/juntaMiembrosApi';
 import type { JuntaMiembro } from '../types';
 import {
   formatJuntaMiembroDate,
   getCargoChipProps,
   getJuntaLabelById,
-  getJuntaMiembroErrorMessage,
   getJuntaMiembroPeriodoLabel,
   getPersonaLabelById,
 } from './juntaMiembrosUi';
 
 type JuntaMiembroDetailDialogProps = {
   open: boolean;
-  tenantId: string;
-  juntaMiembroId?: string | number | null;
+  juntaMiembro?: JuntaMiembro | null;
+  loading: boolean;
+  error?: string | null;
   juntas: JuntaDirectiva[];
   personaCache: Record<string, Persona>;
-  onPersonaResolved: (persona: Persona) => void;
   onClose: () => void;
 };
 
@@ -50,76 +46,13 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 
 export function JuntaMiembroDetailDialog({
   open,
-  tenantId,
-  juntaMiembroId,
+  juntaMiembro,
+  loading,
+  error,
   juntas,
   personaCache,
-  onPersonaResolved,
   onClose,
 }: JuntaMiembroDetailDialogProps) {
-  const [juntaMiembro, setJuntaMiembro] = useState<JuntaMiembro | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setJuntaMiembro(null);
-      setError(null);
-      return;
-    }
-
-    if (!juntaMiembroId) {
-      setError('No se pudo identificar el miembro de junta solicitado.');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadJuntaMiembro = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getJuntaMiembroById(tenantId, juntaMiembroId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setJuntaMiembro(response);
-
-          if (!personaCache[String(response.idPersona)]) {
-            try {
-              const persona = await getPersonaById(tenantId, response.idPersona, controller.signal);
-
-              if (!controller.signal.aborted) {
-                onPersonaResolved(persona);
-              }
-            } catch {
-              // Mantiene fallback Persona #id cuando no se puede resolver el nombre.
-            }
-          }
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(
-            getJuntaMiembroErrorMessage(
-              loadError,
-              'No se pudo cargar el detalle del miembro de junta.',
-            ),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadJuntaMiembro();
-
-    return () => {
-      controller.abort();
-    };
-  }, [juntaMiembroId, onPersonaResolved, open, personaCache, tenantId]);
-
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
       <DialogTitle>Detalle de miembro de junta</DialogTitle>

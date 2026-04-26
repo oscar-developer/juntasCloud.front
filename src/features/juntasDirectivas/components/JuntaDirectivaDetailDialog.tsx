@@ -10,20 +10,18 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getJuntaDirectivaById } from '../services/juntasDirectivasApi';
 import type { JuntaDirectiva } from '../types';
 import {
   formatJuntaDate,
   getEstadoChipProps,
-  getJuntasDirectivasErrorMessage,
   getPeriodoLabel,
 } from './juntasDirectivasUi';
 
 type JuntaDirectivaDetailDialogProps = {
   open: boolean;
-  tenantId: string;
-  juntaId?: string | number | null;
+  junta?: JuntaDirectiva | null;
+  loading: boolean;
+  error?: string | null;
   onClose: () => void;
 };
 
@@ -42,61 +40,11 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 
 export function JuntaDirectivaDetailDialog({
   open,
-  tenantId,
-  juntaId,
+  junta,
+  loading,
+  error,
   onClose,
 }: JuntaDirectivaDetailDialogProps) {
-  const [junta, setJunta] = useState<JuntaDirectiva | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setJunta(null);
-      setError(null);
-      return;
-    }
-
-    if (!juntaId) {
-      setError('No se pudo identificar la junta directiva solicitada.');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadJunta = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getJuntaDirectivaById(tenantId, juntaId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setJunta(response);
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(
-            getJuntasDirectivasErrorMessage(
-              loadError,
-              'No se pudo cargar el detalle de la junta directiva.',
-            ),
-          );
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadJunta();
-
-    return () => {
-      controller.abort();
-    };
-  }, [open, juntaId, tenantId]);
-
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
       <DialogTitle>Detalle de junta directiva</DialogTitle>

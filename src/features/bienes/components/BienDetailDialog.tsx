@@ -11,15 +11,14 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getBienById } from '../services/bienesApi';
 import type { Bien } from '../types';
-import { formatBienNumber, getBienErrorMessage, getEstadoChipProps } from './bienesUi';
+import { formatBienNumber, getEstadoChipProps } from './bienesUi';
 
 type BienDetailDialogProps = {
   open: boolean;
-  tenantId: string;
-  bienId?: string | number | null;
+  bien?: Bien | null;
+  loading: boolean;
+  error?: string | null;
   onClose: () => void;
 };
 
@@ -38,56 +37,11 @@ function DetailRow({ label, value }: { label: string; value?: string | null }) {
 
 export function BienDetailDialog({
   open,
-  tenantId,
-  bienId,
+  bien,
+  loading,
+  error,
   onClose,
 }: BienDetailDialogProps) {
-  const [bien, setBien] = useState<Bien | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!open) {
-      setBien(null);
-      setError(null);
-      return;
-    }
-
-    if (!bienId) {
-      setError('No se pudo identificar el bien solicitado.');
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const loadBien = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await getBienById(tenantId, bienId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setBien(response);
-        }
-      } catch (loadError) {
-        if (!controller.signal.aborted) {
-          setError(getBienErrorMessage(loadError, 'No se pudo cargar el detalle del bien.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadBien();
-
-    return () => {
-      controller.abort();
-    };
-  }, [open, bienId, tenantId]);
-
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
       <DialogTitle>Detalle de bien</DialogTitle>

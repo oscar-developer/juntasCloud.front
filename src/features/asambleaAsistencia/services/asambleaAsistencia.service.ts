@@ -1,16 +1,62 @@
 import axios from 'axios';
-import {
-  fetchAsambleaAttendanceList,
-  patchAsambleaAttendance as patchAsambleaAttendanceRequest,
-  postAsambleaAttendance,
-} from '../api/asambleaAsistenciaApi';
-import type { AsambleaAttendanceApiShape } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
+  AsambleaAttendanceApiShape,
   AsambleaAttendanceCreateDto,
   AsambleaAttendanceListQuery,
   AsambleaAttendanceRecord,
   AsambleaAttendanceUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveAsambleasBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/asambleas';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    return hasApiInBase ? '/asambleas' : '/api/asambleas';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/asambleas' : '/api/asambleas';
+  }
+}
+
+function resolveAsistenciaAsambleaBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/asistencia-asamblea';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    return hasApiInBase ? '/asistencia-asamblea' : '/api/asistencia-asamblea';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+      ? '/asistencia-asamblea'
+      : '/api/asistencia-asamblea';
+  }
+}
+
+function createTenantConfig(tenantId: string | number, signal?: AbortSignal): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
 
 function normalizeBoolean(value: boolean | null | undefined, fallback = false) {
   return typeof value === 'boolean' ? value : fallback;
@@ -24,9 +70,7 @@ function normalizeAttendance(raw: AsambleaAttendanceApiShape): AsambleaAttendanc
     idPersona: raw.idPersona ?? raw.id_persona ?? '',
     estado: raw.estado ?? 'PENDIENTE',
     horaLlegada: raw.horaLlegada ?? raw.hora_llegada ?? null,
-    esPadronadoEnMomento: normalizeBoolean(
-      raw.esPadronadoEnMomento ?? raw.es_padronado_en_momento,
-    ),
+    esPadronadoEnMomento: normalizeBoolean(raw.esPadronadoEnMomento ?? raw.es_padronado_en_momento),
     tieneDerechoVoto: raw.tieneDerechoVoto ?? raw.tiene_derecho_voto ?? false,
     votoEmitido: raw.votoEmitido ?? raw.voto_emitido ?? false,
     observaciones: raw.observaciones ?? null,
@@ -128,6 +172,9 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operación de asistencia de asamblea.';
 }
 
+const ASAMBLEAS_BASE_PATH = resolveAsambleasBasePath();
+const ASISTENCIA_ASAMBLEA_BASE_PATH = resolveAsistenciaAsambleaBasePath();
+
 export async function getAsambleaAttendanceList(
   tenantId: string | number,
   idAsamblea: string | number,
@@ -135,14 +182,15 @@ export async function getAsambleaAttendanceList(
   signal?: AbortSignal,
 ): Promise<AsambleaAttendanceRecord[]> {
   try {
-    const data = await fetchAsambleaAttendanceList(
-      tenantId,
-      idAsamblea,
-      buildListParams(query),
-      signal,
+    const response = await apiClient.get<AsambleaAttendanceApiShape[]>(
+      `${ASAMBLEAS_BASE_PATH}/${idAsamblea}/asistencias`,
+      {
+        ...createTenantConfig(tenantId, signal),
+        params: buildListParams(query),
+      },
     );
 
-    return data.map(normalizeAttendance);
+    return response.data.map(normalizeAttendance);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -154,13 +202,13 @@ export async function createAsambleaAttendance(
   payload: AsambleaAttendanceCreateDto,
 ): Promise<AsambleaAttendanceRecord> {
   try {
-    const data = (await postAsambleaAttendance(
-      tenantId,
-      idAsamblea,
+    const response = await apiClient.post<AsambleaAttendanceApiShape>(
+      `${ASAMBLEAS_BASE_PATH}/${idAsamblea}/asistencias`,
       normalizePayload(payload),
-    )) as AsambleaAttendanceApiShape;
+      createTenantConfig(tenantId),
+    );
 
-    return normalizeAttendance(data);
+    return normalizeAttendance(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -172,13 +220,13 @@ export async function updateAsambleaAttendance(
   payload: AsambleaAttendanceUpdateDto,
 ): Promise<AsambleaAttendanceRecord> {
   try {
-    const data = (await patchAsambleaAttendanceRequest(
-      tenantId,
-      idAsistencia,
+    const response = await apiClient.patch<AsambleaAttendanceApiShape>(
+      `${ASISTENCIA_ASAMBLEA_BASE_PATH}/${idAsistencia}`,
       normalizePayload(payload),
-    )) as AsambleaAttendanceApiShape;
+      createTenantConfig(tenantId),
+    );
 
-    return normalizeAttendance(data);
+    return normalizeAttendance(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

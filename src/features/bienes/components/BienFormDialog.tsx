@@ -11,11 +11,8 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { createBien, getBienById, updateBien } from '../services/bienesApi';
 import type { Bien, BienCreateDto, BienEstado } from '../types';
-import { getBienErrorMessage } from './bienesUi';
 
-type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
 type FormMode = 'create' | 'edit';
 
 type BienFormState = {
@@ -35,11 +32,12 @@ type BienFormErrors = Partial<Record<keyof BienFormState, string>>;
 type BienFormDialogProps = {
   open: boolean;
   mode: FormMode;
-  tenantId: string;
-  bienId?: string | number | null;
+  bien?: Bien | null;
+  loading: boolean;
+  submitting: boolean;
+  loadError?: string | null;
   onClose: () => void;
-  onSaved: (message: string) => void;
-  onShowMessage: (message: string, severity: ToastSeverity) => void;
+  onSubmit: (payload: BienCreateDto) => Promise<void>;
 };
 
 const defaultFormState: BienFormState = {
@@ -129,16 +127,14 @@ function validateForm(formState: BienFormState): BienFormErrors {
 export function BienFormDialog({
   open,
   mode,
-  tenantId,
-  bienId,
+  bien,
+  loading,
+  submitting,
+  loadError,
   onClose,
-  onSaved,
-  onShowMessage,
+  onSubmit,
 }: BienFormDialogProps) {
   const [formState, setFormState] = useState<BienFormState>(defaultFormState);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
 
   useEffect(() => {
@@ -147,49 +143,16 @@ export function BienFormDialog({
     }
 
     setTouched(false);
-    setLoadError(null);
-    setSubmitting(false);
 
     if (mode === 'create') {
       setFormState({ ...defaultFormState, fechaAlta: getTodayDateString() });
-      setLoading(false);
       return;
     }
 
-    if (!bienId) {
-      setLoadError('No se pudo identificar el bien a editar.');
-      setLoading(false);
-      return;
+    if (bien) {
+      setFormState(mapBienToFormState(bien));
     }
-
-    const controller = new AbortController();
-
-    const loadBien = async () => {
-      setLoading(true);
-
-      try {
-        const bien = await getBienById(tenantId, bienId, controller.signal);
-
-        if (!controller.signal.aborted) {
-          setFormState(mapBienToFormState(bien));
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setLoadError(getBienErrorMessage(error, 'No se pudo cargar el bien.'));
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadBien();
-
-    return () => {
-      controller.abort();
-    };
-  }, [mode, open, bienId, tenantId]);
+  }, [bien, mode, open]);
 
   const errors = touched ? validateForm(formState) : {};
   const hasErrors = Object.keys(validateForm(formState)).length > 0;
@@ -208,26 +171,7 @@ export function BienFormDialog({
       return;
     }
 
-    if (mode === 'edit' && !bienId) {
-      onShowMessage('No se pudo identificar el bien a editar.', 'error');
-      return;
-    }
-
-    setSubmitting(true);
-
-    try {
-      if (mode === 'edit') {
-        await updateBien(tenantId, bienId!, mapFormToPayload(formState));
-        onSaved('Bien actualizado correctamente');
-      } else {
-        await createBien(tenantId, mapFormToPayload(formState));
-        onSaved('Bien creado correctamente');
-      }
-    } catch (error) {
-      onShowMessage(getBienErrorMessage(error, 'No se pudo guardar el bien.'), 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    await onSubmit(mapFormToPayload(formState));
   };
 
   return (

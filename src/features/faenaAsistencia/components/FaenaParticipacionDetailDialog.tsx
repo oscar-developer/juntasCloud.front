@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from 'react';
 import { getPersonaById } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
-import { getFaenaParticipacionById } from '../services/faenaAsistenciaApi';
+import { getFaenaParticipacionById } from '../services/faenaAsistencia.service';
 import type { FaenaParticipacion } from '../types';
 import {
   formatFaenaParticipacionDateTime,

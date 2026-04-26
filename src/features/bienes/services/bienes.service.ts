@@ -1,20 +1,47 @@
-import axios from 'axios';
-import type { AxiosResponse } from 'axios';
-import {
-  deleteBien,
-  fetchBienById,
-  fetchBienes,
-  patchBien,
-  postBien,
-} from '../api/bienesApi';
-import type { BienApiShape, BienesListEnvelope } from '../api/types';
+import axios, { type AxiosResponse } from 'axios';
+import { apiClient } from '../../../api/axios';
 import type {
   Bien,
+  BienApiShape,
   BienCreateDto,
+  BienesListEnvelope,
   BienesListResponse,
   BienListQuery,
   BienUpdateDto,
 } from '../types';
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolveBienesBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/bienes';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+
+    return hasApiInBase ? '/bienes' : '/api/bienes';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/bienes' : '/api/bienes';
+  }
+}
+
+function createTenantConfig(tenantId: string | number, signal?: AbortSignal): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
 
 function normalizeNumber(value: number | string | null | undefined): number {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -89,7 +116,7 @@ function extractItems(data: BienesListEnvelope): BienApiShape[] {
     return data.data;
   }
 
-  if (data.data && typeof data.data === "object" && Array.isArray(data.data.items)) {
+  if (data.data && typeof data.data === 'object' && Array.isArray(data.data.items)) {
     return data.data.items;
   }
 
@@ -168,13 +195,18 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operación de bienes.';
 }
 
+const BIENES_BASE_PATH = resolveBienesBasePath();
+
 export async function getBienes(
   tenantId: string | number,
   query: BienListQuery,
   signal?: AbortSignal,
 ): Promise<BienesListResponse> {
   try {
-    const response = await fetchBienes(tenantId, buildListParams(query), signal);
+    const response = await apiClient.get<BienesListEnvelope>(BIENES_BASE_PATH, {
+      ...createTenantConfig(tenantId, signal),
+      params: buildListParams(query),
+    });
     const items = extractItems(response.data).map(normalizeBien);
 
     return {
@@ -192,20 +224,25 @@ export async function getBienById(
   signal?: AbortSignal,
 ): Promise<Bien> {
   try {
-    const data = (await fetchBienById(tenantId, idBien, signal)) as BienApiShape;
-    return normalizeBien(data);
+    const response = await apiClient.get<BienApiShape>(`${BIENES_BASE_PATH}/${idBien}`, {
+      ...createTenantConfig(tenantId, signal),
+    });
+
+    return normalizeBien(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
-export async function createBien(
-  tenantId: string | number,
-  payload: BienCreateDto,
-): Promise<Bien> {
+export async function createBien(tenantId: string | number, payload: BienCreateDto): Promise<Bien> {
   try {
-    const data = (await postBien(tenantId, normalizePayload(payload))) as BienApiShape;
-    return normalizeBien(data);
+    const response = await apiClient.post<BienApiShape>(
+      BIENES_BASE_PATH,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeBien(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -217,8 +254,13 @@ export async function updateBien(
   payload: BienUpdateDto,
 ): Promise<Bien> {
   try {
-    const data = (await patchBien(tenantId, idBien, normalizePayload(payload))) as BienApiShape;
-    return normalizeBien(data);
+    const response = await apiClient.patch<BienApiShape>(
+      `${BIENES_BASE_PATH}/${idBien}`,
+      normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeBien(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
@@ -229,13 +271,16 @@ export async function deactivateBien(
   idBien: string | number,
 ): Promise<Bien | null> {
   try {
-    const data = (await deleteBien(tenantId, idBien)) as BienApiShape | undefined;
+    const response = await apiClient.delete<BienApiShape | undefined>(
+      `${BIENES_BASE_PATH}/${idBien}`,
+      createTenantConfig(tenantId),
+    );
 
-    if (!data || typeof data !== 'object') {
+    if (!response.data || typeof response.data !== 'object') {
       return null;
     }
 
-    return normalizeBien(data);
+    return normalizeBien(response.data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
