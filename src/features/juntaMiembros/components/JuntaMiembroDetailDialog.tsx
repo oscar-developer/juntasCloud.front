@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { JuntaDirectiva } from '../../juntasDirectivas/types';
-import { getPersonaById } from '../../personas/services/personasApi';
+import { getPersonaById } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { getJuntaMiembroById } from '../services/juntaMiembrosApi';
 import type { JuntaMiembro } from '../types';

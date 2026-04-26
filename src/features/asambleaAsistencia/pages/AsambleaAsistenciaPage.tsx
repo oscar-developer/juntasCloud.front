@@ -14,7 +14,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { getAsambleas } from '../../asambleas/services/asambleasApi';
 import type { Asamblea } from '../../asambleas/types';
 import { getFullName } from '../../personas/components/personaUi';
-import { getPersonas } from '../../personas/services/personasApi';
+import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { useTenant } from '../../tenant/context/TenantContext';
 import { AsambleaAttendanceDesktopTable } from '../components/AsambleaAttendanceDesktopTable';

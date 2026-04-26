@@ -1,13 +1,6 @@
 import axios from 'axios';
 import type { AxiosResponse } from 'axios';
-import {
-  deletePersona,
-  fetchPersonaById,
-  fetchPersonas,
-  patchPersona,
-  postPersona,
-} from '../api/personasApi';
-import type { PersonaApiShape, PersonasListEnvelope } from '../api/types';
+import { apiClient } from '../../../api/axios';
 import type {
   ListQuery,
   Persona,
@@ -15,6 +8,127 @@ import type {
   PersonasListResponse,
   PersonaUpdateDto,
 } from '../types';
+
+type PersonaApiShape = {
+  idPersona?: number | string;
+  id_persona?: number | string;
+  idTenant?: number | string;
+  id_tenant?: number | string;
+  nombres?: string;
+  apellidoPaterno?: string;
+  apellido_paterno?: string;
+  apellidoMaterno?: string;
+  apellido_materno?: string;
+  dni?: string | null;
+  email?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  referenciaVivienda?: string | null;
+  referencia_vivienda?: string | null;
+  tipoParticipante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
+  tipo_participante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
+  estado?: 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO' | 'FALLECIDO';
+  fechaRegistro?: string;
+  fecha_registro?: string;
+  fechaBaja?: string | null;
+  fecha_baja?: string | null;
+  observaciones?: string | null;
+};
+
+type PersonasListEnvelope =
+  | PersonaApiShape[]
+  | {
+      items?: PersonaApiShape[];
+      data?: PersonaApiShape[] | { items?: PersonaApiShape[] };
+      results?: PersonaApiShape[];
+    };
+
+type TenantScopedConfig = {
+  headers: {
+    'X-Tenant-Id': string;
+  };
+  signal?: AbortSignal;
+};
+
+function resolvePersonasBasePath() {
+  const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
+
+  if (!baseUrl) {
+    return '/api/personas';
+  }
+
+  try {
+    const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
+    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+
+    return hasApiInBase ? '/personas' : '/api/personas';
+  } catch {
+    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/personas' : '/api/personas';
+  }
+}
+
+function createTenantConfig(
+  tenantId: string | number,
+  signal?: AbortSignal,
+): TenantScopedConfig {
+  return {
+    headers: {
+      'X-Tenant-Id': String(tenantId),
+    },
+    signal,
+  };
+}
+
+const PERSONAS_BASE_PATH = resolvePersonasBasePath();
+
+function fetchPersonas(
+  tenantId: string | number,
+  params: Record<string, string | number>,
+  signal?: AbortSignal,
+): Promise<AxiosResponse<PersonasListEnvelope>> {
+  return apiClient.get<PersonasListEnvelope>(PERSONAS_BASE_PATH, {
+    ...createTenantConfig(tenantId, signal),
+    params,
+  });
+}
+
+async function fetchPersonaById(
+  tenantId: string | number,
+  idPersona: string | number,
+  signal?: AbortSignal,
+) {
+  const response = await apiClient.get(`${PERSONAS_BASE_PATH}/${idPersona}`, {
+    ...createTenantConfig(tenantId, signal),
+  });
+
+  return response.data;
+}
+
+async function postPersona(
+  tenantId: string | number,
+  payload: Record<string, unknown>,
+) {
+  const response = await apiClient.post(PERSONAS_BASE_PATH, payload, createTenantConfig(tenantId));
+  return response.data;
+}
+
+async function patchPersona(
+  tenantId: string | number,
+  idPersona: string | number,
+  payload: Record<string, unknown>,
+) {
+  const response = await apiClient.patch(
+    `${PERSONAS_BASE_PATH}/${idPersona}`,
+    payload,
+    createTenantConfig(tenantId),
+  );
+
+  return response.data;
+}
+
+function deletePersona(tenantId: string | number, idPersona: string | number) {
+  return apiClient.delete(`${PERSONAS_BASE_PATH}/${idPersona}`, createTenantConfig(tenantId));
+}
 
 function normalizePersona(raw: PersonaApiShape): Persona {
   return {

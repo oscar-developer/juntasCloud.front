@@ -11,7 +11,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { getPersonaById } from '../../personas/services/personasApi';
+import { getPersonaById } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { getFaenaParticipacionById } from '../services/faenaAsistenciaApi';
 import type { FaenaParticipacion } from '../types';

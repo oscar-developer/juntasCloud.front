@@ -12,7 +12,7 @@ import {
   Typography,
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { getPersonaById } from '../services/personasApi';
+import { getPersonaById } from '../services/personas.service';
 import type { Persona } from '../types';
 import { getEstadoChipProps, getFullName, getPersonaErrorMessage, getTipoChipProps } from './personaUi';
 

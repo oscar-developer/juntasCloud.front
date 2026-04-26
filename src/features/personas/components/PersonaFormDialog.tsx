@@ -11,7 +11,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { createPersona, getPersonaById, updatePersona } from '../services/personasApi';
+import { createPersona, getPersonaById, updatePersona } from '../services/personas.service';
 import type { Persona, PersonaCreateDto, PersonaEstado, PersonaTipoParticipante } from '../types';
 import { getPersonaErrorMessage } from './personaUi';
 

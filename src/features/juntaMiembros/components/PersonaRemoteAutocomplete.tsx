@@ -4,7 +4,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useMemo, useState } from 'react';
-import { getPersonas } from '../../personas/services/personasApi';
+import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { getPersonaOptionLabel } from './juntaMiembrosUi';
 

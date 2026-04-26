@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Toast } from '../../../shared/ui/Toast';
 import type { JuntaDirectiva } from '../../juntasDirectivas/types';
-import { getPersonaById } from '../../personas/services/personasApi';
+import { getPersonaById } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { getJuntasDirectivas } from '../../juntasDirectivas/services/juntasDirectivasApi';
 import { ConfirmDeleteJuntaMiembroDialog } from '../components/ConfirmDeleteJuntaMiembroDialog';

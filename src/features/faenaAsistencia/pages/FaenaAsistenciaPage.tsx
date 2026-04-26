@@ -14,7 +14,7 @@ import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import { getFaenas } from '../../faenas/services/faenasApi';
 import type { Faena } from '../../faenas/types';
 import { getFullName } from '../../personas/components/personaUi';
-import { getPersonas } from '../../personas/services/personasApi';
+import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { useTenant } from '../../tenant/context/TenantContext';
 import { FaenaAttendanceDesktopTable } from '../components/FaenaAttendanceDesktopTable';

@@ -15,7 +15,7 @@ import type { JuntaDirectiva } from '../../juntasDirectivas/types';
 import {
   getPersonaById,
   getPersonas,
-} from '../../personas/services/personasApi';
+} from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import {
   createJuntaMiembro,

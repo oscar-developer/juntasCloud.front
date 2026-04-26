@@ -13,7 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { getPersonaById, getPersonas } from '../../personas/services/personasApi';
+import { getPersonaById, getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import {
   createFaenaParticipacion,

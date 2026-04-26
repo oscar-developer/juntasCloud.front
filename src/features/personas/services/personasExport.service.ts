@@ -1,8 +1,7 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { exportExcel } from '../../../shared/utils/exportExcel';
+import { exportPdf } from '../../../shared/utils/exportPdf';
 import type { ListQuery, Persona } from '../types';
-import { getPersonas } from './personasApi';
+import { getPersonas } from './personas.service';
 
 type ExportMetadata = {
   tenantName: string;
@@ -65,6 +64,8 @@ function buildExportRows(personas: Persona[]) {
   ]);
 }
 
+const exportColumns = ['Nro', 'Apellidos y nombres', 'DNI', 'Teléfono', 'Tipo participante'];
+
 function getReportDate(generatedAt?: Date) {
   return (generatedAt ?? new Date()).toLocaleDateString();
 }
@@ -109,70 +110,31 @@ export async function getPersonasForExport(
 export function exportPersonasToExcel(personas: Persona[], metadata: ExportMetadata) {
   const tenantName = metadata.tenantName.trim() || 'Junta activa';
   const generatedAt = getReportDate(metadata.generatedAt);
-  const rows = buildExportRows(personas);
-  const sheetData: Array<Array<string | number>> = [
-    ['Relación de socios de la asociación'],
-    [`Junta: ${tenantName}`],
-    [`Fecha: ${generatedAt}`],
-    [],
-    ['Nro', 'Apellidos y nombres', 'DNI', 'Teléfono', 'Tipo participante'],
-    ...rows,
-  ];
 
-  const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
-  worksheet['!cols'] = [
-    { wch: 8 },
-    { wch: 42 },
-    { wch: 18 },
-    { wch: 18 },
-    { wch: 22 },
-  ];
-
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Socios');
-  XLSX.writeFile(workbook, `relacion-socios-${slugify(tenantName)}.xlsx`);
+  exportExcel({
+    fileName: `relacion-socios-${slugify(tenantName)}.xlsx`,
+    sheetName: 'Socios',
+    columns: exportColumns,
+    rows: buildExportRows(personas),
+    titleRows: [
+      ['Relación de socios de la asociación'],
+      [`Junta: ${tenantName}`],
+      [`Fecha: ${generatedAt}`],
+    ],
+    columnWidths: [8, 42, 18, 18, 22],
+  });
 }
 
 export function exportPersonasToPdf(personas: Persona[], metadata: ExportMetadata) {
   const tenantName = metadata.tenantName.trim() || 'Junta activa';
   const generatedAt = getReportDate(metadata.generatedAt);
-  const rows = buildExportRows(personas);
-  const document = new jsPDF({
-    orientation: 'p',
-    unit: 'mm',
-    format: 'a4',
-  });
 
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(16);
-  document.text('Relación de socios de la asociación', 14, 18);
-
-  document.setFont('helvetica', 'normal');
-  document.setFontSize(10);
-  document.text(`Junta: ${tenantName}`, 14, 25);
-  document.text(`Fecha: ${generatedAt}`, 14, 30);
-
-  autoTable(document, {
-    head: [['Nro', 'Apellidos y nombres', 'DNI', 'Teléfono', 'Tipo participante']],
-    body: rows,
-    startY: 36,
-    margin: { top: 14, left: 14, right: 14, bottom: 14 },
-    styles: {
-      font: 'helvetica',
-      fontSize: 9,
-      cellPadding: 2.2,
-      textColor: [17, 24, 39],
-      lineColor: [209, 213, 219],
-      lineWidth: 0.1,
-    },
-    headStyles: {
-      fillColor: [243, 244, 246],
-      textColor: [17, 24, 39],
-      fontStyle: 'bold',
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251],
-    },
+  exportPdf({
+    fileName: `relacion-socios-${slugify(tenantName)}.pdf`,
+    title: 'Relación de socios de la asociación',
+    metadataRows: [`Junta: ${tenantName}`, `Fecha: ${generatedAt}`],
+    columns: exportColumns,
+    rows: buildExportRows(personas),
     columnStyles: {
       0: { cellWidth: 12 },
       1: { cellWidth: 72 },
@@ -181,21 +143,4 @@ export function exportPersonasToPdf(personas: Persona[], metadata: ExportMetadat
       4: { cellWidth: 34 },
     },
   });
-
-  const totalPages = document.getNumberOfPages();
-
-  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
-    document.setPage(pageNumber);
-    document.setFont('helvetica', 'normal');
-    document.setFontSize(9);
-    document.setTextColor(107, 114, 128);
-    document.text(
-      `Página ${pageNumber} de ${totalPages}`,
-      document.internal.pageSize.getWidth() / 2,
-      document.internal.pageSize.getHeight() - 8,
-      { align: 'center' },
-    );
-  }
-
-  document.save(`relacion-socios-${slugify(tenantName)}.pdf`);
 }
