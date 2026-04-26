@@ -2,10 +2,16 @@ import { Navigate, type RouteObject } from 'react-router-dom';
 import { AsambleaAsistenciaPage } from '../../asambleaAsistencia/pages/AsambleaAsistenciaPage';
 import { AsambleasPage } from '../../asambleas/pages/AsambleasPage';
 import { BienesPage } from '../../bienes/pages/BienesPage';
-import { CajaPage } from '../../caja/pages/CajaPage';
 import { FaenaAsistenciaPage } from '../../faenaAsistencia/pages/FaenaAsistenciaPage';
 import { FaenasPage } from '../../faenas/pages/FaenasPage';
-import { ReporteMensualPage } from '../../finanzas/pages/ReporteMensualPage';
+import { CajaPage } from '../../finanzas/caja/pages/CajaPage';
+import { CategoriasCajaPage } from '../../finanzas/categoriasCaja/pages/CategoriasCajaPage';
+import { ConceptosCobroPage } from '../../finanzas/conceptosCobro/pages/ConceptosCobroPage';
+import { CreditosPage } from '../../finanzas/creditos/pages/CreditosPage';
+import { ObligacionesPage } from '../../finanzas/obligaciones/pages/ObligacionesPage';
+import { PagosPage } from '../../finanzas/pagos/pages/PagosPage';
+import { ReporteMensualPage } from '../../finanzas/reporteMensual/pages/ReporteMensualPage';
+import { ResumenFinancieroPage } from '../../finanzas/resumen/pages/ResumenFinancieroPage';
 import { JuntaMiembrosPage } from '../../juntaMiembros/pages/JuntaMiembrosPage';
 import { JuntasDirectivasPage } from '../../juntasDirectivas/pages/JuntasDirectivasPage';
 import { PersonaTerrenoPage } from '../../personaTerreno/pages/PersonaTerrenoPage';
@@ -68,7 +74,35 @@ export const tenantRouteChildren: RouteObject[] = [
   },
   {
     path: 'caja',
+    element: <Navigate replace to="finanzas/caja" />,
+  },
+  {
+    path: 'finanzas/resumen',
+    element: <ResumenFinancieroPage />,
+  },
+  {
+    path: 'finanzas/caja',
     element: <CajaPage />,
+  },
+  {
+    path: 'finanzas/obligaciones',
+    element: <ObligacionesPage />,
+  },
+  {
+    path: 'finanzas/pagos',
+    element: <PagosPage />,
+  },
+  {
+    path: 'finanzas/creditos',
+    element: <CreditosPage />,
+  },
+  {
+    path: 'finanzas/conceptos-cobro',
+    element: <ConceptosCobroPage />,
+  },
+  {
+    path: 'finanzas/categorias-caja',
+    element: <CategoriasCajaPage />,
   },
   {
     path: 'finanzas/reporte-mensual',

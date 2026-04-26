@@ -1,4 +1,4 @@
-import { TenantModulePageShell } from '../../tenant/components/TenantModulePageShell';
+import { TenantModulePageShell } from '../../../tenant/components/TenantModulePageShell';
 
 export function ReporteMensualPage() {
   return (

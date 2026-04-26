@@ -12,6 +12,8 @@ import HandymanRoundedIcon from '@mui/icons-material/HandymanRounded';
 import HomeWorkRoundedIcon from '@mui/icons-material/HomeWorkRounded';
 import Inventory2RoundedIcon from '@mui/icons-material/Inventory2Rounded';
 import PaymentsRoundedIcon from '@mui/icons-material/PaymentsRounded';
+import ReceiptLongRoundedIcon from '@mui/icons-material/ReceiptLongRounded';
+import SavingsRoundedIcon from '@mui/icons-material/SavingsRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import SupervisorAccountRoundedIcon from '@mui/icons-material/SupervisorAccountRounded';
 import {
@@ -145,24 +147,44 @@ export function TenantSidebar({
       title: 'Finanzas',
       entries: [
         {
-          label: 'Caja',
-          to: `${tenantBasePath}/caja`,
-          icon: <PaymentsRoundedIcon />,
-        },
-        {
-          label: 'Ingresos / Gastos',
-          icon: <PaymentsRoundedIcon />,
-          disabled: true,
-        },
-        {
-          label: 'Reporte mensual',
-          to: `${tenantBasePath}/finanzas/reporte-mensual`,
+          label: 'Resumen financiero',
+          to: `${tenantBasePath}/finanzas/resumen`,
           icon: <ArticleRoundedIcon />,
         },
         {
-          label: 'Categorías',
+          label: 'Caja',
+          to: `${tenantBasePath}/finanzas/caja`,
+          icon: <PaymentsRoundedIcon />,
+        },
+        {
+          label: 'Obligaciones / Cobranza',
+          to: `${tenantBasePath}/finanzas/obligaciones`,
+          icon: <ReceiptLongRoundedIcon />,
+        },
+        {
+          label: 'Pagos',
+          to: `${tenantBasePath}/finanzas/pagos`,
+          icon: <PaymentsRoundedIcon />,
+        },
+        {
+          label: 'Créditos',
+          to: `${tenantBasePath}/finanzas/creditos`,
+          icon: <SavingsRoundedIcon />,
+        },
+      ],
+    },
+    {
+      title: 'Configuración financiera',
+      entries: [
+        {
+          label: 'Conceptos de cobro',
+          to: `${tenantBasePath}/finanzas/conceptos-cobro`,
+          icon: <ReceiptLongRoundedIcon />,
+        },
+        {
+          label: 'Categorías de caja',
+          to: `${tenantBasePath}/finanzas/categorias-caja`,
           icon: <SettingsRoundedIcon />,
-          disabled: true,
         },
       ],
     },
