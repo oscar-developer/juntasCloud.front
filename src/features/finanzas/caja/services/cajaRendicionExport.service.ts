@@ -1,5 +1,6 @@
 import { exportExcel, type ExportCell } from '../../../../shared/utils/exportExcel';
-import { exportPdf } from '../../../../shared/utils/exportPdf';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import type { JuntaDirectiva } from '../../../juntasDirectivas/types';
 import type { RendicionCuentasResponse } from '../types';
 
@@ -9,7 +10,11 @@ type ExportMetadata = {
   generatedAt?: Date;
 };
 
+type PdfRow = string[];
+
 const detalleColumns = ['Fecha', 'Tipo', 'Categoría', 'Descripción', 'Monto', 'Medio de pago', 'Documento'];
+const pdfMarginX = 14;
+const pdfPageWidth = 210;
 
 function slugify(value: string) {
   return (
@@ -122,6 +127,97 @@ function buildDetalleRows(report: RendicionCuentasResponse): ExportCell[][] {
   ]);
 }
 
+function parseDateTime(value: string) {
+  const parsed = new Date(value).getTime();
+
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function toPdfRows(rows: ExportCell[][]): PdfRow[] {
+  return rows.map((row) =>
+    row.map((cell) => {
+      if (cell === null || cell === undefined) {
+        return '';
+      }
+
+      return String(cell);
+    }),
+  );
+}
+
+function buildCategoriaPdfRows(report: RendicionCuentasResponse): PdfRow[] {
+  const categoryMap = new Map<string, { categoria: string; ingresos: number; egresos: number }>();
+
+  report.porCategoria.forEach((item) => {
+    const categoria = item.categoria || 'Sin categoría';
+    const current = categoryMap.get(categoria) ?? { categoria, ingresos: 0, egresos: 0 };
+
+    if (item.tipo === 'INGRESO') {
+      current.ingresos += item.total;
+    } else {
+      current.egresos += item.total;
+    }
+
+    categoryMap.set(categoria, current);
+  });
+
+  const rows = Array.from(categoryMap.values())
+    .sort((left, right) => {
+      const leftTypeOrder = left.ingresos > 0 && left.egresos === 0 ? 0 : 1;
+      const rightTypeOrder = right.ingresos > 0 && right.egresos === 0 ? 0 : 1;
+
+      if (leftTypeOrder !== rightTypeOrder) {
+        return leftTypeOrder - rightTypeOrder;
+      }
+
+      return left.categoria.localeCompare(right.categoria);
+    })
+    .map((item) => [
+      item.categoria,
+      item.ingresos > 0 ? formatCurrency(item.ingresos) : '',
+      item.egresos > 0 ? formatCurrency(item.egresos) : '',
+      formatCurrency(item.ingresos - item.egresos),
+    ]);
+  const totalIngresos = report.porCategoria
+    .filter((categoria) => categoria.tipo === 'INGRESO')
+    .reduce((sum, categoria) => sum + categoria.total, 0);
+  const totalEgresos = report.porCategoria
+    .filter((categoria) => categoria.tipo === 'GASTO')
+    .reduce((sum, categoria) => sum + categoria.total, 0);
+
+  return [
+    ...(rows.length > 0 ? rows : [['Sin movimientos por categoría', '', '', formatCurrency(0)]]),
+    ['Totales', formatCurrency(totalIngresos), formatCurrency(totalEgresos), ''],
+    ['Resultado general', '', '', formatCurrency(totalIngresos - totalEgresos)],
+  ];
+}
+
+function buildDetallePdfRows(report: RendicionCuentasResponse): PdfRow[] {
+  const sortedMovimientos = [...report.detalleMovimientos].sort(
+    (left, right) => parseDateTime(left.fecha) - parseDateTime(right.fecha),
+  );
+  const rows = sortedMovimientos.map((movimiento) => [
+    formatDate(movimiento.fecha),
+    movimiento.categoria || 'Sin categoría',
+    movimiento.descripcion || 'Sin descripción',
+    movimiento.tipo === 'INGRESO' ? formatCurrency(movimiento.monto) : '',
+    movimiento.tipo === 'GASTO' ? formatCurrency(movimiento.monto) : '',
+    getMedioPagoLabel(movimiento.medioPago),
+    movimiento.docReferencia ?? '',
+  ]);
+  const totalIngresos = sortedMovimientos
+    .filter((movimiento) => movimiento.tipo === 'INGRESO')
+    .reduce((sum, movimiento) => sum + movimiento.monto, 0);
+  const totalEgresos = sortedMovimientos
+    .filter((movimiento) => movimiento.tipo === 'GASTO')
+    .reduce((sum, movimiento) => sum + movimiento.monto, 0);
+
+  return [
+    ...(rows.length > 0 ? rows : [['Sin movimientos', '', '', formatCurrency(0), formatCurrency(0), '', '']]),
+    ['', '', 'Total movimientos', formatCurrency(totalIngresos), formatCurrency(totalEgresos), '', ''],
+  ];
+}
+
 function buildExcelRows(report: RendicionCuentasResponse): ExportCell[][] {
   const resumenRows = buildResumenRows(report);
   const categoriaRows = buildCategoriaRows(report);
@@ -142,27 +238,185 @@ function buildExcelRows(report: RendicionCuentasResponse): ExportCell[][] {
   ];
 }
 
-function buildPdfRows(report: RendicionCuentasResponse): ExportCell[][] {
-  const rows: ExportCell[][] = [
-    ['Resumen', '', '', '', '', '', ''],
-    ...buildResumenRows(report).map((row) => [row[0], '', '', '', row[1], '', '']),
-    ['', '', '', '', '', '', ''],
-    ['Totales por categoría', '', '', '', '', '', ''],
-  ];
-  const categoriaRows = buildCategoriaRows(report);
+function addReportHeader(document: jsPDF, report: RendicionCuentasResponse, metadata: ExportMetadata) {
+  const tenantName = metadata.tenantName.trim() || 'Junta activa';
+  const juntaName = metadata.junta.nombre?.trim() || `Junta #${metadata.junta.idJunta}`;
 
-  rows.push(
-    ...(categoriaRows.length > 0
-      ? categoriaRows.map((row) => [row[0], '', row[1], '', row[2], '', ''])
-      : [['Sin movimientos por categoría', '', '', '', '', '', '']]),
-    ['', '', '', '', '', '', ''],
-    ['Detalle de movimientos', '', '', '', '', '', ''],
-    ...(buildDetalleRows(report).length > 0
-      ? buildDetalleRows(report)
-      : [['Sin movimientos', '', '', '', '', '', '']]),
-  );
+  document.setTextColor(17, 24, 39);
+  document.setFont('helvetica', 'bold');
+  document.setFontSize(17);
+  document.text('Rendición de cuentas', pdfMarginX, 16);
+  document.setFont('helvetica', 'normal');
+  document.setFontSize(9);
+  document.setTextColor(75, 85, 99);
+  document.text('Reporte financiero de caja por junta directiva', pdfMarginX, 23);
 
-  return rows;
+  document.setTextColor(17, 24, 39);
+  document.setFont('helvetica', 'bold');
+  document.setFontSize(10);
+  document.text(tenantName, pdfMarginX, 35);
+  document.setFont('helvetica', 'normal');
+  document.setFontSize(9);
+  document.setTextColor(75, 85, 99);
+  document.text(`Junta directiva: ${juntaName}`, pdfMarginX, 41);
+  document.text(`Periodo: ${getPeriodoLabel(report)}`, pdfMarginX, 46);
+  document.text(`Fecha de generación: ${getReportDate(metadata.generatedAt)}`, pdfMarginX, 51);
+  document.setDrawColor(226, 232, 240);
+  document.line(pdfMarginX, 58, pdfPageWidth - pdfMarginX, 58);
+}
+
+function getTableEndY(document: jsPDF) {
+  const lastAutoTable = (document as jsPDF & { lastAutoTable?: { finalY?: number } }).lastAutoTable;
+
+  return lastAutoTable?.finalY ?? 96;
+}
+
+function addSectionTitle(document: jsPDF, title: string, y: number) {
+  document.setFont('helvetica', 'bold');
+  document.setFontSize(11);
+  document.setTextColor(17, 24, 39);
+  document.text(title, pdfMarginX, y);
+}
+
+function addPageFooters(document: jsPDF) {
+  const totalPages = document.getNumberOfPages();
+
+  for (let pageNumber = 1; pageNumber <= totalPages; pageNumber += 1) {
+    document.setPage(pageNumber);
+    document.setFont('helvetica', 'normal');
+    document.setFontSize(8.5);
+    document.setTextColor(107, 114, 128);
+    document.text(
+      `Página ${pageNumber} de ${totalPages}`,
+      document.internal.pageSize.getWidth() / 2,
+      document.internal.pageSize.getHeight() - 8,
+      { align: 'center' },
+    );
+  }
+}
+
+function renderResumenTable(document: jsPDF, report: RendicionCuentasResponse, startY: number) {
+  const resumenRows = toPdfRows(buildResumenRows(report));
+
+  addSectionTitle(document, '1. Resumen financiero', startY);
+  autoTable(document, {
+    head: [['Concepto', 'Monto']],
+    body: resumenRows,
+    startY: startY + 4,
+    margin: { left: pdfMarginX, right: pdfMarginX },
+    styles: {
+      font: 'helvetica',
+      fontSize: 9,
+      cellPadding: 2.4,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [17, 24, 39],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 120 },
+      1: { halign: 'right' },
+    },
+    didParseCell: (data) => {
+      if (data.section === 'body' && data.row.index === 3) {
+        data.cell.styles.fillColor = [241, 245, 249];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+  });
+}
+
+function renderCategoriasTable(document: jsPDF, report: RendicionCuentasResponse, startY: number) {
+  const categoriaRows = buildCategoriaPdfRows(report);
+
+  addSectionTitle(document, '2. Totales por categoría', startY);
+  autoTable(document, {
+    head: [['Categoría', 'Ingresos', 'Egresos', 'Saldo']],
+    body: categoriaRows,
+    startY: startY + 4,
+    margin: { left: pdfMarginX, right: pdfMarginX },
+    styles: {
+      font: 'helvetica',
+      fontSize: 8.8,
+      cellPadding: 2.2,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+    },
+    headStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [17, 24, 39],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 86 },
+      1: { cellWidth: 32, halign: 'right' },
+      2: { cellWidth: 32, halign: 'right' },
+      3: { cellWidth: 32, halign: 'right' },
+    },
+    didParseCell: (data) => {
+      if (data.section !== 'body') {
+        return;
+      }
+
+      const rawRow = data.row.raw as PdfRow;
+      const firstCell = rawRow[0] ?? '';
+
+      if (firstCell === 'Totales' || firstCell === 'Resultado general') {
+        data.cell.styles.fillColor = [241, 245, 249];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+  });
+}
+
+function renderDetalleTable(document: jsPDF, report: RendicionCuentasResponse, startY: number) {
+  const detalleRows = buildDetallePdfRows(report);
+
+  addSectionTitle(document, '3. Detalle de movimientos', startY);
+  autoTable(document, {
+    head: [['Fecha', 'Categoría', 'Descripción', 'Ingreso', 'Egreso', 'Medio', 'Documento']],
+    body: detalleRows,
+    startY: startY + 4,
+    margin: { left: pdfMarginX, right: pdfMarginX },
+    styles: {
+      font: 'helvetica',
+      fontSize: 7.6,
+      cellPadding: 1.8,
+      lineColor: [226, 232, 240],
+      lineWidth: 0.1,
+      overflow: 'linebreak',
+    },
+    headStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [17, 24, 39],
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      0: { cellWidth: 19 },
+      1: { cellWidth: 27 },
+      2: { cellWidth: 50 },
+      3: { cellWidth: 23, halign: 'right' },
+      4: { cellWidth: 23, halign: 'right' },
+      5: { cellWidth: 20 },
+      6: { cellWidth: 20 },
+    },
+    didParseCell: (data) => {
+      if (data.section !== 'body') {
+        return;
+      }
+
+      const rawRow = data.row.raw as PdfRow;
+      const conceptoCell = rawRow[2] ?? '';
+
+      if (conceptoCell === 'Total movimientos') {
+        data.cell.styles.fillColor = [241, 245, 249];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+  });
 }
 
 export function exportRendicionCuentasToExcel(
@@ -183,20 +437,16 @@ export function exportRendicionCuentasToPdf(
   report: RendicionCuentasResponse,
   metadata: ExportMetadata,
 ) {
-  exportPdf({
-    fileName: `${getFileBaseName(metadata)}.pdf`,
-    title: 'Rendición de cuentas',
-    metadataRows: buildMetadataRows(report, metadata),
-    columns: detalleColumns,
-    rows: buildPdfRows(report),
-    columnStyles: {
-      0: { cellWidth: 22 },
-      1: { cellWidth: 18 },
-      2: { cellWidth: 28 },
-      3: { cellWidth: 45 },
-      4: { cellWidth: 24 },
-      5: { cellWidth: 24 },
-      6: { cellWidth: 24 },
-    },
+  const document = new jsPDF({
+    orientation: 'p',
+    unit: 'mm',
+    format: 'a4',
   });
+
+  addReportHeader(document, report, metadata);
+  renderResumenTable(document, report, 68);
+  renderCategoriasTable(document, report, getTableEndY(document) + 12);
+  renderDetalleTable(document, report, getTableEndY(document) + 12);
+  addPageFooters(document);
+  document.save(`${getFileBaseName(metadata)}.pdf`);
 }
