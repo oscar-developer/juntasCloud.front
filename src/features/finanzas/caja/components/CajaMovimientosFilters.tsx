@@ -1,4 +1,5 @@
 import FilterAltOffRoundedIcon from '@mui/icons-material/FilterAltOffRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import {
   Button,
   Card,
@@ -17,6 +18,8 @@ type CajaMovimientosFiltersProps = {
   onToChange: (value: string) => void;
   onTipoChange: (value: CajaMovimientosQuery['tipo']) => void;
   onClear: () => void;
+  onExportClick: () => void;
+  exportLoading?: boolean;
 };
 
 export function CajaMovimientosFilters({
@@ -27,6 +30,8 @@ export function CajaMovimientosFilters({
   onToChange,
   onTipoChange,
   onClear,
+  onExportClick,
+  exportLoading = false,
 }: CajaMovimientosFiltersProps) {
   return (
     <Card elevation={0}>
@@ -66,6 +71,15 @@ export function CajaMovimientosFilters({
             variant="outlined"
           >
             Limpiar
+          </Button>
+          <Button
+            loading={exportLoading}
+            onClick={onExportClick}
+            startIcon={<DownloadRoundedIcon />}
+            sx={{ minWidth: { md: 150 } }}
+            variant="outlined"
+          >
+            Exportar
           </Button>
         </Stack>
       </CardContent>

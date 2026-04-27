@@ -130,3 +130,65 @@ export type CajaCategoriaApiShape = {
   tipo?: CajaMovimientoTipo;
   activo?: boolean;
 };
+
+export type RendicionCuentasPeriodo = {
+  fechaInicio: string;
+  fechaFin: string;
+};
+
+export type RendicionCuentasResumen = {
+  saldoInicial: number;
+  totalIngresos: number;
+  totalGastos: number;
+  saldoFinal: number;
+};
+
+export type RendicionCuentasCategoria = {
+  tipo: CajaMovimientoTipo;
+  categoria: string;
+  total: number;
+};
+
+export type RendicionCuentasDetalleMovimiento = {
+  fecha: string;
+  tipo: CajaMovimientoTipo;
+  categoria: string;
+  descripcion: string;
+  monto: number;
+  medioPago: CajaMedioPago;
+  docReferencia: string | null;
+};
+
+export type RendicionCuentasResponse = {
+  periodo: RendicionCuentasPeriodo;
+  resumen: RendicionCuentasResumen;
+  porCategoria: RendicionCuentasCategoria[];
+  detalleMovimientos: RendicionCuentasDetalleMovimiento[];
+};
+
+export type RendicionCuentasApiShape = {
+  periodo?: {
+    fechaInicio?: unknown;
+    fechaFin?: unknown;
+  };
+  resumen?: {
+    saldoInicial?: number | string;
+    totalIngresos?: number | string;
+    totalGastos?: number | string;
+    saldoFinal?: number | string;
+  };
+  porCategoria?: Array<{
+    tipo?: unknown;
+    categoria?: unknown;
+    total?: number | string;
+  }>;
+  detalleMovimientos?: Array<{
+    fecha?: unknown;
+    tipo?: unknown;
+    categoria?: unknown;
+    descripcion?: unknown;
+    monto?: number | string;
+    medioPago?: unknown;
+    docReferencia?: unknown;
+  }>;
+};

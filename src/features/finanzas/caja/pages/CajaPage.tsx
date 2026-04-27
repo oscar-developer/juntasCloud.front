@@ -6,6 +6,7 @@ import { CajaMovimientosFilters } from '../components/CajaMovimientosFilters';
 import { CajaMovimientosMobileList } from '../components/CajaMovimientosMobileList';
 import { CajaMovimientosTable } from '../components/CajaMovimientosTable';
 import { ConfirmAnularMovimientoDialog } from '../components/ConfirmAnularMovimientoDialog';
+import { ExportCajaRendicionDialog } from '../components/ExportCajaRendicionDialog';
 import { useCajaMovimientos } from '../hooks/useCajaMovimientos';
 
 export function CajaPage() {
@@ -27,8 +28,10 @@ export function CajaPage() {
         )}
 
         <CajaMovimientosFilters
+          exportLoading={cajaMovimientos.exportLoading}
           fromValue={cajaMovimientos.fromFilter}
           onClear={cajaMovimientos.clearFilters}
+          onExportClick={cajaMovimientos.openExportDialog}
           onFromChange={cajaMovimientos.setFromFilter}
           onTipoChange={cajaMovimientos.setTipoFilter}
           onToChange={cajaMovimientos.setToFilter}
@@ -114,6 +117,23 @@ export function CajaPage() {
           tenantId={cajaMovimientos.tenantId}
         />
       )}
+
+      <ExportCajaRendicionDialog
+        contextError={cajaMovimientos.exportContextError}
+        contextLoading={cajaMovimientos.exportContextLoading}
+        juntas={cajaMovimientos.juntas}
+        loading={cajaMovimientos.exportLoading}
+        onClose={cajaMovimientos.closeExportDialog}
+        onExportExcel={() => {
+          void cajaMovimientos.handleExport('excel');
+        }}
+        onExportPdf={() => {
+          void cajaMovimientos.handleExport('pdf');
+        }}
+        onJuntaChange={cajaMovimientos.setSelectedExportJuntaId}
+        open={cajaMovimientos.exportOpen}
+        selectedJuntaId={cajaMovimientos.selectedExportJuntaId}
+      />
 
       <ConfirmAnularMovimientoDialog
         loading={cajaMovimientos.anularLoading}

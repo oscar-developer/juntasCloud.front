@@ -1,6 +1,9 @@
 import { useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTenant } from '../../../tenant/context/TenantContext';
+import { getJuntasDirectivas } from '../../../juntasDirectivas/services/juntasDirectivas.service';
+import type { JuntaDirectiva } from '../../../juntasDirectivas/types';
 import {
   getCajaMovimientoErrorMessage,
   getCajaMovimientoLabel,
@@ -12,6 +15,11 @@ import {
   getMovimientos,
   updateMovimiento,
 } from '../services/cajaMovimientos.service';
+import {
+  exportRendicionCuentasToExcel,
+  exportRendicionCuentasToPdf,
+} from '../services/cajaRendicionExport.service';
+import { getRendicionCuentas } from '../services/reportesCaja.service';
 import type {
   CajaMovimiento,
   CajaMovimientoListItem,
@@ -51,6 +59,7 @@ function buildListQuery(
 
 export function useCajaMovimientos() {
   const { tenantId } = useParams<{ tenantId: string }>();
+  const { tenant } = useTenant();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [rows, setRows] = useState<CajaMovimientoListItem[]>([]);
@@ -72,6 +81,12 @@ export function useCajaMovimientos() {
   const [formLoadError, setFormLoadError] = useState<string | null>(null);
   const [anularTarget, setAnularTarget] = useState<CajaMovimientoListItem | null>(null);
   const [anularLoading, setAnularLoading] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [juntas, setJuntas] = useState<JuntaDirectiva[]>([]);
+  const [selectedExportJuntaId, setSelectedExportJuntaId] = useState('');
+  const [exportContextLoading, setExportContextLoading] = useState(false);
+  const [exportContextError, setExportContextError] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(initialToastState);
 
   useEffect(() => {
@@ -180,6 +195,69 @@ export function useCajaMovimientos() {
     };
   }, [editingMovimientoId, formMode, formOpen, tenantId]);
 
+  useEffect(() => {
+    if (!exportOpen) {
+      setExportContextError(null);
+      return;
+    }
+
+    if (!tenantId) {
+      setJuntas([]);
+      setSelectedExportJuntaId('');
+      setExportContextLoading(false);
+      setExportContextError('No se pudo identificar la junta activa.');
+      return;
+    }
+
+    const controller = new AbortController();
+
+    const loadJuntas = async () => {
+      setExportContextLoading(true);
+      setExportContextError(null);
+
+      try {
+        const juntasResponse = await getJuntasDirectivas(
+          tenantId,
+          { estado: 'TODOS', from: '', to: '' },
+          controller.signal,
+        );
+
+        if (!controller.signal.aborted) {
+          setJuntas(juntasResponse);
+          setSelectedExportJuntaId((current) => {
+            if (current && juntasResponse.some((junta) => String(junta.idJunta) === current)) {
+              return current;
+            }
+
+            const defaultJunta = juntasResponse.find((junta) => junta.estado === 'VIGENTE') ?? juntasResponse[0];
+            return defaultJunta ? String(defaultJunta.idJunta) : '';
+          });
+        }
+      } catch (loadError) {
+        if (!controller.signal.aborted) {
+          setJuntas([]);
+          setSelectedExportJuntaId('');
+          setExportContextError(
+            getCajaMovimientoErrorMessage(
+              loadError,
+              'No se pudieron cargar las juntas directivas para exportar.',
+            ),
+          );
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setExportContextLoading(false);
+        }
+      }
+    };
+
+    void loadJuntas();
+
+    return () => {
+      controller.abort();
+    };
+  }, [exportOpen, tenantId]);
+
   const showEmptyState = !initialLoading && !error && rows.length === 0;
 
   const showMessage = (message: string, severity: ToastState['severity']) => {
@@ -198,6 +276,16 @@ export function useCajaMovimientos() {
     setFromFilter('');
     setToFilter('');
     setTipoFilter('TODOS');
+  };
+
+  const openExportDialog = () => {
+    setExportOpen(true);
+  };
+
+  const closeExportDialog = () => {
+    if (!exportLoading) {
+      setExportOpen(false);
+    }
   };
 
   const handlePageChange = (nextPage: number) => {
@@ -298,6 +386,52 @@ export function useCajaMovimientos() {
     }
   };
 
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    if (!tenantId) {
+      showMessage('No se pudo identificar la junta activa.', 'error');
+      return;
+    }
+
+    if (!selectedExportJuntaId) {
+      showMessage('Selecciona una junta directiva para exportar.', 'warning');
+      return;
+    }
+
+    const selectedJunta = juntas.find((junta) => String(junta.idJunta) === selectedExportJuntaId);
+
+    if (!selectedJunta) {
+      showMessage('No se pudo identificar la junta directiva seleccionada.', 'error');
+      return;
+    }
+
+    setExportLoading(true);
+
+    try {
+      const report = await getRendicionCuentas(tenantId, selectedExportJuntaId);
+      const metadata = {
+        tenantName: tenant?.nombre ?? 'Junta activa',
+        junta: selectedJunta,
+      };
+
+      if (format === 'pdf') {
+        exportRendicionCuentasToPdf(report, metadata);
+        showMessage('Rendición de cuentas exportada en formato PDF.', 'success');
+      } else {
+        exportRendicionCuentasToExcel(report, metadata);
+        showMessage('Rendición de cuentas exportada en formato Excel.', 'success');
+      }
+
+      setExportOpen(false);
+    } catch (exportError) {
+      showMessage(
+        getCajaMovimientoErrorMessage(exportError, 'No se pudo exportar la rendición de cuentas.'),
+        'error',
+      );
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   return {
     tenantId,
     isDesktop,
@@ -314,6 +448,16 @@ export function useCajaMovimientos() {
     tipoFilter,
     setTipoFilter,
     clearFilters,
+    exportOpen,
+    exportLoading,
+    juntas,
+    selectedExportJuntaId,
+    setSelectedExportJuntaId,
+    exportContextLoading,
+    exportContextError,
+    openExportDialog,
+    closeExportDialog,
+    handleExport,
     retry,
     showEmptyState,
     handlePageChange,

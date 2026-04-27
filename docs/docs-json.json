@@ -5542,6 +5542,54 @@
                     "credito-movimientos"
                 ]
             }
+        },
+        "/api/reportes/rendicion-cuentas": {
+            "get": {
+                "operationId": "ReportesCajaController_getRendicionCuentas",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idJunta",
+                        "required": true,
+                        "in": "query",
+                        "description": "id_junta dentro del tenant activo",
+                        "schema": {
+                            "minimum": 1,
+                            "example": 1,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RendicionCuentasResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener reporte de rendicion de cuentas por junta directiva",
+                "tags": [
+                    "reportes"
+                ]
+            }
         }
     },
     "info": {
@@ -9352,6 +9400,144 @@
                     "referenciaId",
                     "observaciones",
                     "createdByUser"
+                ]
+            },
+            "RendicionCuentasPeriodoDto": {
+                "type": "object",
+                "properties": {
+                    "fechaInicio": {
+                        "type": "object",
+                        "example": "2026-01-01"
+                    },
+                    "fechaFin": {
+                        "type": "object",
+                        "example": "2026-12-31"
+                    }
+                },
+                "required": [
+                    "fechaInicio",
+                    "fechaFin"
+                ]
+            },
+            "RendicionCuentasResumenDto": {
+                "type": "object",
+                "properties": {
+                    "saldoInicial": {
+                        "type": "number",
+                        "example": 1000
+                    },
+                    "totalIngresos": {
+                        "type": "number",
+                        "example": 5000
+                    },
+                    "totalGastos": {
+                        "type": "number",
+                        "example": 2500
+                    },
+                    "saldoFinal": {
+                        "type": "number",
+                        "example": 3500
+                    }
+                },
+                "required": [
+                    "saldoInicial",
+                    "totalIngresos",
+                    "totalGastos",
+                    "saldoFinal"
+                ]
+            },
+            "RendicionCuentasCategoriaDto": {
+                "type": "object",
+                "properties": {
+                    "tipo": {
+                        "type": "object",
+                        "example": "INGRESO"
+                    },
+                    "categoria": {
+                        "type": "object",
+                        "example": "Cuotas"
+                    },
+                    "total": {
+                        "type": "number",
+                        "example": 1500
+                    }
+                },
+                "required": [
+                    "tipo",
+                    "categoria",
+                    "total"
+                ]
+            },
+            "RendicionCuentasDetalleMovimientoDto": {
+                "type": "object",
+                "properties": {
+                    "fecha": {
+                        "type": "object",
+                        "example": "2026-04-26"
+                    },
+                    "tipo": {
+                        "type": "object",
+                        "example": "INGRESO"
+                    },
+                    "categoria": {
+                        "type": "object",
+                        "example": "Cuotas"
+                    },
+                    "descripcion": {
+                        "type": "object",
+                        "example": "Ingreso comunal"
+                    },
+                    "monto": {
+                        "type": "number",
+                        "example": 500
+                    },
+                    "medioPago": {
+                        "type": "object",
+                        "example": "TRANSFERENCIA"
+                    },
+                    "docReferencia": {
+                        "type": "object",
+                        "example": "REC-0001",
+                        "nullable": true
+                    }
+                },
+                "required": [
+                    "fecha",
+                    "tipo",
+                    "categoria",
+                    "descripcion",
+                    "monto",
+                    "medioPago",
+                    "docReferencia"
+                ]
+            },
+            "RendicionCuentasResponseDto": {
+                "type": "object",
+                "properties": {
+                    "periodo": {
+                        "$ref": "#/components/schemas/RendicionCuentasPeriodoDto"
+                    },
+                    "resumen": {
+                        "$ref": "#/components/schemas/RendicionCuentasResumenDto"
+                    },
+                    "porCategoria": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RendicionCuentasCategoriaDto"
+                        }
+                    },
+                    "detalleMovimientos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RendicionCuentasDetalleMovimientoDto"
+                        }
+                    }
+                },
+                "required": [
+                    "periodo",
+                    "resumen",
+                    "porCategoria",
+                    "detalleMovimientos"
                 ]
             }
         }

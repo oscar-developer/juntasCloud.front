@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { env } from '../config/env';
-import { getToken } from '../shared/auth/authStorage';
+import { clearToken, getToken } from '../shared/auth/authStorage';
+import { navigateToLogin } from '../shared/auth/navigation';
 
 export const apiClient = axios.create({
   baseURL: env.apiBaseUrl,
@@ -18,3 +19,15 @@ apiClient.interceptors.request.use((config) => {
 
   return config;
 });
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      clearToken();
+      navigateToLogin();
+    }
+
+    return Promise.reject(error);
+  },
+);
