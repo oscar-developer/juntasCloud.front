@@ -4036,7 +4036,17 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Retorna un arreglo o un envelope paginado."
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CajaMovimientoListDto"
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 "security": [
@@ -8334,6 +8344,49 @@
                     "anuladoAt",
                     "anuladoByUser",
                     "motivoAnulacion"
+                ]
+            },
+            "CajaMovimientoListDto": {
+                "type": "object",
+                "properties": {
+                    "idMovimiento": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "fecha": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-03-01T00:00:00.000Z"
+                    },
+                    "tipo": {
+                        "type": "string",
+                        "example": "INGRESO"
+                    },
+                    "monto": {
+                        "type": "number",
+                        "example": 100.5
+                    },
+                    "descripcion": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "Aporte comunal"
+                    },
+                    "medioPago": {
+                        "type": "string",
+                        "nullable": true,
+                        "example": "YAPE"
+                    },
+                    "anulado": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "required": [
+                    "idMovimiento",
+                    "fecha",
+                    "tipo",
+                    "monto",
+                    "anulado"
                 ]
             },
             "UpdateCajaMovimientoDto": {
