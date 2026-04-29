@@ -69,7 +69,7 @@ export function PersonaMobileList({
         <Box sx={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
           {virtualItems.map((virtualRow) => {
             const persona = rows[virtualRow.index];
-            const displayNumber = Math.max(total - virtualRow.index, 1);
+            const displayNumber = virtualRow.index + 1;
 
             if (!persona) {
               return null;
