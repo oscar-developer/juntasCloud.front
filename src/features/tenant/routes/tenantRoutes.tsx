@@ -19,7 +19,7 @@ import { PersonasPage } from '../../personas/pages/PersonasPage';
 import { TerrenosPage } from '../../terrenos/pages/TerrenosPage';
 import { TenantInvitationsPage } from '../../tenantAdmin/pages/TenantInvitationsPage';
 import { TenantMembersPage } from '../../tenantAdmin/pages/TenantMembersPage';
-import { TenantRolesPage } from '../../tenantAdmin/pages/TenantRolesPage';
+import { TenantPerfilesPage } from '../../tenantAdmin/pages/TenantRolesPage';
 import { TenantSettingsPage } from '../../tenantAdmin/pages/TenantSettingsPage';
 import { TenantDashboardPage } from '../../tenantDashboard/pages/TenantDashboardPage';
 
@@ -117,8 +117,8 @@ export const tenantRouteChildren: RouteObject[] = [
     element: <TenantInvitationsPage />,
   },
   {
-    path: 'admin/roles',
-    element: <TenantRolesPage />,
+    path: 'admin/perfiles',
+    element: <TenantPerfilesPage />,
   },
   {
     path: 'admin/configuracion',

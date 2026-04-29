@@ -210,8 +210,8 @@ export function TenantSidebar({
           icon: <ArticleRoundedIcon />,
         },
         {
-          label: 'Roles',
-          to: `${tenantBasePath}/admin/roles`,
+          label: 'Perfiles',
+          to: `${tenantBasePath}/admin/perfiles`,
           icon: <SupervisorAccountRoundedIcon />,
         },
         {

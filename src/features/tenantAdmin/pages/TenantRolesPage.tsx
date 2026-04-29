@@ -1,10 +1,10 @@
 import { TenantModulePageShell } from '../../tenant/components/TenantModulePageShell';
 
-export function TenantRolesPage() {
+export function TenantPerfilesPage() {
   return (
     <TenantModulePageShell
-      description="Configura roles OWNER, ADMIN y MEMBER dentro del tenant."
-      title="Roles"
+      description="Configura Perfiles dentro del tenant."
+      title="Perfiles"
     />
   );
 }

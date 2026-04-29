@@ -15,6 +15,36 @@
                 ]
             }
         },
+        "/api/app-modules": {
+            "get": {
+                "operationId": "AppModulesController_findAll",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppModuleResponseDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Listar modulos globales de la aplicacion",
+                "tags": [
+                    "app-modules"
+                ]
+            }
+        },
         "/api/auth-users": {
             "post": {
                 "operationId": "AuthUsersController_create",
@@ -689,6 +719,39 @@
                     }
                 ],
                 "summary": "Eliminar tenant por id_tenant",
+                "tags": [
+                    "tenants"
+                ]
+            }
+        },
+        "/api/tenants/{id}/permanent": {
+            "delete": {
+                "operationId": "TenantsController_removePermanent",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "description": "id_tenant de tenants",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Tenant eliminado definitivamente"
+                    },
+                    "403": {
+                        "description": "Solo el owner del tenant puede eliminarlo definitivamente."
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Eliminar definitivamente un tenant por id_tenant",
                 "tags": [
                     "tenants"
                 ]
@@ -5590,6 +5653,654 @@
                     "reportes"
                 ]
             }
+        },
+        "/api/reportes/dashboard": {
+            "get": {
+                "operationId": "DashboardController_getDashboard",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener dashboard general del tenant activo",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/reportes/personas/{personaId}/extracto": {
+            "get": {
+                "operationId": "DeudasPersonaController_getExtracto",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "personaId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener extracto consolidado de una persona",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/reportes/personas/{personaId}/deuda": {
+            "get": {
+                "operationId": "DeudasPersonaController_getDeuda",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "personaId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener resumen de deuda de una persona",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/reportes/personas/{personaId}/faenas": {
+            "get": {
+                "operationId": "DeudasPersonaController_getFaenas",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "personaId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener resumen de faenas de una persona",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/reportes/personas/{personaId}/asambleas": {
+            "get": {
+                "operationId": "DeudasPersonaController_getAsambleas",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "personaId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener resumen de asambleas de una persona",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/reportes/top-deudores": {
+            "get": {
+                "operationId": "TopController_getTopDeudores",
+                "parameters": [
+                    {
+                        "name": "X-Tenant-Id",
+                        "in": "header",
+                        "description": "Tenant activo",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "limite",
+                        "required": false,
+                        "in": "query",
+                        "description": "Cantidad maxima de personas a retornar",
+                        "schema": {
+                            "minimum": 1,
+                            "default": 10,
+                            "example": 10,
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "additionalProperties": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener top deudores del tenant activo",
+                "tags": [
+                    "reportes"
+                ]
+            }
+        },
+        "/api/tenants/{tenantId}/profiles": {
+            "get": {
+                "operationId": "TenantProfilesController_findAll",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TenantProfileResponseDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Listar perfiles del tenant",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            },
+            "post": {
+                "operationId": "TenantProfilesController_create",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateTenantProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TenantProfileResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Crear perfil del tenant",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            }
+        },
+        "/api/tenants/{tenantId}/profiles/{id}": {
+            "get": {
+                "operationId": "TenantProfilesController_findOne",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TenantProfileResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Obtener detalle de perfil",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            },
+            "put": {
+                "operationId": "TenantProfilesController_update",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateTenantProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TenantProfileResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Actualizar perfil del tenant",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            },
+            "delete": {
+                "operationId": "TenantProfilesController_remove",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": ""
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Eliminar perfil del tenant",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            }
+        },
+        "/api/tenants/{tenantId}/profiles/{profileId}/modules": {
+            "get": {
+                "operationId": "TenantProfilesController_findModules",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "profileId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TenantProfileModuleResponseDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Listar modulos configurados para un perfil",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            },
+            "put": {
+                "operationId": "TenantProfilesController_replaceModules",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "profileId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/TenantProfileModuleConfigDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/TenantProfileModuleResponseDto"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Reemplazar configuracion completa de modulos del perfil",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            }
+        },
+        "/api/tenants/{tenantId}/users/{userId}/profile": {
+            "patch": {
+                "operationId": "TenantProfilesController_updateUserProfile",
+                "parameters": [
+                    {
+                        "name": "tenantId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateTenantUserProfileDto"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TenantProfileResponseDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearer": []
+                    }
+                ],
+                "summary": "Modificar perfil de un usuario del tenant",
+                "tags": [
+                    "tenant-profiles"
+                ]
+            }
         }
     },
     "info": {
@@ -5609,6 +6320,38 @@
             }
         },
         "schemas": {
+            "AppModuleResponseDto": {
+                "type": "object",
+                "properties": {
+                    "moduleCode": {
+                        "type": "string",
+                        "example": "personas"
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Personas"
+                    },
+                    "grupo": {
+                        "type": "string",
+                        "example": "Padron"
+                    },
+                    "orden": {
+                        "type": "number",
+                        "example": 10
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "required": [
+                    "moduleCode",
+                    "nombre",
+                    "grupo",
+                    "orden",
+                    "activo"
+                ]
+            },
             "CreateAuthUserDto": {
                 "type": "object",
                 "properties": {
@@ -9538,6 +10281,163 @@
                     "resumen",
                     "porCategoria",
                     "detalleMovimientos"
+                ]
+            },
+            "TenantProfileResponseDto": {
+                "type": "object",
+                "properties": {
+                    "idTenant": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "idProfile": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "nombre": {
+                        "type": "string",
+                        "example": "Administrador"
+                    },
+                    "descripcion": {
+                        "type": "object",
+                        "example": "Perfil con acceso administrativo",
+                        "nullable": true
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "required": [
+                    "idTenant",
+                    "idProfile",
+                    "nombre",
+                    "activo"
+                ]
+            },
+            "CreateTenantProfileDto": {
+                "type": "object",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Administrador",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "object",
+                        "example": "Perfil con acceso administrativo"
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                },
+                "required": [
+                    "nombre"
+                ]
+            },
+            "UpdateTenantProfileDto": {
+                "type": "object",
+                "properties": {
+                    "nombre": {
+                        "type": "string",
+                        "example": "Administrador",
+                        "maxLength": 100
+                    },
+                    "descripcion": {
+                        "type": "object",
+                        "example": "Perfil con acceso administrativo"
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "default": true
+                    }
+                }
+            },
+            "TenantProfileModuleResponseDto": {
+                "type": "object",
+                "properties": {
+                    "idTenant": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "idProfile": {
+                        "type": "number",
+                        "example": 1
+                    },
+                    "moduleCode": {
+                        "type": "string",
+                        "example": "personas"
+                    },
+                    "moduleName": {
+                        "type": "string",
+                        "example": "Personas"
+                    },
+                    "grupo": {
+                        "type": "string",
+                        "example": "Padron"
+                    },
+                    "orden": {
+                        "type": "number",
+                        "example": 10
+                    },
+                    "activo": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "accessLevel": {
+                        "type": "string",
+                        "enum": [
+                            "SIN_ACCESO",
+                            "SOLO_LECTURA",
+                            "ACCESO_TOTAL"
+                        ]
+                    }
+                },
+                "required": [
+                    "idTenant",
+                    "idProfile",
+                    "moduleCode",
+                    "moduleName",
+                    "grupo",
+                    "orden",
+                    "activo",
+                    "accessLevel"
+                ]
+            },
+            "TenantProfileModuleConfigDto": {
+                "type": "object",
+                "properties": {
+                    "moduleCode": {
+                        "type": "string",
+                        "example": "personas",
+                        "maxLength": 80
+                    },
+                    "accessLevel": {
+                        "type": "string",
+                        "enum": [
+                            "SIN_ACCESO",
+                            "SOLO_LECTURA",
+                            "ACCESO_TOTAL"
+                        ],
+                        "example": "ACCESO_TOTAL"
+                    }
+                },
+                "required": [
+                    "moduleCode",
+                    "accessLevel"
+                ]
+            },
+            "UpdateTenantUserProfileDto": {
+                "type": "object",
+                "properties": {
+                    "id_profile": {
+                        "type": "number",
+                        "example": 1
+                    }
+                },
+                "required": [
+                    "id_profile"
                 ]
             }
         }
