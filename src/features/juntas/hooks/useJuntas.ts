@@ -186,7 +186,7 @@ export function useJuntas() {
         current.filter((tenant) => String(tenant.idTenant) !== String(deleteTarget.idTenant)),
       );
       setDeleteTarget(null);
-      showMessage('Junta eliminada correctamente', 'success');
+      showMessage('Junta eliminada permanentemente', 'success');
     } catch (deleteError) {
       showMessage(getErrorMessage(deleteError), 'error');
     } finally {

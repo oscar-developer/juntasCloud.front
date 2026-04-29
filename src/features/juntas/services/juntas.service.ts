@@ -93,7 +93,7 @@ export async function updateTenant(
 
 export async function deleteTenant(id: string | number): Promise<void> {
   try {
-    await apiClient.delete(`${TENANTS_BASE_PATH}/${id}`);
+    await apiClient.delete(`${TENANTS_BASE_PATH}/${id}/permanent`);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
