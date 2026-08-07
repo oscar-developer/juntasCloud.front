@@ -1,4 +1,4 @@
-export type TenantStatus = 'ACTIVO' | 'INACTIVO';
+export type TenantStatus = 'ACTIVO' | 'INACTIVO' | 'SUSPENDIDO';
 export type TenantDocumentType = 'RUC' | 'DNI' | 'OTRO';
 
 export type Tenant = {

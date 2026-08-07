@@ -1,4 +1,5 @@
 import DashboardRoundedIcon from '@mui/icons-material/DashboardRounded';
+import DeleteSweepRoundedIcon from '@mui/icons-material/DeleteSweepRounded';
 import { Avatar } from '@mui/material';
 import ExpandLessRoundedIcon from '@mui/icons-material/ExpandLessRounded';
 import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
@@ -39,6 +40,7 @@ type NavItem = {
 
 const primaryItems: NavItem[] = [
   { label: 'Juntas', path: '/app/juntas', icon: <DashboardRoundedIcon /> },
+  { label: 'Papelera', path: '/app/juntas/papelera', icon: <DeleteSweepRoundedIcon /> },
   { label: 'Invitaciones', path: '/app/invitations', icon: <MailOutlineRoundedIcon /> },
   { label: 'Ayuda', path: '/app/help', icon: <HelpOutlineRoundedIcon /> },
 ];
@@ -168,7 +170,7 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
       <Divider />
 
       <List sx={{ px: 2, py: 2.5, flexGrow: 1 }}>
-        {primaryItems.slice(0, 2).map((item) => {
+        {primaryItems.slice(0, 3).map((item) => {
           const selected = location.pathname === item.path;
 
           return (
@@ -244,7 +246,7 @@ export function SideNav({ drawerWidth, mobileOpen, onClose }: SideNavProps) {
           </List>
         </Collapse>
 
-        {primaryItems.slice(2).map((item) => {
+        {primaryItems.slice(3).map((item) => {
           const selected = location.pathname === item.path;
 
           return (

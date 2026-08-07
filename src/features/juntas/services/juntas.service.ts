@@ -1,6 +1,11 @@
 import axios from 'axios';
 import { apiClient } from '../../../api/axios';
-import type { CreateTenantPayload, Tenant, UpdateTenantPayload } from '../types';
+import type { CreateTenantPayload, Tenant, TenantStatus, UpdateTenantPayload } from '../types';
+
+type GetTenantsOptions = {
+  estado?: TenantStatus;
+  signal?: AbortSignal;
+};
 
 function resolveTenantsBasePath() {
   const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
@@ -49,9 +54,14 @@ function getErrorMessage(error: unknown) {
   return 'No se pudo completar la operación de juntas.';
 }
 
-export async function getTenants(signal?: AbortSignal): Promise<Tenant[]> {
+export async function getTenants(options: GetTenantsOptions = {}): Promise<Tenant[]> {
   try {
-    const response = await apiClient.get<Tenant[]>(TENANTS_BASE_PATH, { signal });
+    const response = await apiClient.get<Tenant[]>(TENANTS_BASE_PATH, {
+      params: {
+        estado: options.estado,
+      },
+      signal: options.signal,
+    });
     return response.data;
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -91,10 +101,24 @@ export async function updateTenant(
   }
 }
 
-export async function deleteTenant(id: string | number): Promise<void> {
+export async function sendTenantToTrash(id: string | number): Promise<void> {
+  try {
+    await apiClient.delete(`${TENANTS_BASE_PATH}/${id}`);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function deleteTenantPermanently(id: string | number): Promise<void> {
   try {
     await apiClient.delete(`${TENANTS_BASE_PATH}/${id}/permanent`);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
+}
+
+export async function restoreTenant(_id: string | number): Promise<void> {
+  // Pendiente de backend: conectar a un endpoint como PATCH /tenants/{id}/restore
+  // que invoque public.restaurar_tenant(...).
+  throw new Error('La restauración de juntas todavía no está disponible en el backend.');
 }

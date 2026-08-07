@@ -5,8 +5,8 @@ import { getToken } from '../../../shared/auth/authStorage';
 import { getUserIdFromToken } from '../../../shared/auth/jwt';
 import {
   createTenant,
-  deleteTenant,
   getTenants,
+  sendTenantToTrash,
   updateTenant,
 } from '../services/juntas.service';
 import type { CreateTenantPayload, Tenant } from '../types';
@@ -55,7 +55,7 @@ export function useJuntas() {
       setError(null);
 
       try {
-        const response = await getTenants(controller.signal);
+        const response = await getTenants({ estado: 'ACTIVO', signal: controller.signal });
 
         if (!controller.signal.aborted) {
           setTenants(response);
@@ -181,12 +181,12 @@ export function useJuntas() {
     setDeleteLoadingId(deleteTarget.idTenant);
 
     try {
-      await deleteTenant(deleteTarget.idTenant);
+      await sendTenantToTrash(deleteTarget.idTenant);
       setTenants((current) =>
         current.filter((tenant) => String(tenant.idTenant) !== String(deleteTarget.idTenant)),
       );
       setDeleteTarget(null);
-      showMessage('Junta eliminada permanentemente', 'success');
+      showMessage('Junta enviada a la papelera', 'success');
     } catch (deleteError) {
       showMessage(getErrorMessage(deleteError), 'error');
     } finally {

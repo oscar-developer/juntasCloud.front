@@ -11,6 +11,7 @@ import { VerifyEmailPage } from '../features/auth/pages/VerifyEmailPage';
 import { HelpPage } from '../features/help/pages/HelpPage';
 import { InvitationsPage } from '../features/invitations/pages/InvitationsPage';
 import { JuntasListPage } from '../features/juntas/pages/JuntasListPage';
+import { TenantTrashPage } from '../features/juntas/pages/TenantTrashPage';
 import { TenantProvider } from '../features/tenant/context/TenantContext';
 import { TenantLayout } from '../features/tenant/layout/TenantLayout';
 import { tenantRouteChildren } from '../features/tenant/routes/tenantRoutes';
@@ -70,6 +71,10 @@ export function AppRoutes() {
             {
               path: 'juntas',
               element: <JuntasListPage />,
+            },
+            {
+              path: 'juntas/papelera',
+              element: <TenantTrashPage />,
             },
             {
               path: 'invitations',

@@ -146,7 +146,7 @@ export function TenantCard({
                 <EditRoundedIcon />
               </IconButton>
               <IconButton
-                aria-label="Eliminar junta"
+                aria-label="Enviar junta a la papelera"
                 color="error"
                 disabled={isDeleting}
                 onClick={onDelete}

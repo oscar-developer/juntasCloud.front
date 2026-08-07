@@ -13,7 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import { Toast } from '../../../shared/ui/Toast';
-import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
+import { ConfirmTrashDialog } from '../components/ConfirmTrashDialog';
 import { TenantCard } from '../components/TenantCard';
 import { TenantFormDialog } from '../components/TenantFormDialog';
 import { useJuntas } from '../hooks/useJuntas';
@@ -131,7 +131,7 @@ export function TenantsPage() {
         submitting={juntas.submitting}
       />
 
-      <ConfirmDeleteDialog
+      <ConfirmTrashDialog
         loading={
           juntas.deleteTarget !== null &&
           juntas.deleteLoadingId !== null &&
