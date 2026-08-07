@@ -22,12 +22,12 @@ export type FaenaCreateDto = {
   horaInicio?: string;
   horaFin?: string;
   descripcion: string;
-  lugar?: string;
-  tipoFaena: FaenaTipo;
-  esObligatoria: boolean;
-  estado: FaenaEstado;
-  montoMultaBase?: number;
-  observaciones?: string;
+  lugar?: string | null;
+  tipoFaena?: FaenaTipo;
+  esObligatoria?: boolean;
+  estado?: FaenaEstado;
+  montoMultaBase?: number | null;
+  observaciones?: string | null;
 };
 
 export type FaenaUpdateDto = Partial<FaenaCreateDto>;

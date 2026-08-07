@@ -63,10 +63,10 @@ const getTodayDateString = () => {
 function mapBienToFormState(bien: Bien): BienFormState {
   return {
     descripcion: bien.descripcion,
-    tipo: bien.tipo,
+    tipo: bien.tipo ?? '',
     cantidad: String(bien.cantidad),
-    valorEstimado: String(bien.valorEstimado),
-    ubicacion: bien.ubicacion,
+    valorEstimado: bien.valorEstimado === null ? '' : String(bien.valorEstimado),
+    ubicacion: bien.ubicacion ?? '',
     fechaAlta: bien.fechaAlta ? bien.fechaAlta.slice(0, 10) : '',
     fechaBaja: bien.fechaBaja ? bien.fechaBaja.slice(0, 10) : '',
     estado: bien.estado,
@@ -77,14 +77,14 @@ function mapBienToFormState(bien: Bien): BienFormState {
 function mapFormToPayload(formState: BienFormState): BienCreateDto {
   return {
     descripcion: formState.descripcion.trim(),
-    tipo: formState.tipo.trim(),
+    tipo: formState.tipo.trim() || null,
     cantidad: Number(formState.cantidad),
-    valorEstimado: Number(formState.valorEstimado),
-    ubicacion: formState.ubicacion.trim(),
+    valorEstimado: formState.valorEstimado.trim() ? Number(formState.valorEstimado) : null,
+    ubicacion: formState.ubicacion.trim() || null,
     fechaAlta: formState.fechaAlta,
-    fechaBaja: formState.fechaBaja || undefined,
+    fechaBaja: formState.fechaBaja || null,
     estado: formState.estado,
-    observaciones: formState.observaciones.trim() || undefined,
+    observaciones: formState.observaciones.trim() || null,
   };
 }
 

@@ -57,11 +57,11 @@ function resolveApiPath(path: string) {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? normalizedPath : `/api${normalizedPath}`;
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? normalizedPath : `/api${normalizedPath}`;
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? normalizedPath : `/api${normalizedPath}`;
   }
 }
 

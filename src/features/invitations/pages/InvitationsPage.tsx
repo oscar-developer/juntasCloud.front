@@ -50,6 +50,10 @@ function getActionErrorMessage(error: unknown, action: 'accept' | 'reject') {
     return error.message;
   }
 
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
   return action === 'accept'
     ? 'No se pudo aceptar la invitación. Inténtalo nuevamente.'
     : 'No se pudo rechazar la invitación. Inténtalo nuevamente.';
@@ -139,11 +143,11 @@ export function InvitationsPage() {
     try {
       const updatedInvitation =
         action === 'accept'
-          ? await acceptInvitation(invitation.idInvitation)
-          : await rejectInvitation(invitation.idInvitation);
+          ? await acceptInvitation(invitation)
+          : await rejectInvitation(invitation);
 
       setRows((current) =>
-        applyActionResult(current, updatedInvitation, action === 'accept' ? 'ACCEPTED' : 'REVOKED'),
+        applyActionResult(current, updatedInvitation, action === 'accept' ? 'ACCEPTED' : 'REJECTED'),
       );
       handleShowMessage(
         action === 'accept' ? 'Invitación aceptada correctamente.' : 'Invitación rechazada correctamente.',

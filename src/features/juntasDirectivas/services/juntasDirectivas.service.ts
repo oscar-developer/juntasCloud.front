@@ -26,11 +26,11 @@ function resolveJuntasDirectivasBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/juntas-directivas' : '/api/juntas-directivas';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/juntas-directivas'
       : '/api/juntas-directivas';
   }
@@ -114,9 +114,9 @@ function normalizeJuntaDirectiva(raw: JuntaDirectivaApiShape): JuntaDirectiva {
     idJunta: raw.idJunta ?? raw.id_junta ?? '',
     idTenant: raw.idTenant ?? raw.id_tenant ?? '',
     nombre: raw.nombre ?? '',
-    fechaEleccion: raw.fechaEleccion ?? raw.fecha_eleccion ?? '',
+    fechaEleccion: raw.fechaEleccion ?? raw.fecha_eleccion ?? null,
     fechaInicio: raw.fechaInicio ?? raw.fecha_inicio ?? '',
-    fechaFin: raw.fechaFin ?? raw.fecha_fin ?? '',
+    fechaFin: raw.fechaFin ?? raw.fecha_fin ?? null,
     estado: raw.estado ?? 'PROYECTADA',
     documentoSustento: raw.documentoSustento ?? raw.documento_sustento ?? null,
     observaciones: raw.observaciones ?? null,
@@ -135,12 +135,20 @@ function normalizePayload(payload: JuntaDirectivaCreateDto | JuntaDirectivaUpdat
   };
 
   assign('nombre', payload.nombre?.trim());
-  assign('fechaEleccion', payload.fechaEleccion);
+  if (payload.fechaEleccion !== undefined) {
+    assign('fechaEleccion', payload.fechaEleccion || null);
+  }
   assign('fechaInicio', payload.fechaInicio);
-  assign('fechaFin', payload.fechaFin);
+  if (payload.fechaFin !== undefined) {
+    assign('fechaFin', payload.fechaFin || null);
+  }
   assign('estado', payload.estado);
-  assign('documentoSustento', payload.documentoSustento?.trim() || undefined);
-  assign('observaciones', payload.observaciones?.trim() || undefined);
+  if (payload.documentoSustento !== undefined) {
+    assign('documentoSustento', payload.documentoSustento?.trim() || null);
+  }
+  if (payload.observaciones !== undefined) {
+    assign('observaciones', payload.observaciones?.trim() || null);
+  }
 
   return normalizedPayload;
 }

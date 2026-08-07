@@ -26,11 +26,11 @@ function resolveBienesBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/bienes' : '/api/bienes';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/bienes' : '/api/bienes';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/bienes' : '/api/bienes';
   }
 }
 
@@ -64,10 +64,12 @@ function normalizeBien(raw: BienApiShape): Bien {
     idBien: raw.idBien ?? raw.id_bien ?? '',
     idTenant: raw.idTenant ?? raw.id_tenant ?? '',
     descripcion: raw.descripcion ?? raw.descripcion_bien ?? '',
-    tipo: raw.tipo ?? '',
+    tipo: raw.tipo ?? null,
     cantidad: normalizeNumber(raw.cantidad),
-    valorEstimado: normalizeNumber(raw.valorEstimado ?? raw.valor_estimado),
-    ubicacion: raw.ubicacion ?? '',
+    valorEstimado: raw.valorEstimado === null || raw.valor_estimado === null
+      ? null
+      : normalizeNumber(raw.valorEstimado ?? raw.valor_estimado),
+    ubicacion: raw.ubicacion ?? null,
     fechaAlta: raw.fechaAlta ?? raw.fecha_alta ?? '',
     fechaBaja: raw.fechaBaja ?? raw.fecha_baja ?? null,
     estado: raw.estado ?? 'BUENO',
@@ -87,14 +89,22 @@ function normalizePayload(payload: BienCreateDto | BienUpdateDto) {
   };
 
   assign('descripcion', payload.descripcion?.trim());
-  assign('tipo', payload.tipo?.trim());
+  if (payload.tipo !== undefined) {
+    assign('tipo', payload.tipo?.trim() || null);
+  }
   assign('cantidad', payload.cantidad);
   assign('valorEstimado', payload.valorEstimado);
-  assign('ubicacion', payload.ubicacion?.trim());
+  if (payload.ubicacion !== undefined) {
+    assign('ubicacion', payload.ubicacion?.trim() || null);
+  }
   assign('fechaAlta', payload.fechaAlta);
-  assign('fechaBaja', payload.fechaBaja || undefined);
+  if (payload.fechaBaja !== undefined) {
+    assign('fechaBaja', payload.fechaBaja || null);
+  }
   assign('estado', payload.estado);
-  assign('observaciones', payload.observaciones?.trim() || undefined);
+  if (payload.observaciones !== undefined) {
+    assign('observaciones', payload.observaciones?.trim() || null);
+  }
 
   return normalizedPayload;
 }

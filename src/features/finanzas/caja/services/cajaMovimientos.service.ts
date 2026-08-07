@@ -23,6 +23,9 @@ type MovimientosListEnvelope =
   | CajaMovimientoListApiShape[]
   | {
       items?: CajaMovimientoListApiShape[];
+      total?: number | string;
+      page?: number | string;
+      limit?: number | string;
       data?: CajaMovimientoListApiShape[] | { items?: CajaMovimientoListApiShape[] };
       results?: CajaMovimientoListApiShape[];
     };
@@ -36,11 +39,11 @@ function resolveCajaMovimientosBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/caja-movimientos' : '/api/caja-movimientos';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/caja-movimientos'
       : '/api/caja-movimientos';
   }
@@ -132,15 +135,35 @@ function normalizePayload(payload: CreateMovimientoDto | UpdateMovimientoDto) {
 
     normalizedPayload[key] = value;
   };
+  const has = (key: keyof CreateMovimientoDto) =>
+    Object.prototype.hasOwnProperty.call(payload, key);
 
   assign('fecha', payload.fecha);
   assign('tipo', payload.tipo);
   assign('monto', payload.monto);
   assign('idCategoriaCaja', payload.idCategoriaCaja);
   assign('medioPago', payload.medioPago);
-  assign('idPersona', payload.idPersona ?? null);
-  assign('idBien', payload.idBien ?? null);
-  assign('descripcion', payload.descripcion?.trim() || null);
+  if (has('idPersona')) {
+    assign('idPersona', payload.idPersona ?? null);
+  }
+  if (has('idFaena')) {
+    assign('idFaena', payload.idFaena ?? null);
+  }
+  if (has('idAsamblea')) {
+    assign('idAsamblea', payload.idAsamblea ?? null);
+  }
+  if (has('idBien')) {
+    assign('idBien', payload.idBien ?? null);
+  }
+  if (has('descripcion')) {
+    assign('descripcion', payload.descripcion?.trim() || null);
+  }
+  if (has('docReferencia')) {
+    assign('docReferencia', payload.docReferencia?.trim() || null);
+  }
+  if (has('observaciones')) {
+    assign('observaciones', payload.observaciones?.trim() || null);
+  }
 
   return normalizedPayload;
 }
@@ -210,12 +233,29 @@ function extractItems(data: MovimientosListEnvelope): CajaMovimientoListApiShape
   return [];
 }
 
+function getBodyTotal(data: MovimientosListEnvelope): number | null {
+  if (Array.isArray(data)) {
+    return null;
+  }
+
+  const rawTotal = data.total;
+  const parsed = Number(rawTotal);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function parseTotal(
   response: AxiosResponse<MovimientosListEnvelope>,
   page: number,
   limit: number,
   length: number,
 ) {
+  const bodyTotal = getBodyTotal(response.data);
+
+  if (bodyTotal !== null) {
+    return bodyTotal;
+  }
+
   const totalHeader = response.headers['x-total-count'];
   const parsed = Number(totalHeader);
 
@@ -279,6 +319,8 @@ export async function getMovimientos(
     return {
       items,
       total: parseTotal(response, query.page, query.limit, items.length),
+      page: Array.isArray(response.data) ? query.page : normalizeNumber(response.data.page) || query.page,
+      limit: Array.isArray(response.data) ? query.limit : normalizeNumber(response.data.limit) || query.limit,
     };
   } catch (error) {
     throw new Error(getErrorMessage(error));

@@ -9,16 +9,28 @@ export function getReceivedInvitations(signal?: AbortSignal): Promise<ReceivedIn
   });
 }
 
-export function acceptInvitation(invitationId: string | number): Promise<ReceivedInvitation> {
+function getInvitationToken(invitation: ReceivedInvitation): string {
+  const token = invitation.token?.trim();
+
+  if (!token) {
+    throw new Error('La API v4 requiere el token de invitación para procesar esta acción.');
+  }
+
+  return token;
+}
+
+export function acceptInvitation(invitation: ReceivedInvitation): Promise<ReceivedInvitation> {
   return request<ReceivedInvitation>({
-    path: `/me/invitations/${invitationId}/accept`,
+    path: '/me/invitations/accept',
     method: 'POST',
+    body: { token: getInvitationToken(invitation) },
   });
 }
 
-export function rejectInvitation(invitationId: string | number): Promise<ReceivedInvitation> {
+export function rejectInvitation(invitation: ReceivedInvitation): Promise<ReceivedInvitation> {
   return request<ReceivedInvitation>({
-    path: `/me/invitations/${invitationId}/reject`,
+    path: '/me/invitations/reject',
     method: 'POST',
+    body: { token: getInvitationToken(invitation) },
   });
 }

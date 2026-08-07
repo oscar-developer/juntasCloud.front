@@ -6,6 +6,7 @@ import type {
   AsambleaAttendanceListQuery,
   AsambleaAttendanceRecord,
   AsambleaAttendanceUpdateDto,
+  AnularAsambleaAttendanceDto,
 } from '../types';
 
 type TenantScopedConfig = {
@@ -24,10 +25,10 @@ function resolveAsambleasBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
     return hasApiInBase ? '/asambleas' : '/api/asambleas';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/asambleas' : '/api/asambleas';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/asambleas' : '/api/asambleas';
   }
 }
 
@@ -40,10 +41,10 @@ function resolveAsistenciaAsambleaBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
     return hasApiInBase ? '/asistencia-asamblea' : '/api/asistencia-asamblea';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/asistencia-asamblea'
       : '/api/asistencia-asamblea';
   }
@@ -223,6 +224,26 @@ export async function updateAsambleaAttendance(
     const response = await apiClient.patch<AsambleaAttendanceApiShape>(
       `${ASISTENCIA_ASAMBLEA_BASE_PATH}/${idAsistencia}`,
       normalizePayload(payload),
+      createTenantConfig(tenantId),
+    );
+
+    return normalizeAttendance(response.data);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function anularAsambleaAttendance(
+  tenantId: string | number,
+  idAsistencia: string | number,
+  payload: AnularAsambleaAttendanceDto,
+): Promise<AsambleaAttendanceRecord> {
+  try {
+    const response = await apiClient.post<AsambleaAttendanceApiShape>(
+      `${ASISTENCIA_ASAMBLEA_BASE_PATH}/${idAsistencia}/anular`,
+      {
+        motivoAnulacion: payload.motivoAnulacion.trim(),
+      },
       createTenantConfig(tenantId),
     );
 

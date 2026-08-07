@@ -42,7 +42,7 @@ function normalizeApiPath(path: string): string {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
   const baseUrl = getBaseUrl();
   const basePathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-  const hasApiInBase = basePathname === '/api' || basePathname.endsWith('/api');
+  const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(basePathname);
 
   if (hasApiInBase) {
     return normalizedPath;

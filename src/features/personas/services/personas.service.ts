@@ -59,11 +59,11 @@ function resolvePersonasBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/personas' : '/api/personas';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/personas' : '/api/personas';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/personas' : '/api/personas';
   }
 }
 

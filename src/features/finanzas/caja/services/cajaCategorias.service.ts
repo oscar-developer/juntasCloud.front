@@ -18,11 +18,11 @@ function resolveCajaCategoriasBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/caja-categorias' : '/api/caja-categorias';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/caja-categorias' : '/api/caja-categorias';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/caja-categorias' : '/api/caja-categorias';
   }
 }
 

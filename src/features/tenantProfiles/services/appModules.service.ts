@@ -15,11 +15,11 @@ function resolveAppModulesBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/app-modules' : '/api/app-modules';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/app-modules' : '/api/app-modules';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/app-modules' : '/api/app-modules';
   }
 }
 

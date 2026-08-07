@@ -25,10 +25,10 @@ function resolveFaenasBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
     return hasApiInBase ? '/faenas' : '/api/faenas';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/faenas' : '/api/faenas';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/faenas' : '/api/faenas';
   }
 }
 
@@ -41,10 +41,10 @@ function resolveFaenaParticipacionesBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
     return hasApiInBase ? '/faena-participaciones' : '/api/faena-participaciones';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/faena-participaciones'
       : '/api/faena-participaciones';
   }

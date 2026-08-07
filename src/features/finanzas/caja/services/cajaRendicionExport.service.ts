@@ -31,7 +31,7 @@ function getReportDate(generatedAt?: Date) {
   return (generatedAt ?? new Date()).toLocaleDateString();
 }
 
-function formatDate(value: string) {
+function formatDate(value: string | null) {
   if (!value) {
     return 'Sin fecha';
   }
@@ -56,11 +56,19 @@ function formatCurrency(value: number) {
   }).format(value);
 }
 
-function getTipoLabel(value: 'INGRESO' | 'GASTO') {
+function getTipoLabel(value: 'INGRESO' | 'GASTO' | null) {
+  if (!value) {
+    return 'Sin tipo';
+  }
+
   return value === 'INGRESO' ? 'Ingreso' : 'Egreso';
 }
 
-function getMedioPagoLabel(value: string) {
+function getMedioPagoLabel(value: string | null) {
+  if (!value) {
+    return 'Sin medio';
+  }
+
   const labels: Record<string, string> = {
     EFECTIVO: 'Efectivo',
     TRANSFERENCIA: 'Transferencia',
@@ -127,7 +135,11 @@ function buildDetalleRows(report: RendicionCuentasResponse): ExportCell[][] {
   ]);
 }
 
-function parseDateTime(value: string) {
+function parseDateTime(value: string | null) {
+  if (!value) {
+    return 0;
+  }
+
   const parsed = new Date(value).getTime();
 
   return Number.isNaN(parsed) ? 0 : parsed;

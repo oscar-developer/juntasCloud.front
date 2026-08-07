@@ -46,8 +46,12 @@ export type CreateMovimientoDto = {
   idCategoriaCaja: number;
   medioPago: CajaMedioPago;
   idPersona: number | null;
+  idFaena?: number | null;
+  idAsamblea?: number | null;
   idBien: number | null;
   descripcion: string | null;
+  docReferencia?: string | null;
+  observaciones?: string | null;
 };
 
 export type UpdateMovimientoDto = Partial<CreateMovimientoDto>;
@@ -72,6 +76,8 @@ export type CajaMovimientosQuery = {
 export type CajaMovimientosListResponse = {
   items: CajaMovimientoListItem[];
   total: number;
+  page?: number;
+  limit?: number;
 };
 
 export type CajaCategoriaOption = {
@@ -132,8 +138,8 @@ export type CajaCategoriaApiShape = {
 };
 
 export type RendicionCuentasPeriodo = {
-  fechaInicio: string;
-  fechaFin: string;
+  fechaInicio: string | null;
+  fechaFin: string | null;
 };
 
 export type RendicionCuentasResumen = {
@@ -144,18 +150,18 @@ export type RendicionCuentasResumen = {
 };
 
 export type RendicionCuentasCategoria = {
-  tipo: CajaMovimientoTipo;
-  categoria: string;
+  tipo: CajaMovimientoTipo | null;
+  categoria: string | null;
   total: number;
 };
 
 export type RendicionCuentasDetalleMovimiento = {
-  fecha: string;
-  tipo: CajaMovimientoTipo;
-  categoria: string;
-  descripcion: string;
+  fecha: string | null;
+  tipo: CajaMovimientoTipo | null;
+  categoria: string | null;
+  descripcion: string | null;
   monto: number;
-  medioPago: CajaMedioPago;
+  medioPago: CajaMedioPago | null;
   docReferencia: string | null;
 };
 

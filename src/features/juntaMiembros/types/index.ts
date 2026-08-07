@@ -13,7 +13,7 @@ export type JuntaMiembro = {
   idPersona: number | string;
   cargo: JuntaMiembroCargo;
   fechaInicio: string;
-  fechaFin: string;
+  fechaFin: string | null;
   observaciones?: string | null;
 };
 
@@ -22,7 +22,7 @@ export type JuntaMiembroCreateDto = {
   idPersona: number | string;
   cargo: JuntaMiembroCargo;
   fechaInicio: string;
-  fechaFin: string;
+  fechaFin?: string | null;
   observaciones?: string;
 };
 
@@ -51,7 +51,7 @@ export type JuntaMiembroApiShape = {
   cargo?: JuntaMiembroCargo;
   fechaInicio?: string;
   fecha_inicio?: string;
-  fechaFin?: string;
+  fechaFin?: string | null;
   fecha_fin?: string;
   observaciones?: string | null;
 };

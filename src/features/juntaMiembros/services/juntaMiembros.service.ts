@@ -26,11 +26,11 @@ function resolveJuntaMiembrosBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/junta-miembros' : '/api/junta-miembros';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/junta-miembros'
       : '/api/junta-miembros';
   }
@@ -117,7 +117,7 @@ function normalizeJuntaMiembro(raw: JuntaMiembroApiShape): JuntaMiembro {
     idPersona: raw.idPersona ?? raw.id_persona ?? '',
     cargo: raw.cargo ?? 'OTRO',
     fechaInicio: raw.fechaInicio ?? raw.fecha_inicio ?? '',
-    fechaFin: raw.fechaFin ?? raw.fecha_fin ?? '',
+    fechaFin: raw.fechaFin ?? raw.fecha_fin ?? null,
     observaciones: raw.observaciones ?? null,
   };
 }

@@ -44,6 +44,10 @@ export type AsambleaAttendanceCreateDto = {
 
 export type AsambleaAttendanceUpdateDto = Partial<AsambleaAttendanceCreateDto>;
 
+export type AnularAsambleaAttendanceDto = {
+  motivoAnulacion: string;
+};
+
 export type AsambleaAttendanceListQuery = {
   estado?: AsistenciaAsambleaEstado;
   anulado?: boolean;

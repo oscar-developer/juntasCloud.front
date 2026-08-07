@@ -4,9 +4,9 @@ export type JuntaDirectiva = {
   idJunta: number | string;
   idTenant: number | string;
   nombre: string;
-  fechaEleccion: string;
+  fechaEleccion: string | null;
   fechaInicio: string;
-  fechaFin: string;
+  fechaFin: string | null;
   estado: JuntaDirectivaEstado;
   documentoSustento?: string | null;
   observaciones?: string | null;
@@ -14,9 +14,9 @@ export type JuntaDirectiva = {
 
 export type JuntaDirectivaCreateDto = {
   nombre: string;
-  fechaEleccion: string;
+  fechaEleccion?: string | null;
   fechaInicio: string;
-  fechaFin: string;
+  fechaFin?: string | null;
   estado: JuntaDirectivaEstado;
   documentoSustento?: string;
   observaciones?: string;
@@ -38,11 +38,11 @@ export type JuntaDirectivaApiShape = {
   idTenant?: number | string;
   id_tenant?: number | string;
   nombre?: string;
-  fechaEleccion?: string;
+  fechaEleccion?: string | null;
   fecha_eleccion?: string;
   fechaInicio?: string;
   fecha_inicio?: string;
-  fechaFin?: string;
+  fechaFin?: string | null;
   fecha_fin?: string;
   estado?: JuntaDirectivaEstado;
   documentoSustento?: string | null;

@@ -1,6 +1,6 @@
 export type InvitationRole = 'ADMIN' | 'MEMBER';
 
-export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'REVOKED' | 'EXPIRED';
+export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'REVOKED' | 'EXPIRED';
 
 export type ReceivedInvitation = {
   idInvitation: number | string;
@@ -8,7 +8,11 @@ export type ReceivedInvitation = {
   email: string;
   role: InvitationRole;
   status: InvitationStatus;
+  token?: string | null;
   expiresAt: string;
+  acceptedAt?: string | null;
+  rejectedAt?: string | null;
+  revokedAt?: string | null;
   invitedBy: number | string | null;
   createdAt: string;
 };

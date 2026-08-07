@@ -4,10 +4,10 @@ export type Bien = {
   idBien: number | string;
   idTenant: number | string;
   descripcion: string;
-  tipo: string;
+  tipo: string | null;
   cantidad: number;
-  valorEstimado: number;
-  ubicacion: string;
+  valorEstimado: number | null;
+  ubicacion: string | null;
   fechaAlta: string;
   fechaBaja?: string | null;
   estado: BienEstado;
@@ -16,14 +16,14 @@ export type Bien = {
 
 export type BienCreateDto = {
   descripcion: string;
-  tipo: string;
+  tipo?: string | null;
   cantidad: number;
-  valorEstimado: number;
-  ubicacion: string;
+  valorEstimado?: number | null;
+  ubicacion?: string | null;
   fechaAlta: string;
-  fechaBaja?: string;
+  fechaBaja?: string | null;
   estado: BienEstado;
-  observaciones?: string;
+  observaciones?: string | null;
 };
 
 export type BienUpdateDto = Partial<BienCreateDto>;

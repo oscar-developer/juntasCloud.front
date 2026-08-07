@@ -47,9 +47,17 @@ export function getInvitationStatusChipProps(
           bgcolor: (theme) => alpha(theme.palette.success.main, 0.12),
         },
       };
-    case 'REVOKED':
+    case 'REJECTED':
       return {
         label: 'Rechazada',
+        color: 'default',
+        sx: {
+          bgcolor: 'grey.100',
+        },
+      };
+    case 'REVOKED':
+      return {
+        label: 'Revocada',
         color: 'default',
         sx: {
           bgcolor: 'grey.100',

@@ -23,11 +23,11 @@ function resolveReportesCajaBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/reportes/rendicion-cuentas' : '/api/reportes/rendicion-cuentas';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api')
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, ''))
       ? '/reportes/rendicion-cuentas'
       : '/api/reportes/rendicion-cuentas';
   }
@@ -58,18 +58,22 @@ function normalizeNumber(value: number | string | null | undefined): number {
   return 0;
 }
 
-function normalizeString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
+function normalizeString(value: unknown): string | null {
+  return typeof value === 'string' ? value : null;
 }
 
-function normalizeTipo(value: unknown): CajaMovimientoTipo {
-  return value === 'GASTO' ? 'GASTO' : 'INGRESO';
+function normalizeTipo(value: unknown): CajaMovimientoTipo | null {
+  if (value === 'INGRESO' || value === 'GASTO') {
+    return value;
+  }
+
+  return null;
 }
 
-function normalizeMedioPago(value: unknown): CajaMedioPago {
+function normalizeMedioPago(value: unknown): CajaMedioPago | null {
   const allowed: CajaMedioPago[] = ['EFECTIVO', 'TRANSFERENCIA', 'YAPE', 'PLIN', 'OTRO'];
 
-  return allowed.includes(value as CajaMedioPago) ? (value as CajaMedioPago) : 'OTRO';
+  return allowed.includes(value as CajaMedioPago) ? (value as CajaMedioPago) : null;
 }
 
 function normalizeRendicion(raw: RendicionCuentasApiShape): RendicionCuentasResponse {
@@ -96,7 +100,7 @@ function normalizeRendicion(raw: RendicionCuentasApiShape): RendicionCuentasResp
       descripcion: normalizeString(movimiento.descripcion),
       monto: normalizeNumber(movimiento.monto),
       medioPago: normalizeMedioPago(movimiento.medioPago),
-      docReferencia: normalizeString(movimiento.docReferencia) || null,
+      docReferencia: normalizeString(movimiento.docReferencia),
     })),
   };
 }

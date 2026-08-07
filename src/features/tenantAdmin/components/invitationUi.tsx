@@ -55,6 +55,14 @@ export function getInvitationStatusChipProps(
           bgcolor: 'grey.100',
         },
       };
+    case 'REJECTED':
+      return {
+        label: 'Rechazada',
+        color: 'default',
+        sx: {
+          bgcolor: 'grey.100',
+        },
+      };
     case 'EXPIRED':
       return {
         label: 'Expirada',

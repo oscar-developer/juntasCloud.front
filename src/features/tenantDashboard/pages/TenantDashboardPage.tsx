@@ -68,8 +68,7 @@ export function TenantDashboardPage() {
           Dashboard de la junta
         </Typography>
         <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-          Resumen operativo y financiero de {tenant?.nombre ?? 'la junta'} con KPIs listos para
-          integrarse al backend.
+          Resumen operativo y financiero de {tenant?.nombre ?? 'la junta'} con los indicadores del tenant activo.
         </Typography>
       </Box>
 

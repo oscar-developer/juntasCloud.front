@@ -10,7 +10,11 @@ export function getBienLabel(bien: Pick<Bien, 'descripcion'>) {
   return bien.descripcion.trim() || 'Bien sin descripcion';
 }
 
-export function formatBienNumber(value: number) {
+export function formatBienNumber(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return 'No registrado';
+  }
+
   return numberFormatter.format(value);
 }
 

@@ -11,11 +11,11 @@ function resolveTenantsBasePath() {
 
   try {
     const pathname = new URL(baseUrl).pathname.replace(/\/+$/, '');
-    const hasApiInBase = pathname === '/api' || pathname.endsWith('/api');
+    const hasApiInBase = /(?:^|\/)api(?:\/|$)/.test(pathname);
 
     return hasApiInBase ? '/tenants' : '/api/tenants';
   } catch {
-    return baseUrl.replace(/\/+$/, '').endsWith('/api') ? '/tenants' : '/api/tenants';
+    return /(?:^|\/)api(?:\/|$)/.test(baseUrl.replace(/\/+$/, '')) ? '/tenants' : '/api/tenants';
   }
 }
 
