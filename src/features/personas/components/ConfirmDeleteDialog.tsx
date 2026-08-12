@@ -8,7 +8,7 @@ import {
   Typography,
 } from '@mui/material';
 
-type ConfirmRetireDialogProps = {
+type ConfirmDeleteDialogProps = {
   open: boolean;
   loading: boolean;
   personaName?: string;
@@ -16,19 +16,19 @@ type ConfirmRetireDialogProps = {
   onConfirm: () => void;
 };
 
-export function ConfirmRetireDialog({
+export function ConfirmDeleteDialog({
   open,
   loading,
   personaName,
   onClose,
   onConfirm,
-}: ConfirmRetireDialogProps) {
+}: ConfirmDeleteDialogProps) {
   return (
     <Dialog fullWidth maxWidth="xs" onClose={loading ? undefined : onClose} open={open}>
-      <DialogTitle>Retirar persona</DialogTitle>
+      <DialogTitle>Eliminar persona</DialogTitle>
       <DialogContent>
         <Typography variant="body2">
-          Esta acción hará un retiro lógico y dejará a la persona en estado RETIRADO.
+          Esta acción eliminará definitivamente a la persona y no podrá deshacerse.
         </Typography>
         {personaName && (
           <Typography color="text.secondary" sx={{ mt: 1.5 }} variant="body2">
@@ -41,7 +41,7 @@ export function ConfirmRetireDialog({
           Cancelar
         </Button>
         <Button color="error" disabled={loading} onClick={onConfirm} variant="contained">
-          {loading ? <CircularProgress color="inherit" size={20} /> : 'Retirar'}
+          {loading ? <CircularProgress color="inherit" size={20} /> : 'Eliminar'}
         </Button>
       </DialogActions>
     </Dialog>

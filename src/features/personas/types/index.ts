@@ -14,6 +14,7 @@ export type Persona = {
   direccion?: string | null;
   referenciaVivienda?: string | null;
   tipoParticipante: PersonaTipoParticipante;
+  nroPadron?: number | null;
   estado: PersonaEstado;
   fechaRegistro: string;
   fechaBaja?: string | null;
@@ -30,13 +31,15 @@ export type PersonaCreateDto = {
   direccion?: string;
   referenciaVivienda?: string;
   tipoParticipante: PersonaTipoParticipante;
-  estado: PersonaEstado;
   fechaRegistro: string;
-  fechaBaja?: string;
   observaciones?: string;
 };
 
-export type PersonaUpdateDto = Partial<PersonaCreateDto>;
+export type PersonaUpdateDto = Partial<PersonaCreateDto> & {
+  estado?: PersonaEstado;
+  fechaBaja?: string | null;
+  nroPadron?: number | null;
+};
 
 export type ListQuery = {
   search?: string;

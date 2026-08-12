@@ -27,6 +27,8 @@ type PersonaApiShape = {
   referencia_vivienda?: string | null;
   tipoParticipante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
   tipo_participante?: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
+  nroPadron?: number | null;
+  nro_padron?: number | null;
   estado?: 'ACTIVO' | 'SUSPENDIDO' | 'RETIRADO' | 'FALLECIDO';
   fechaRegistro?: string;
   fecha_registro?: string;
@@ -126,8 +128,13 @@ async function patchPersona(
   return response.data;
 }
 
-function deletePersona(tenantId: string | number, idPersona: string | number) {
-  return apiClient.delete(`${PERSONAS_BASE_PATH}/${idPersona}`, createTenantConfig(tenantId));
+async function deletePersonaRequest(tenantId: string | number, idPersona: string | number) {
+  const response = await apiClient.delete(
+    `${PERSONAS_BASE_PATH}/${idPersona}`,
+    createTenantConfig(tenantId),
+  );
+
+  return response.data;
 }
 
 function normalizePersona(raw: PersonaApiShape): Persona {
@@ -143,6 +150,7 @@ function normalizePersona(raw: PersonaApiShape): Persona {
     direccion: raw.direccion ?? null,
     referenciaVivienda: raw.referenciaVivienda ?? raw.referencia_vivienda ?? null,
     tipoParticipante: raw.tipoParticipante ?? raw.tipo_participante ?? 'NO_PADRONADO',
+    nroPadron: raw.nroPadron ?? raw.nro_padron ?? null,
     estado: raw.estado ?? 'ACTIVO',
     fechaRegistro: raw.fechaRegistro ?? raw.fecha_registro ?? '',
     fechaBaja: raw.fechaBaja ?? raw.fecha_baja ?? null,
@@ -150,7 +158,7 @@ function normalizePersona(raw: PersonaApiShape): Persona {
   };
 }
 
-function normalizePayload(payload: PersonaCreateDto | PersonaUpdateDto) {
+function normalizeBasePayload(payload: Partial<PersonaCreateDto>) {
   const normalizedPayload: Record<string, unknown> = {};
 
   const assign = (key: string, value: unknown) => {
@@ -170,10 +178,30 @@ function normalizePayload(payload: PersonaCreateDto | PersonaUpdateDto) {
   assign('direccion', payload.direccion?.trim() || undefined);
   assign('referenciaVivienda', payload.referenciaVivienda?.trim() || undefined);
   assign('tipoParticipante', payload.tipoParticipante);
-  assign('estado', payload.estado);
   assign('fechaRegistro', payload.fechaRegistro);
-  assign('fechaBaja', payload.fechaBaja || undefined);
   assign('observaciones', payload.observaciones?.trim() || undefined);
+
+  return normalizedPayload;
+}
+
+function normalizeCreatePayload(payload: PersonaCreateDto) {
+  return normalizeBasePayload(payload);
+}
+
+function normalizeUpdatePayload(payload: PersonaUpdateDto) {
+  const normalizedPayload = normalizeBasePayload(payload);
+
+  const assign = (key: string, value: unknown) => {
+    if (value === undefined) {
+      return;
+    }
+
+    normalizedPayload[key] = value;
+  };
+
+  assign('estado', payload.estado);
+  assign('fechaBaja', payload.fechaBaja === '' ? null : payload.fechaBaja);
+  assign('nroPadron', payload.nroPadron);
 
   return normalizedPayload;
 }
@@ -314,7 +342,7 @@ export async function createPersona(
   payload: PersonaCreateDto,
 ): Promise<Persona> {
   try {
-    const data = (await postPersona(tenantId, normalizePayload(payload))) as PersonaApiShape;
+    const data = (await postPersona(tenantId, normalizeCreatePayload(payload))) as PersonaApiShape;
     return normalizePersona(data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
@@ -327,19 +355,24 @@ export async function updatePersona(
   payload: PersonaUpdateDto,
 ): Promise<Persona> {
   try {
-    const data = (await patchPersona(tenantId, idPersona, normalizePayload(payload))) as PersonaApiShape;
+    const data = (await patchPersona(
+      tenantId,
+      idPersona,
+      normalizeUpdatePayload(payload),
+    )) as PersonaApiShape;
     return normalizePersona(data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }
 }
 
-export async function retirePersona(
+export async function deletePersona(
   tenantId: string | number,
   idPersona: string | number,
-): Promise<void> {
+): Promise<Persona> {
   try {
-    await deletePersona(tenantId, idPersona);
+    const data = (await deletePersonaRequest(tenantId, idPersona)) as PersonaApiShape;
+    return normalizePersona(data);
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

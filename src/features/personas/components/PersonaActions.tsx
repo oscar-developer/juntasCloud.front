@@ -1,6 +1,6 @@
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import PersonOffRoundedIcon from '@mui/icons-material/PersonOffRounded';
 import { IconButton, Stack, Tooltip } from '@mui/material';
 import type { Persona } from '../types';
 
@@ -8,14 +8,14 @@ type PersonaActionsProps = {
   persona: Persona;
   onView: (persona: Persona) => void;
   onEdit: (persona: Persona) => void;
-  onRetire: (persona: Persona) => void;
+  onDelete: (persona: Persona) => void;
 };
 
 export function PersonaActions({
   persona,
   onView,
   onEdit,
-  onRetire,
+  onDelete,
 }: PersonaActionsProps) {
   return (
     <Stack direction="row" spacing={0.5}>
@@ -33,15 +33,14 @@ export function PersonaActions({
           </IconButton>
         </span>
       </Tooltip>
-      <Tooltip title="Retirar">
+      <Tooltip title="Eliminar">
         <span>
           <IconButton
             color="error"
-            disabled={persona.estado === 'RETIRADO' || persona.estado === 'FALLECIDO'}
-            onClick={() => onRetire(persona)}
+            onClick={() => onDelete(persona)}
             size="small"
           >
-            <PersonOffRoundedIcon fontSize="small" />
+            <DeleteRoundedIcon fontSize="small" />
           </IconButton>
         </span>
       </Tooltip>

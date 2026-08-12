@@ -8,7 +8,7 @@ import {
   exportPersonasToPdf,
   getPersonasForExport,
 } from '../services/personasExport.service';
-import { getPersonas, retirePersona } from '../services/personas.service';
+import { deletePersona, getPersonas } from '../services/personas.service';
 import type { ListQuery, Persona } from '../types';
 
 type ToastState = {
@@ -69,8 +69,8 @@ export function usePersonasPage() {
   const [editingPersonaId, setEditingPersonaId] = useState<string | number | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailPersonaId, setDetailPersonaId] = useState<string | number | null>(null);
-  const [retireTarget, setRetireTarget] = useState<Persona | null>(null);
-  const [retireLoading, setRetireLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Persona | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [toast, setToast] = useState<ToastState>(initialToastState);
@@ -240,32 +240,32 @@ export function usePersonasPage() {
     showMessage(message, 'success');
   };
 
-  const openRetireDialog = (persona: Persona) => {
-    setRetireTarget(persona);
+  const openDeleteDialog = (persona: Persona) => {
+    setDeleteTarget(persona);
   };
 
-  const closeRetireDialog = () => {
-    if (!retireLoading) {
-      setRetireTarget(null);
+  const closeDeleteDialog = () => {
+    if (!deleteLoading) {
+      setDeleteTarget(null);
     }
   };
 
-  const confirmRetire = async () => {
-    if (!tenantId || !retireTarget) {
+  const confirmDelete = async () => {
+    if (!tenantId || !deleteTarget) {
       return;
     }
 
-    setRetireLoading(true);
+    setDeleteLoading(true);
 
     try {
-      await retirePersona(tenantId, retireTarget.idPersona);
-      setRetireTarget(null);
+      await deletePersona(tenantId, deleteTarget.idPersona);
+      setDeleteTarget(null);
       setReloadKey((current) => current + 1);
-      showMessage('Persona retirada correctamente', 'success');
-    } catch (retireError) {
-      showMessage(getPersonaErrorMessage(retireError, 'No se pudo retirar la persona.'), 'error');
+      showMessage('Persona eliminada correctamente', 'success');
+    } catch (deleteError) {
+      showMessage(getPersonaErrorMessage(deleteError, 'No se pudo eliminar la persona.'), 'error');
     } finally {
-      setRetireLoading(false);
+      setDeleteLoading(false);
     }
   };
 
@@ -343,9 +343,9 @@ export function usePersonasPage() {
     editingPersonaId,
     detailOpen,
     detailPersonaId,
-    retireLoading,
-    retireDialogOpen: Boolean(retireTarget),
-    retireTargetName: retireTarget ? getFullName(retireTarget) : undefined,
+    deleteLoading,
+    deleteDialogOpen: Boolean(deleteTarget),
+    deleteTargetName: deleteTarget ? getFullName(deleteTarget) : undefined,
     exportOpen,
     exportLoading,
     toast,
@@ -364,9 +364,9 @@ export function usePersonasPage() {
     closeDetailDialog,
     handleSaved,
     showMessage,
-    openRetireDialog,
-    closeRetireDialog,
-    confirmRetire,
+    openDeleteDialog,
+    closeDeleteDialog,
+    confirmDelete,
     clearFilters,
     openExportDialog,
     closeExportDialog,

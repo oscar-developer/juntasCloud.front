@@ -16,7 +16,7 @@ type PersonaTableProps = {
   onReachEnd: () => void;
   onView: (persona: Persona) => void;
   onEdit: (persona: Persona) => void;
-  onRetire: (persona: Persona) => void;
+  onDelete: (persona: Persona) => void;
 };
 
 export function PersonaTable({
@@ -26,10 +26,10 @@ export function PersonaTable({
   onReachEnd,
   onView,
   onEdit,
-  onRetire,
+  onDelete,
 }: PersonaTableProps) {
   const containerHeight = Math.min(TABLE_HEIGHT, Math.max(ROW_HEIGHT * 4, rows.length * ROW_HEIGHT));
-  const gridTemplateColumns = '2.2fr 1fr 1fr 1fr 1fr 180px';
+  const gridTemplateColumns = '0.8fr 2.2fr 1fr 1fr 1fr 1fr 180px';
   const parentRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -66,9 +66,12 @@ export function PersonaTable({
           borderBottom: 1,
           borderColor: 'divider',
           backgroundColor: 'grey.50',
-          minWidth: 760,
+          minWidth: 900,
         }}
       >
+        <TableCell component="div" sx={{ borderBottom: 0, fontWeight: 700, px: 1 }}>
+          Padrón
+        </TableCell>
         <TableCell component="div" sx={{ borderBottom: 0, fontWeight: 700, px: 1 }}>
           Nombre completo
         </TableCell>
@@ -93,7 +96,7 @@ export function PersonaTable({
         ref={parentRef}
         sx={{
           height: containerHeight,
-          minWidth: 760,
+          minWidth: 900,
           overflow: 'auto',
           position: 'relative',
         }}
@@ -122,10 +125,13 @@ export function PersonaTable({
                   alignItems: 'center',
                   borderBottom: 1,
                   borderColor: 'divider',
-                  minWidth: 760,
+                  minWidth: 900,
                   '&:hover': { backgroundColor: 'action.hover' },
                 }}
               >
+                <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
+                  {persona.nroPadron ? `#${persona.nroPadron}` : 'No registrado'}
+                </TableCell>
                 <TableCell component="div" sx={{ borderBottom: 0, fontWeight: 600, px: 1 }}>
                   {getFullName(persona)}
                 </TableCell>
@@ -142,7 +148,7 @@ export function PersonaTable({
                   <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
                 </TableCell>
                 <TableCell component="div" sx={{ borderBottom: 0, px: 1, textAlign: 'right' }}>
-                  <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
+                  <PersonaActions onDelete={onDelete} onEdit={onEdit} onView={onView} persona={persona} />
                 </TableCell>
               </Box>
             );

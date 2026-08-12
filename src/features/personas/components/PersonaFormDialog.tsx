@@ -12,7 +12,13 @@ import {
 } from '@mui/material';
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { createPersona, getPersonaById, updatePersona } from '../services/personas.service';
-import type { Persona, PersonaCreateDto, PersonaEstado, PersonaTipoParticipante } from '../types';
+import type {
+  Persona,
+  PersonaCreateDto,
+  PersonaEstado,
+  PersonaTipoParticipante,
+  PersonaUpdateDto,
+} from '../types';
 import { getPersonaErrorMessage } from './personaUi';
 
 type ToastSeverity = 'success' | 'error' | 'info' | 'warning';
@@ -28,6 +34,7 @@ type PersonaFormState = {
   direccion: string;
   referenciaVivienda: string;
   tipoParticipante: PersonaTipoParticipante;
+  nroPadron: string;
   estado: PersonaEstado;
   fechaRegistro: string;
   fechaBaja: string;
@@ -56,6 +63,7 @@ const defaultFormState: PersonaFormState = {
   direccion: '',
   referenciaVivienda: '',
   tipoParticipante: 'PADRONADO',
+  nroPadron: '',
   estado: 'ACTIVO',
   fechaRegistro: '',
   fechaBaja: '',
@@ -75,6 +83,7 @@ function mapPersonaToFormState(persona: Persona): PersonaFormState {
     direccion: persona.direccion ?? '',
     referenciaVivienda: persona.referenciaVivienda ?? '',
     tipoParticipante: persona.tipoParticipante,
+    nroPadron: persona.nroPadron ? String(persona.nroPadron) : '',
     estado: persona.estado,
     fechaRegistro: persona.fechaRegistro ? persona.fechaRegistro.slice(0, 10) : '',
     fechaBaja: persona.fechaBaja ? persona.fechaBaja.slice(0, 10) : '',
@@ -82,7 +91,7 @@ function mapPersonaToFormState(persona: Persona): PersonaFormState {
   };
 }
 
-function mapFormToPayload(formState: PersonaFormState): PersonaCreateDto {
+function mapFormToCreatePayload(formState: PersonaFormState): PersonaCreateDto {
   return {
     nombres: formState.nombres.trim(),
     apellidoPaterno: formState.apellidoPaterno.trim(),
@@ -93,14 +102,24 @@ function mapFormToPayload(formState: PersonaFormState): PersonaCreateDto {
     direccion: formState.direccion.trim() || undefined,
     referenciaVivienda: formState.referenciaVivienda.trim() || undefined,
     tipoParticipante: formState.tipoParticipante,
-    estado: formState.estado,
     fechaRegistro: formState.fechaRegistro,
-    fechaBaja: formState.fechaBaja || undefined,
     observaciones: formState.observaciones.trim() || undefined,
   };
 }
 
-function validateForm(formState: PersonaFormState): PersonaFormErrors {
+function mapFormToUpdatePayload(formState: PersonaFormState): PersonaUpdateDto {
+  return {
+    ...mapFormToCreatePayload(formState),
+    estado: formState.estado,
+    fechaBaja: formState.fechaBaja || null,
+    nroPadron:
+      formState.tipoParticipante === 'PADRONADO'
+        ? Number(formState.nroPadron)
+        : null,
+  };
+}
+
+function validateForm(formState: PersonaFormState, mode: FormMode): PersonaFormErrors {
   const errors: PersonaFormErrors = {};
 
   if (!formState.nombres.trim()) {
@@ -129,6 +148,16 @@ function validateForm(formState: PersonaFormState): PersonaFormErrors {
 
   if (formState.telefono.trim().length > 20) {
     errors.telefono = 'El teléfono no puede superar 20 caracteres.';
+  }
+
+  if (mode === 'edit') {
+    const nroPadron = formState.nroPadron.trim();
+
+    if (formState.tipoParticipante === 'PADRONADO' && !nroPadron) {
+      errors.nroPadron = 'El nro padrón es requerido para personas padronadas.';
+    } else if (nroPadron && (!/^\d+$/.test(nroPadron) || Number(nroPadron) < 1)) {
+      errors.nroPadron = 'Ingresa un entero positivo.';
+    }
   }
 
   return errors;
@@ -207,8 +236,8 @@ export function PersonaFormDialog({
     };
   }, [mode, open, personaId, tenantId]);
 
-  const errors = touched ? validateForm(formState) : {};
-  const hasErrors = Object.keys(validateForm(formState)).length > 0;
+  const errors = touched ? validateForm(formState, mode) : {};
+  const hasErrors = Object.keys(validateForm(formState, mode)).length > 0;
 
   const handleChange =
     <K extends keyof PersonaFormState>(key: K) =>
@@ -216,11 +245,21 @@ export function PersonaFormDialog({
       setFormState((current) => ({ ...current, [key]: event.target.value }));
     };
 
+  const handleTipoParticipanteChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const tipoParticipante = event.target.value as PersonaTipoParticipante;
+
+    setFormState((current) => ({
+      ...current,
+      tipoParticipante,
+      nroPadron: tipoParticipante === 'PADRONADO' ? current.nroPadron : '',
+    }));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setTouched(true);
 
-    if (Object.keys(validateForm(formState)).length > 0 || loading || submitting) {
+    if (Object.keys(validateForm(formState, mode)).length > 0 || loading || submitting) {
       return;
     }
 
@@ -233,10 +272,10 @@ export function PersonaFormDialog({
 
     try {
       if (mode === 'edit') {
-        await updatePersona(tenantId, personaId!, mapFormToPayload(formState));
+        await updatePersona(tenantId, personaId!, mapFormToUpdatePayload(formState));
         onSaved('Persona actualizada correctamente');
       } else {
-        await createPersona(tenantId, mapFormToPayload(formState));
+        await createPersona(tenantId, mapFormToCreatePayload(formState));
         onSaved('Persona creada correctamente');
       }
     } catch (error) {
@@ -345,16 +384,8 @@ export function PersonaFormDialog({
               />
               <TextField
                 fullWidth
-                label="Fecha de baja"
-                onChange={handleChange('fechaBaja')}
-                slotProps={{ inputLabel: { shrink: true } }}
-                type="date"
-                value={formState.fechaBaja}
-              />
-              <TextField
-                fullWidth
                 label="Tipo de participante"
-                onChange={handleChange('tipoParticipante')}
+                onChange={handleTipoParticipanteChange}
                 select
                 value={formState.tipoParticipante}
               >
@@ -362,19 +393,48 @@ export function PersonaFormDialog({
                 <MenuItem value="NO_PADRONADO">NO_PADRONADO</MenuItem>
                 <MenuItem value="INVITADO">INVITADO</MenuItem>
               </TextField>
-              <TextField
-                fullWidth
-                label="Estado"
-                onChange={handleChange('estado')}
-                select
-                value={formState.estado}
-              >
-                <MenuItem value="ACTIVO">ACTIVO</MenuItem>
-                <MenuItem value="SUSPENDIDO">SUSPENDIDO</MenuItem>
-                <MenuItem value="RETIRADO">RETIRADO</MenuItem>
-                <MenuItem value="FALLECIDO">FALLECIDO</MenuItem>
-              </TextField>
-              
+              {mode === 'edit' && (
+                <>
+                  <TextField
+                    disabled={formState.tipoParticipante !== 'PADRONADO'}
+                    error={Boolean(errors.nroPadron)}
+                    fullWidth
+                    helperText={
+                      errors.nroPadron ??
+                      (formState.tipoParticipante === 'PADRONADO'
+                        ? ' '
+                        : 'Solo aplica para personas PADRONADO.')
+                    }
+                    inputProps={{ min: 1, step: 1 }}
+                    label="Nro padrón"
+                    onBlur={() => setTouched(true)}
+                    onChange={handleChange('nroPadron')}
+                    type="number"
+                    value={formState.nroPadron}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Fecha de baja"
+                    onChange={handleChange('fechaBaja')}
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    type="date"
+                    value={formState.fechaBaja}
+                  />
+                  <TextField
+                    fullWidth
+                    label="Estado"
+                    onChange={handleChange('estado')}
+                    select
+                    value={formState.estado}
+                  >
+                    <MenuItem value="ACTIVO">ACTIVO</MenuItem>
+                    <MenuItem value="SUSPENDIDO">SUSPENDIDO</MenuItem>
+                    <MenuItem value="RETIRADO">RETIRADO</MenuItem>
+                    <MenuItem value="FALLECIDO">FALLECIDO</MenuItem>
+                  </TextField>
+                </>
+              )}
+
               <TextField
                 fullWidth
                 label="Observaciones"

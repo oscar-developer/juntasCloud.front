@@ -43,6 +43,21 @@ function toSortableNumber(value: string | number) {
 
 function sortPersonasForExport(personas: Persona[]) {
   return [...personas].sort((left, right) => {
+    const leftPadron = left.nroPadron ?? null;
+    const rightPadron = right.nroPadron ?? null;
+
+    if (leftPadron !== null && rightPadron !== null && leftPadron !== rightPadron) {
+      return leftPadron - rightPadron;
+    }
+
+    if (leftPadron !== null && rightPadron === null) {
+      return -1;
+    }
+
+    if (leftPadron === null && rightPadron !== null) {
+      return 1;
+    }
+
     const leftNumber = toSortableNumber(left.idPersona);
     const rightNumber = toSortableNumber(right.idPersona);
 
@@ -57,6 +72,7 @@ function sortPersonasForExport(personas: Persona[]) {
 function buildExportRows(personas: Persona[]) {
   return sortPersonasForExport(personas).map((persona, index) => [
     index + 1,
+    persona.nroPadron ?? '',
     getApellidosYNombres(persona),
     persona.dni ?? '',
     persona.telefono ?? '',
@@ -64,7 +80,7 @@ function buildExportRows(personas: Persona[]) {
   ]);
 }
 
-const exportColumns = ['Nro', 'Apellidos y nombres', 'DNI', 'Teléfono', 'Tipo participante'];
+const exportColumns = ['Nro', 'Nro padrón', 'Apellidos y nombres', 'DNI', 'Teléfono', 'Tipo participante'];
 
 function getReportDate(generatedAt?: Date) {
   return (generatedAt ?? new Date()).toLocaleDateString();
@@ -121,7 +137,7 @@ export function exportPersonasToExcel(personas: Persona[], metadata: ExportMetad
       [`Junta: ${tenantName}`],
       [`Fecha: ${generatedAt}`],
     ],
-    columnWidths: [8, 42, 18, 18, 22],
+    columnWidths: [8, 14, 42, 18, 18, 22],
   });
 }
 
@@ -137,10 +153,11 @@ export function exportPersonasToPdf(personas: Persona[], metadata: ExportMetadat
     rows: buildExportRows(personas),
     columnStyles: {
       0: { cellWidth: 12 },
-      1: { cellWidth: 72 },
-      2: { cellWidth: 28 },
-      3: { cellWidth: 28 },
-      4: { cellWidth: 34 },
+      1: { cellWidth: 18 },
+      2: { cellWidth: 66 },
+      3: { cellWidth: 26 },
+      4: { cellWidth: 26 },
+      5: { cellWidth: 32 },
     },
   });
 }

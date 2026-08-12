@@ -17,7 +17,7 @@ type PersonaMobileListProps = {
   onReachEnd: () => void;
   onView: (persona: Persona) => void;
   onEdit: (persona: Persona) => void;
-  onRetire: (persona: Persona) => void;
+  onDelete: (persona: Persona) => void;
 };
 
 export function PersonaMobileList({
@@ -28,7 +28,7 @@ export function PersonaMobileList({
   onReachEnd,
   onView,
   onEdit,
-  onRetire,
+  onDelete,
 }: PersonaMobileListProps) {
   const listHeight = Math.min(LIST_HEIGHT, Math.max(CARD_HEIGHT * 3, rows.length * CARD_HEIGHT));
   const parentRef = useRef<HTMLDivElement | null>(null);
@@ -69,8 +69,6 @@ export function PersonaMobileList({
         <Box sx={{ height: rowVirtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
           {virtualItems.map((virtualRow) => {
             const persona = rows[virtualRow.index];
-            const displayNumber = virtualRow.index + 1;
-
             if (!persona) {
               return null;
             }
@@ -95,16 +93,19 @@ export function PersonaMobileList({
                       <Box sx={{ flex: 1, minWidth: 0 }}>
                         <Stack spacing={1.5}>
                           <Typography noWrap sx={{ fontSize: 18, fontWeight: 800 }} title={getFullName(persona)}>
-                            #{displayNumber} {getFullName(persona)}
+                            {getFullName(persona)}
                           </Typography>
                           <Stack direction="row" flexWrap="wrap" spacing={1} useFlexGap>
+                            {persona.nroPadron ? (
+                              <Chip label={`Padrón #${persona.nroPadron}`} size="small" variant="outlined" />
+                            ) : null}
                             <Chip size="small" variant="outlined" {...getTipoChipProps(persona.tipoParticipante)} />
                             <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
                           </Stack>
                         </Stack>
                       </Box>
                       <Box sx={{ flexShrink: 0 }}>
-                        <PersonaActions onEdit={onEdit} onRetire={onRetire} onView={onView} persona={persona} />
+                        <PersonaActions onDelete={onDelete} onEdit={onEdit} onView={onView} persona={persona} />
                       </Box>
                     </Stack>
                   </CardContent>

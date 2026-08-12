@@ -1,7 +1,7 @@
 import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import { Alert, Box, Button, Card, CardContent, Fab, LinearProgress, Stack, Typography } from '@mui/material';
 import { Toast } from '../../../shared/ui/Toast';
-import { ConfirmRetireDialog } from '../components/ConfirmRetireDialog';
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ExportPersonasDialog } from '../components/ExportPersonasDialog';
 import { PersonaDetailDialog } from '../components/PersonaDetailDialog';
 import { PersonaFiltersCard } from '../components/PersonaFiltersCard';
@@ -79,9 +79,9 @@ export function PersonasPage() {
             <PersonaTable
               hasMore={personasPage.hasMore}
               loadingMore={personasPage.loadingMore}
+              onDelete={personasPage.openDeleteDialog}
               onEdit={personasPage.openEditDialog}
               onReachEnd={personasPage.handleReachEnd}
-              onRetire={personasPage.openRetireDialog}
               onView={personasPage.openDetailDialog}
               rows={personasPage.rows}
             />
@@ -90,9 +90,9 @@ export function PersonasPage() {
           <PersonaMobileList
             hasMore={personasPage.hasMore}
             loadingMore={personasPage.loadingMore}
+            onDelete={personasPage.openDeleteDialog}
             onEdit={personasPage.openEditDialog}
             onReachEnd={personasPage.handleReachEnd}
-            onRetire={personasPage.openRetireDialog}
             onView={personasPage.openDetailDialog}
             rows={personasPage.rows}
             total={personasPage.total}
@@ -141,14 +141,14 @@ export function PersonasPage() {
         </>
       )}
 
-      <ConfirmRetireDialog
-        loading={personasPage.retireLoading}
-        onClose={personasPage.closeRetireDialog}
+      <ConfirmDeleteDialog
+        loading={personasPage.deleteLoading}
+        onClose={personasPage.closeDeleteDialog}
         onConfirm={() => {
-          void personasPage.confirmRetire();
+          void personasPage.confirmDelete();
         }}
-        open={personasPage.retireDialogOpen}
-        personaName={personasPage.retireTargetName}
+        open={personasPage.deleteDialogOpen}
+        personaName={personasPage.deleteTargetName}
       />
 
       <Toast

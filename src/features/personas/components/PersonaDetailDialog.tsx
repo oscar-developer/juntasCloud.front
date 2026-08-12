@@ -107,6 +107,10 @@ export function PersonaDetailDialog({
                 <Chip size="small" variant="outlined" {...getEstadoChipProps(persona.estado)} />
               </Stack>
             </Box>
+            <DetailRow
+              label="Nro padrón"
+              value={persona.nroPadron ? String(persona.nroPadron) : null}
+            />
             <DetailRow label="DNI" value={persona.dni} />
             <DetailRow label="Email" value={persona.email} />
             <DetailRow label="Teléfono" value={persona.telefono} />
