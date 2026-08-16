@@ -14,8 +14,8 @@ export function PersonasPage() {
   const personasPage = usePersonasPage();
 
   return (
-    <Box sx={{ pb: { xs: 10, md: 0 } }}>
-      <Stack spacing={3}>
+    <Box sx={{ pb: { xs: 'calc(112px + env(safe-area-inset-bottom))', sm: 10, md: 0 } }}>
+      <Stack spacing={{ xs: 1.25, sm: 3 }}>
         {personasPage.isDesktop && (
           <Stack direction="row" justifyContent="flex-end">
             <Button
@@ -104,7 +104,11 @@ export function PersonasPage() {
         <Fab
           color="primary"
           onClick={personasPage.openCreateDialog}
-          sx={{ position: 'fixed', right: 24, bottom: 24 }}
+          sx={{
+            position: 'fixed',
+            right: { xs: 20, sm: 24 },
+            bottom: { xs: 'calc(20px + env(safe-area-inset-bottom))', sm: 24 },
+          }}
         >
           <AddRoundedIcon />
         </Fab>

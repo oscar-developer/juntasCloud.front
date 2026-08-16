@@ -34,20 +34,41 @@ export function PersonaFiltersCard({
 }: PersonaFiltersCardProps) {
   return (
     <Card elevation={0}>
-      <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 1.5 }}>
+      <CardContent sx={{ p: { xs: 1, sm: 2.5, md: 3 }, '&:last-child': { pb: { xs: 1, sm: 2.5, md: 3 } } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: { xs: 1, sm: 1.5 },
+          }}
+        >
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack spacing={1.5}>
+            <Stack spacing={{ xs: 0.75, sm: 1.5 }}>
               {isDesktop && (
                 <Typography color="text.secondary" variant="caption">
                   Busca en nombre, apellidos, DNI, teléfono, tipo, estado y observaciones.
                 </Typography>
               )}
-              <Stack direction={{ xs: 'row', md: 'row' }} spacing={2}>
+              <Stack direction={{ xs: 'row', md: 'row' }} spacing={{ xs: 1, sm: 2 }}>
                 <TextField
                   fullWidth
                   label="Buscar"
                   onChange={(event) => onSearchChange(event.target.value)}
+                  placeholder="Buscar persona..."
+                  sx={(theme) => ({
+                    [theme.breakpoints.down('sm')]: {
+                      '& .MuiInputLabel-root': {
+                        display: 'none',
+                      },
+                      '& .MuiOutlinedInput-notchedOutline': {
+                        top: 0,
+                      },
+                      '& legend': {
+                        display: 'none',
+                      },
+                    },
+                  })}
                   slotProps={{
                     input: {
                       startAdornment: (
@@ -55,6 +76,14 @@ export function PersonaFiltersCard({
                           <SearchRoundedIcon fontSize="small" />
                         </InputAdornment>
                       ),
+                      sx: (theme) => ({
+                        [theme.breakpoints.down('sm')]: {
+                          minHeight: 44,
+                          '& .MuiInputBase-input': {
+                            py: 1.1,
+                          },
+                        },
+                      }),
                     },
                   }}
                   value={searchValue}
@@ -116,7 +145,12 @@ export function PersonaFiltersCard({
               Exportar
             </Button>
           ) : (
-            <IconButton aria-label="Exportar" onClick={onExportClick}>
+            <IconButton
+              aria-label="Exportar"
+              disabled={exportLoading}
+              onClick={onExportClick}
+              sx={{ height: { xs: 44, sm: 40 }, width: { xs: 44, sm: 40 } }}
+            >
               <DownloadRoundedIcon />
             </IconButton>
           )}

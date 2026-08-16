@@ -10,6 +10,24 @@ export function getFullName(
     .join(' ');
 }
 
+function toTitleCaseWord(value: string) {
+  return value
+    .toLocaleLowerCase('es-PE')
+    .replace(/(^|[-'`])(\p{L})/gu, (_match, separator: string, letter: string) => {
+      return `${separator}${letter.toLocaleUpperCase('es-PE')}`;
+    });
+}
+
+export function getDisplayFullName(
+  persona: Pick<Persona, 'nombres' | 'apellidoPaterno' | 'apellidoMaterno'>,
+) {
+  return getFullName(persona)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(toTitleCaseWord)
+    .join(' ');
+}
+
 export function getEstadoChipProps(estado: PersonaEstado): Pick<ChipProps, 'color' | 'label'> {
   if (estado === 'ACTIVO') {
     return { color: 'success', label: 'ACTIVO' };
