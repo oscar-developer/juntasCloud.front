@@ -51,9 +51,17 @@ export function buildOptimisticAttendanceRecord(params: {
   persona: Persona;
   previousRecord: AsambleaAttendanceRecord | null;
   nextStatus: Exclude<AttendanceStatus, 'unknown'>;
+  horaLlegada?: string;
+  observaciones?: string;
 }) {
-  const { tenantId, idAsamblea, persona, previousRecord, nextStatus } = params;
+  const { tenantId, idAsamblea, persona, previousRecord, nextStatus, horaLlegada, observaciones } = params;
   const isPadronado = persona.tipoParticipante === 'PADRONADO';
+  const nextHoraLlegada =
+    nextStatus === 'present'
+      ? previousRecord?.horaLlegada ?? createAttendanceTimestamp()
+      : nextStatus === 'late'
+        ? horaLlegada ?? previousRecord?.horaLlegada ?? createAttendanceTimestamp()
+        : previousRecord?.horaLlegada ?? null;
 
   return {
     idAsistencia: previousRecord?.idAsistencia ?? `optimistic-${idAsamblea}-${persona.idPersona}`,
@@ -61,14 +69,11 @@ export function buildOptimisticAttendanceRecord(params: {
     idAsamblea: previousRecord?.idAsamblea ?? idAsamblea,
     idPersona: persona.idPersona,
     estado: mapAttendanceStatusToEstado(nextStatus, previousRecord?.estado),
-    horaLlegada:
-      nextStatus === 'present'
-        ? previousRecord?.horaLlegada ?? createAttendanceTimestamp()
-        : previousRecord?.horaLlegada ?? null,
+    horaLlegada: nextHoraLlegada,
     esPadronadoEnMomento: previousRecord?.esPadronadoEnMomento ?? isPadronado,
     tieneDerechoVoto: previousRecord?.tieneDerechoVoto ?? isPadronado,
     votoEmitido: previousRecord?.votoEmitido ?? false,
-    observaciones: previousRecord?.observaciones ?? null,
+    observaciones: observaciones?.trim() || previousRecord?.observaciones || null,
     createdAt: previousRecord?.createdAt,
     createdByUser: previousRecord?.createdByUser ?? null,
     updatedAt: previousRecord?.updatedAt ?? null,

@@ -7,15 +7,32 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { AsambleaAttendanceDesktopTable } from '../components/AsambleaAttendanceDesktopTable';
 import { AsambleaAttendanceHeader } from '../components/AsambleaAttendanceHeader';
+import { AsambleaAttendanceLateDialog } from '../components/AsambleaAttendanceLateDialog';
 import { AsambleaAttendanceMobileList } from '../components/AsambleaAttendanceMobileList';
 import { AsambleaAttendanceToolbar } from '../components/AsambleaAttendanceToolbar';
 import { useAsambleaAsistencia } from '../hooks/useAsambleaAsistencia';
+import type { AttendanceRowVM } from '../types';
 
 export function AsambleaAsistenciaPage() {
   const asistencia = useAsambleaAsistencia();
+  const [lateTarget, setLateTarget] = useState<AttendanceRowVM | null>(null);
+
+  const closeLateDialog = () => {
+    setLateTarget(null);
+  };
+
+  const confirmLateAttendance = async (values: { horaLlegada: string; observaciones?: string }) => {
+    if (!lateTarget) {
+      return;
+    }
+
+    await asistencia.handleSelectStatus(lateTarget, 'late', values);
+    setLateTarget(null);
+  };
 
   return (
     <Box sx={{ pb: { xs: 2, sm: 4, md: 0 } }}>
@@ -145,6 +162,7 @@ export function AsambleaAsistenciaPage() {
             <Card elevation={0}>
               <AsambleaAttendanceDesktopTable
                 disabled={asistencia.attendanceLoading}
+                onRequestLate={setLateTarget}
                 onSelectStatus={asistencia.handleSelectStatus}
                 rows={asistencia.filteredRows}
               />
@@ -152,12 +170,19 @@ export function AsambleaAsistenciaPage() {
           ) : (
             <AsambleaAttendanceMobileList
               disabled={asistencia.attendanceLoading}
+              onRequestLate={setLateTarget}
               onSelectStatus={asistencia.handleSelectStatus}
               rows={asistencia.filteredRows}
             />
           )
         ) : null}
       </Stack>
+      <AsambleaAttendanceLateDialog
+        onClose={closeLateDialog}
+        onConfirm={confirmLateAttendance}
+        open={Boolean(lateTarget)}
+        row={lateTarget}
+      />
     </Box>
   );
 }

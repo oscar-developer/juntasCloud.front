@@ -8,18 +8,20 @@ import {
 } from '../constants';
 import type { AttendanceRowVM, AttendanceStatus } from '../types';
 import { AsambleaAttendanceActions } from './AsambleaAttendanceActions';
-import { getAttendanceChipProps } from './asambleaAttendanceUi';
+import { formatAttendanceStatusLabel, getAttendanceChipProps } from './asambleaAttendanceUi';
 
 type AsambleaAttendanceDesktopTableProps = {
   rows: AttendanceRowVM[];
   disabled?: boolean;
   onSelectStatus: (row: AttendanceRowVM, status: Exclude<AttendanceStatus, 'unknown'>) => void;
+  onRequestLate: (row: AttendanceRowVM) => void;
 };
 
 export function AsambleaAttendanceDesktopTable({
   rows,
   disabled = false,
   onSelectStatus,
+  onRequestLate,
 }: AsambleaAttendanceDesktopTableProps) {
   const containerHeight = Math.min(
     ASAMBLEA_ATTENDANCE_DESKTOP_TABLE_HEIGHT,
@@ -33,7 +35,7 @@ export function AsambleaAttendanceDesktopTable({
     overscan: ASAMBLEA_ATTENDANCE_VIRTUAL_OVERSCAN,
   });
   const virtualItems = rowVirtualizer.getVirtualItems();
-  const gridTemplateColumns = '2.25fr 1.2fr 0.9fr 240px';
+  const gridTemplateColumns = '2.25fr 1.2fr 0.9fr 330px';
 
   return (
     <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
@@ -46,7 +48,7 @@ export function AsambleaAttendanceDesktopTable({
           borderBottom: 1,
           borderColor: 'divider',
           backgroundColor: 'grey.50',
-          minWidth: 980,
+          minWidth: 1070,
         }}
       >
         {['Asistente', 'Condición', 'Estado', 'Registro'].map((label) => (
@@ -64,7 +66,7 @@ export function AsambleaAttendanceDesktopTable({
         ref={parentRef}
         sx={{
           height: containerHeight,
-          minWidth: 980,
+          minWidth: 1070,
           overflow: 'auto',
           position: 'relative',
         }}
@@ -93,7 +95,7 @@ export function AsambleaAttendanceDesktopTable({
                   alignItems: 'center',
                   borderBottom: 1,
                   borderColor: 'divider',
-                  minWidth: 980,
+                  minWidth: 1070,
                   '&:hover': { backgroundColor: 'action.hover' },
                 }}
               >
@@ -124,12 +126,21 @@ export function AsambleaAttendanceDesktopTable({
                 </TableCell>
 
                 <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-                  <Chip size="small" {...getAttendanceChipProps(row.status)} />
+                  <Chip
+                    size="small"
+                    {...getAttendanceChipProps(row.status)}
+                    label={formatAttendanceStatusLabel(row.status, row.horaLlegada)}
+                  />
                 </TableCell>
 
                 <TableCell component="div" sx={{ borderBottom: 0, px: 1, textAlign: 'right' }}>
                   <Stack alignItems="flex-end">
-                    <AsambleaAttendanceActions disabled={disabled} onSelectStatus={onSelectStatus} row={row} />
+                    <AsambleaAttendanceActions
+                      disabled={disabled}
+                      onRequestLate={onRequestLate}
+                      onSelectStatus={onSelectStatus}
+                      row={row}
+                    />
                   </Stack>
                 </TableCell>
               </Box>

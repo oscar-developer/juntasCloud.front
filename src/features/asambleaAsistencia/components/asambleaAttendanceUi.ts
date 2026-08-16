@@ -14,8 +14,12 @@ export function mapAttendanceRecordToStatus(
     return 'unknown';
   }
 
-  if (attendance.estado === 'ASISTIO' || attendance.estado === 'TARDE') {
+  if (attendance.estado === 'ASISTIO') {
     return 'present';
+  }
+
+  if (attendance.estado === 'TARDE') {
+    return 'late';
   }
 
   if (attendance.estado === 'FALTO' || attendance.estado === 'JUSTIFICADO') {
@@ -30,7 +34,11 @@ export function mapAttendanceStatusToEstado(
   previousEstado?: AsistenciaAsambleaEstado | null,
 ): AsistenciaAsambleaEstado {
   if (status === 'present') {
-    return previousEstado === 'TARDE' ? 'TARDE' : 'ASISTIO';
+    return 'ASISTIO';
+  }
+
+  if (status === 'late') {
+    return 'TARDE';
   }
 
   return previousEstado === 'JUSTIFICADO' ? 'JUSTIFICADO' : 'FALTO';
@@ -51,6 +59,14 @@ export function getAttendanceChipProps(
     return {
       color: 'error',
       label: 'Ausente',
+      variant: 'outlined',
+    };
+  }
+
+  if (status === 'late') {
+    return {
+      color: 'warning',
+      label: 'Tarde',
       variant: 'outlined',
     };
   }
@@ -77,6 +93,10 @@ export function matchesAttendanceFilter(status: AttendanceStatus, filter: Attend
 export function getAttendanceFilterLabel(filter: AttendanceFilter) {
   if (filter === 'present') {
     return 'Presentes';
+  }
+
+  if (filter === 'late') {
+    return 'Tardanzas';
   }
 
   if (filter === 'absent') {
@@ -128,6 +148,44 @@ export function formatAttendanceTime(value?: string | null) {
 
   const match = value.match(/(\d{2}):(\d{2})/);
   return match ? `${match[1]}:${match[2]}` : value;
+}
+
+export function formatAttendanceStatusLabel(status: AttendanceStatus, horaLlegada?: string | null) {
+  if (status === 'late') {
+    const hora = formatAttendanceTime(horaLlegada);
+    return hora === 'Sin hora' ? '⏱ Tarde' : `⏱ Tarde · ${hora}`;
+  }
+
+  if (status === 'present') {
+    return '✓ Presente';
+  }
+
+  if (status === 'absent') {
+    return '✕ Ausente';
+  }
+
+  return 'Pendiente';
+}
+
+export function formatAttendanceMobileStatusLabel(
+  status: AttendanceStatus,
+  rawStatus?: AsistenciaAsambleaEstado | null,
+  horaLlegada?: string | null,
+) {
+  if (rawStatus === 'JUSTIFICADO') {
+    return 'Justificado';
+  }
+
+  if (status === 'late') {
+    const hora = formatAttendanceTime(horaLlegada);
+    return hora === 'Sin hora' ? 'Tarde' : `Tarde · ${hora}`;
+  }
+
+  if (status === 'unknown') {
+    return 'Pendiente';
+  }
+
+  return null;
 }
 
 export function createAttendanceTimestamp(date = new Date()) {

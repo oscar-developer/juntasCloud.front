@@ -49,7 +49,7 @@ export function AsambleaAttendanceToolbar({
 }: AsambleaAttendanceToolbarProps) {
   const theme = useTheme();
   const hasActiveToolbarValue = Boolean(searchInput.trim()) || statusFilter !== 'all';
-  const filterOrder: AttendanceFilter[] = ['all', 'unknown', 'present', 'absent'];
+  const filterOrder: AttendanceFilter[] = ['all', 'unknown', 'present', 'late', 'absent'];
 
   return (
     <Card
@@ -72,10 +72,10 @@ export function AsambleaAttendanceToolbar({
               sx={(currentTheme) => ({
                 [currentTheme.breakpoints.down('sm')]: {
                   '& .MuiOutlinedInput-root': {
-                    minHeight: 44,
+                    minHeight: 42,
                   },
                   '& .MuiInputBase-input': {
-                    py: 1.1,
+                    py: 1,
                   },
                 },
               })}
@@ -95,8 +95,8 @@ export function AsambleaAttendanceToolbar({
                 borderColor: 'divider',
                 color: 'text.secondary',
                 display: { xs: 'inline-flex', sm: 'none' },
-                height: 44,
-                width: 44,
+                height: 42,
+                width: 42,
               }}
             >
               <RefreshRoundedIcon />
@@ -120,16 +120,31 @@ export function AsambleaAttendanceToolbar({
 
           <Box
             sx={{
+              position: 'relative',
               overflowX: 'auto',
               pb: { xs: 0.25, sm: 0 },
               scrollbarWidth: 'none',
+              '&::after': {
+                background: `linear-gradient(90deg, ${alpha(theme.palette.background.paper, 0)}, ${alpha(
+                  theme.palette.background.paper,
+                  0.96,
+                )})`,
+                content: '""',
+                display: { xs: 'block', sm: 'none' },
+                height: '100%',
+                pointerEvents: 'none',
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                width: 24,
+              },
               '&::-webkit-scrollbar': { display: 'none' },
             }}
           >
             <Stack
               direction="row"
               spacing={{ xs: 0.75, sm: 1 }}
-              sx={{ display: { xs: 'flex', sm: 'none' }, minWidth: 'max-content' }}
+              sx={{ display: { xs: 'flex', sm: 'none' }, minWidth: 'max-content', pr: 3 }}
             >
               {filterOrder.map((filterValue) => {
                 const selected = statusFilter === filterValue;
@@ -144,6 +159,10 @@ export function AsambleaAttendanceToolbar({
                     sx={{
                       fontWeight: selected ? 700 : 600,
                       height: 30,
+                      '& .MuiChip-label': {
+                        fontSize: 12,
+                        px: 1,
+                      },
                     }}
                     variant={selected ? 'filled' : 'outlined'}
                   />

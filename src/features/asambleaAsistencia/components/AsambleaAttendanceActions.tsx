@@ -1,3 +1,4 @@
+import AccessTimeRoundedIcon from '@mui/icons-material/AccessTimeRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
@@ -7,18 +8,34 @@ type AsambleaAttendanceActionsProps = {
   row: AttendanceRowVM;
   disabled?: boolean;
   onSelectStatus: (row: AttendanceRowVM, status: Exclude<AttendanceStatus, 'unknown'>) => void;
+  onRequestLate: (row: AttendanceRowVM) => void;
 };
 
 export function AsambleaAttendanceActions({
   row,
   disabled = false,
   onSelectStatus,
+  onRequestLate,
 }: AsambleaAttendanceActionsProps) {
   const actionsDisabled = disabled || row.isSaving;
+  const activeStatus =
+    row.rawStatus === 'ASISTIO'
+      ? 'present'
+      : row.rawStatus === 'TARDE'
+        ? 'late'
+        : row.rawStatus === 'FALTO'
+          ? 'absent'
+          : null;
 
   return (
-    <Stack spacing={{ xs: 0.4, sm: 0.75 }} sx={{ minWidth: 0 }}>
-      <Stack direction="row" spacing={{ xs: 0.75, sm: 1 }} sx={{ width: { xs: '100%', sm: 'auto' } }} useFlexGap>
+    <Stack spacing={{ xs: 0.35, sm: 0.75 }} sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        flexWrap={{ xs: 'wrap', sm: 'nowrap' }}
+        spacing={{ xs: 0.75, sm: 1 }}
+        sx={{ width: { xs: '100%', sm: 'auto' } }}
+        useFlexGap
+      >
         <Button
           color="success"
           disabled={actionsDisabled}
@@ -26,12 +43,36 @@ export function AsambleaAttendanceActions({
           size="small"
           sx={{
             flex: { xs: 1, sm: 'initial' },
-            minHeight: { xs: 44, sm: 'auto' },
+            flexBasis: { xs: 'calc(50% - 3px)', sm: 'auto' },
+            fontSize: { xs: 12.5, sm: 13 },
+            fontWeight: 700,
+            minHeight: { xs: 42, sm: 'auto' },
             minWidth: { xs: 0, sm: 94 },
+            px: { xs: 0.75, sm: 1.25 },
           }}
-          variant={row.status === 'present' ? 'contained' : 'outlined'}
+          variant={activeStatus === 'present' ? 'contained' : 'outlined'}
         >
-          Presente
+          {activeStatus === 'present' ? '✓ Presente' : 'Presente'}
+        </Button>
+        <Button
+          color="warning"
+          disabled={actionsDisabled}
+          onClick={() => onRequestLate(row)}
+          size="small"
+          startIcon={activeStatus === 'late' ? undefined : <AccessTimeRoundedIcon />}
+          sx={{
+            flex: { xs: 1, sm: 'initial' },
+            flexBasis: { xs: 'calc(50% - 3px)', sm: 'auto' },
+            '& .MuiButton-startIcon': { mr: { xs: 0.4, sm: 0.75 } },
+            fontSize: { xs: 12.5, sm: 13 },
+            fontWeight: 700,
+            minHeight: { xs: 42, sm: 'auto' },
+            minWidth: { xs: 0, sm: 104 },
+            px: { xs: 0.75, sm: 1.25 },
+          }}
+          variant={activeStatus === 'late' ? 'contained' : 'outlined'}
+        >
+          {activeStatus === 'late' ? '✓ Tardanza' : 'Tardanza'}
         </Button>
         <Button
           color="error"
@@ -40,12 +81,16 @@ export function AsambleaAttendanceActions({
           size="small"
           sx={{
             flex: { xs: 1, sm: 'initial' },
-            minHeight: { xs: 44, sm: 'auto' },
+            flexBasis: { xs: '100%', sm: 'auto' },
+            fontSize: { xs: 12.5, sm: 13 },
+            fontWeight: 700,
+            minHeight: { xs: 42, sm: 'auto' },
             minWidth: { xs: 0, sm: 94 },
+            px: { xs: 0.75, sm: 1.25 },
           }}
-          variant={row.status === 'absent' ? 'contained' : 'outlined'}
+          variant={activeStatus === 'absent' ? 'contained' : 'outlined'}
         >
-          Ausente
+          {activeStatus === 'absent' ? '✓ Ausente' : 'Ausente'}
         </Button>
       </Stack>
 
@@ -83,7 +128,11 @@ export function AsambleaAttendanceActions({
               <Button
                 color="error"
                 disabled={disabled}
-                onClick={() => onSelectStatus(row, row.retryStatus!)}
+                onClick={() =>
+                  row.retryStatus === 'late'
+                    ? onRequestLate(row)
+                    : onSelectStatus(row, row.retryStatus!)
+                }
                 size="small"
                 sx={{ minWidth: 0, px: 0.5 }}
               >

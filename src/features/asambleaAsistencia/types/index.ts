@@ -5,9 +5,9 @@ export type AsistenciaAsambleaEstado =
   | 'FALTO'
   | 'JUSTIFICADO';
 
-export type AttendanceStatus = 'present' | 'absent' | 'unknown';
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'unknown';
 
-export type AttendanceFilter = 'all' | 'present' | 'absent' | 'unknown';
+export type AttendanceFilter = 'all' | 'present' | 'late' | 'absent' | 'unknown';
 
 export type AttendanceRowSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -64,6 +64,8 @@ export type AttendanceRowVM = {
   compactSecondaryText: string;
   status: AttendanceStatus;
   rawStatus?: AsistenciaAsambleaEstado | null;
+  horaLlegada?: string | null;
+  observaciones?: string | null;
   isPadronado: boolean;
   canVote: boolean;
   isSaving: boolean;
@@ -75,6 +77,7 @@ export type AttendanceRowVM = {
 export type AttendanceSummaryVM = {
   total: number;
   present: number;
+  late: number;
   absent: number;
   pending: number;
 };

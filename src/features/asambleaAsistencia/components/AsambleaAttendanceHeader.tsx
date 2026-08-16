@@ -35,6 +35,7 @@ type SummaryMetricCardProps = {
   label: string;
   value: number;
   tone: 'default' | 'success' | 'error' | 'warning';
+  mobileWide?: boolean;
 };
 
 function getSummaryTone(tone: SummaryMetricCardProps['tone']) {
@@ -69,17 +70,21 @@ function getSummaryTone(tone: SummaryMetricCardProps['tone']) {
   };
 }
 
-function SummaryMetricCard({ label, value, tone }: SummaryMetricCardProps) {
+function SummaryMetricCard({ label, value, tone, mobileWide = false }: SummaryMetricCardProps) {
   const palette = getSummaryTone(tone);
 
   return (
     <Box
       sx={{
         border: 1,
-        borderRadius: 3,
-        p: { xs: 1, sm: 2 },
+        borderRadius: { xs: 2, sm: 3 },
+        p: { xs: mobileWide ? '8px 12px' : 1, sm: 2 },
         backgroundColor: palette.backgroundColor,
         borderColor: palette.borderColor,
+        display: mobileWide ? { xs: 'flex', sm: 'block' } : 'block',
+        gridColumn: mobileWide ? { xs: '1 / -1', md: 'auto' } : 'auto',
+        justifyContent: mobileWide ? { xs: 'space-between', sm: 'initial' } : 'initial',
+        alignItems: mobileWide ? { xs: 'center', sm: 'initial' } : 'initial',
         textAlign: { xs: 'center', sm: 'left' },
       }}
     >
@@ -201,18 +206,16 @@ export function AsambleaAttendanceHeader({
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: 'repeat(2, minmax(0, 1fr))',
-                    md: 'repeat(4, minmax(0, 1fr))',
-                  },
-                  '@media (min-width:450px) and (max-width:599.95px)': {
-                    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                    md: 'repeat(5, minmax(0, 1fr))',
                   },
                   gap: { xs: 0.75, sm: 1.5 },
                 }}
               >
                 <SummaryMetricCard label="Total" tone="default" value={summary.total} />
                 <SummaryMetricCard label="Presentes" tone="success" value={summary.present} />
+                <SummaryMetricCard label="Tardanzas" tone="warning" value={summary.late} />
                 <SummaryMetricCard label="Ausentes" tone="error" value={summary.absent} />
-                <SummaryMetricCard label="Pendientes" tone="warning" value={summary.pending} />
+                <SummaryMetricCard label="Pendientes" mobileWide tone="default" value={summary.pending} />
               </Box>
             </Stack>
           ) : asambleasLoading ? (

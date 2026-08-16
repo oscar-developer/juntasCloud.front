@@ -39,6 +39,11 @@ import type {
   AttendanceStatus,
 } from '../types';
 
+type AttendanceStatusOptions = {
+  horaLlegada?: string;
+  observaciones?: string;
+};
+
 export function useAsambleaAsistencia() {
   const { tenant, tenantId } = useTenant();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -310,6 +315,7 @@ export function useAsambleaAsistencia() {
 
   const summary = useMemo(() => {
     let present = 0;
+    let late = 0;
     let absent = 0;
 
     attendanceByPersonaId.forEach((record) => {
@@ -317,17 +323,20 @@ export function useAsambleaAsistencia() {
 
       if (status === 'present') {
         present += 1;
+      } else if (status === 'late') {
+        late += 1;
       } else if (status === 'absent') {
         absent += 1;
       }
     });
 
     const total = personasProgress.total || personas.length;
-    const pending = Math.max(total - present - absent, 0);
+    const pending = Math.max(total - present - late - absent, 0);
 
     return {
       total,
       present,
+      late,
       absent,
       pending,
     };
@@ -356,6 +365,8 @@ export function useAsambleaAsistencia() {
         compactSecondaryText: formatPersonaCompactAttendanceText(persona, isPadronado, canVote),
         status: mapAttendanceRecordToStatus(record),
         rawStatus: record?.estado ?? null,
+        horaLlegada: record?.horaLlegada ?? null,
+        observaciones: record?.observaciones ?? null,
         isPadronado,
         canVote,
         isSaving: rowState.saveState === 'saving',
@@ -371,6 +382,7 @@ export function useAsambleaAsistencia() {
       all: summary.total,
       unknown: summary.pending,
       present: summary.present,
+      late: summary.late,
       absent: summary.absent,
     }),
     [summary],
@@ -462,6 +474,7 @@ export function useAsambleaAsistencia() {
   const handleSelectStatus = async (
     row: AttendanceRowVM,
     nextStatus: Exclude<AttendanceStatus, 'unknown'>,
+    options: AttendanceStatusOptions = {},
   ) => {
     if (!tenantId || !selectedAsambleaId) {
       return;
@@ -484,6 +497,8 @@ export function useAsambleaAsistencia() {
       persona,
       previousRecord,
       nextStatus,
+      horaLlegada: options.horaLlegada,
+      observaciones: options.observaciones,
     });
 
     clearRowSaveFeedback(rowId);
@@ -509,7 +524,10 @@ export function useAsambleaAsistencia() {
           horaLlegada:
             nextStatus === 'present'
               ? previousRecord.horaLlegada ?? optimisticRecord.horaLlegada ?? undefined
+              : nextStatus === 'late'
+                ? optimisticRecord.horaLlegada ?? undefined
               : undefined,
+          observaciones: nextStatus === 'late' ? options.observaciones?.trim() || undefined : undefined,
         });
       } else {
         const payload: AsambleaAttendanceCreateDto = {
@@ -521,7 +539,10 @@ export function useAsambleaAsistencia() {
           horaLlegada:
             nextStatus === 'present'
               ? optimisticRecord.horaLlegada ?? undefined
+              : nextStatus === 'late'
+                ? optimisticRecord.horaLlegada ?? undefined
               : undefined,
+          observaciones: nextStatus === 'late' ? options.observaciones?.trim() || undefined : undefined,
         };
 
         savedRecord = await createAsambleaAttendance(tenantId, asambleaSnapshot, payload);
