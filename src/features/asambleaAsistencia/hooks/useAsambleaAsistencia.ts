@@ -3,12 +3,13 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAsambleas } from '../../asambleas/services/asambleas.service';
 import type { Asamblea } from '../../asambleas/types';
-import { getFullName } from '../../personas/components/personaUi';
+import { getDisplayFullName, getFullName } from '../../personas/components/personaUi';
 import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { useTenant } from '../../tenant/context/TenantContext';
 import {
   formatPersonaSecondaryText,
+  formatPersonaCompactAttendanceText,
   getAttendanceErrorMessage,
   mapAttendanceRecordToStatus,
   mapAttendanceStatusToEstado,
@@ -351,6 +352,8 @@ export function useAsambleaAsistencia() {
         attendanceId: record?.idAsistencia ?? null,
         primaryText: getFullName(persona) || `Persona ${persona.idPersona}`,
         secondaryText: formatPersonaSecondaryText(persona),
+        displayPrimaryText: getDisplayFullName(persona) || `Persona ${persona.idPersona}`,
+        compactSecondaryText: formatPersonaCompactAttendanceText(persona, isPadronado, canVote),
         status: mapAttendanceRecordToStatus(record),
         rawStatus: record?.estado ?? null,
         isPadronado,

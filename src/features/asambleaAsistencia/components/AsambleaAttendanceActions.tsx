@@ -17,14 +17,18 @@ export function AsambleaAttendanceActions({
   const actionsDisabled = disabled || row.isSaving;
 
   return (
-    <Stack spacing={0.75} sx={{ minWidth: 0 }}>
-      <Stack direction="row" spacing={1} useFlexGap>
+    <Stack spacing={{ xs: 0.4, sm: 0.75 }} sx={{ minWidth: 0 }}>
+      <Stack direction="row" spacing={{ xs: 0.75, sm: 1 }} sx={{ width: { xs: '100%', sm: 'auto' } }} useFlexGap>
         <Button
           color="success"
           disabled={actionsDisabled}
           onClick={() => onSelectStatus(row, 'present')}
           size="small"
-          sx={{ minWidth: 94 }}
+          sx={{
+            flex: { xs: 1, sm: 'initial' },
+            minHeight: { xs: 44, sm: 'auto' },
+            minWidth: { xs: 0, sm: 94 },
+          }}
           variant={row.status === 'present' ? 'contained' : 'outlined'}
         >
           Presente
@@ -34,14 +38,18 @@ export function AsambleaAttendanceActions({
           disabled={actionsDisabled}
           onClick={() => onSelectStatus(row, 'absent')}
           size="small"
-          sx={{ minWidth: 94 }}
+          sx={{
+            flex: { xs: 1, sm: 'initial' },
+            minHeight: { xs: 44, sm: 'auto' },
+            minWidth: { xs: 0, sm: 94 },
+          }}
           variant={row.status === 'absent' ? 'contained' : 'outlined'}
         >
           Ausente
         </Button>
       </Stack>
 
-      <Box sx={{ minHeight: 22 }}>
+      <Box sx={{ minHeight: { xs: row.saveState === 'idle' ? 0 : 20, sm: 22 } }}>
         {row.saveState === 'saving' ? (
           <Stack alignItems="center" direction="row" spacing={0.75}>
             <CircularProgress size={12} />

@@ -109,6 +109,18 @@ export function formatPersonaSecondaryText(persona: Persona) {
   return `${documentLabel} · ${emailLabel}`;
 }
 
+export function formatPersonaCompactAttendanceText(
+  persona: Persona,
+  isPadronado: boolean,
+  canVote: boolean,
+) {
+  const documentLabel = persona.dni?.trim() ? `DNI ${persona.dni.trim()}` : 'Sin DNI';
+  const padronLabel = isPadronado ? 'PADRONADO' : 'NO PADRONADO';
+  const voteLabel = canVote ? 'CON VOTO' : 'SIN VOTO';
+
+  return `${documentLabel} · ${padronLabel} · ${voteLabel}`;
+}
+
 export function formatAttendanceTime(value?: string | null) {
   if (!value) {
     return 'Sin hora';

@@ -60,6 +60,8 @@ export type AttendanceRowVM = {
   attendanceId?: number | string | null;
   primaryText: string;
   secondaryText?: string;
+  displayPrimaryText: string;
+  compactSecondaryText: string;
   status: AttendanceStatus;
   rawStatus?: AsistenciaAsambleaEstado | null;
   isPadronado: boolean;

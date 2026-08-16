@@ -18,8 +18,8 @@ export function AsambleaAsistenciaPage() {
   const asistencia = useAsambleaAsistencia();
 
   return (
-    <Box sx={{ pb: { xs: 4, md: 0 } }}>
-      <Stack spacing={3}>
+    <Box sx={{ pb: { xs: 2, sm: 4, md: 0 } }}>
+      <Stack spacing={{ xs: 1.25, sm: 3 }}>
         <AsambleaAttendanceHeader
           asambleas={asistencia.orderedAsambleas}
           asambleasLoading={asistencia.asambleasLoading}
@@ -48,7 +48,7 @@ export function AsambleaAsistenciaPage() {
           <Box
             sx={{
               position: 'sticky',
-              top: { xs: 8, md: 16 },
+              top: { xs: 4, sm: 8, md: 16 },
               zIndex: 2,
             }}
           >

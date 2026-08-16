@@ -77,15 +77,16 @@ function SummaryMetricCard({ label, value, tone }: SummaryMetricCardProps) {
       sx={{
         border: 1,
         borderRadius: 3,
-        p: 2,
+        p: { xs: 1, sm: 2 },
         backgroundColor: palette.backgroundColor,
         borderColor: palette.borderColor,
+        textAlign: { xs: 'center', sm: 'left' },
       }}
     >
-      <Typography color="text.secondary" variant="body2">
+      <Typography color="text.secondary" sx={{ fontSize: { xs: 11, sm: 14 } }} variant="body2">
         {label}
       </Typography>
-      <Typography sx={{ color: palette.color, fontSize: 30, fontWeight: 800, lineHeight: 1.05 }}>
+      <Typography sx={{ color: palette.color, fontSize: { xs: 22, sm: 30 }, fontWeight: 800, lineHeight: 1.05 }}>
         {value}
       </Typography>
     </Box>
@@ -110,16 +111,17 @@ export function AsambleaAttendanceHeader({
           'linear-gradient(145deg, rgba(255,255,255,1) 0%, rgba(249,250,251,0.98) 38%, rgba(236,253,245,0.92) 100%)',
       }}
     >
-      <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-        <Stack spacing={3}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2.5, md: 3.5 } }}>
+        <Stack spacing={{ xs: 1.5, sm: 3 }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent="space-between"
-            spacing={{ xs: 2, md: 3 }}
+            spacing={{ xs: 1.25, sm: 2, md: 3 }}
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Chip
                 label={tenantName ?? 'Junta activa'}
+                size="small"
                 sx={{
                   bgcolor: alpha('#059669', 0.12),
                   color: 'success.dark',
@@ -127,10 +129,10 @@ export function AsambleaAttendanceHeader({
                   width: 'fit-content',
                 }}
               />
-              <Typography sx={{ fontSize: { xs: 30, md: 38 }, fontWeight: 900, lineHeight: 1.02, mt: 1.5 }}>
+              <Typography sx={{ fontSize: { xs: 24, sm: 30, md: 38 }, fontWeight: 900, lineHeight: 1.05, mt: { xs: 1, sm: 1.5 } }}>
                 Registro de asistencia
               </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1.25, maxWidth: 760 }}>
+              <Typography color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, mt: 1.25, maxWidth: 760 }}>
                 Módulo operativo para marcar asistencia de asamblea con registro rápido, filtros por estado
                 y virtualización tanto en desktop como en móvil.
               </Typography>
@@ -160,12 +162,12 @@ export function AsambleaAttendanceHeader({
           </Stack>
 
           {selectedAsamblea ? (
-            <Stack spacing={2.25}>
+            <Stack spacing={{ xs: 1.25, sm: 2.25 }}>
               <Stack
                 alignItems={{ xs: 'flex-start', md: 'center' }}
                 direction={{ xs: 'column', md: 'row' }}
                 justifyContent="space-between"
-                spacing={1.5}
+                spacing={{ xs: 1, sm: 1.5 }}
               >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack alignItems="center" direction="row" spacing={1}>
@@ -175,10 +177,10 @@ export function AsambleaAttendanceHeader({
                       {formatAsambleaTime(selectedAsamblea.horaInicioReal)}
                     </Typography>
                   </Stack>
-                  <Typography sx={{ fontSize: { xs: 24, md: 28 }, fontWeight: 800, mt: 0.75 }}>
+                  <Typography sx={{ fontSize: { xs: 18, sm: 24, md: 28 }, fontWeight: 800, mt: { xs: 0.35, sm: 0.75 } }}>
                     {selectedAsamblea.temaPrincipal || 'Asamblea sin tema'}
                   </Typography>
-                  <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                  <Typography color="text.secondary" sx={{ fontSize: { xs: 13, sm: 16 }, mt: { xs: 0.25, sm: 0.5 } }}>
                     {selectedAsamblea.lugar?.trim() || 'Lugar no registrado'}
                   </Typography>
                 </Box>
@@ -201,7 +203,10 @@ export function AsambleaAttendanceHeader({
                     xs: 'repeat(2, minmax(0, 1fr))',
                     md: 'repeat(4, minmax(0, 1fr))',
                   },
-                  gap: 1.5,
+                  '@media (min-width:450px) and (max-width:599.95px)': {
+                    gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+                  },
+                  gap: { xs: 0.75, sm: 1.5 },
                 }}
               >
                 <SummaryMetricCard label="Total" tone="default" value={summary.total} />
