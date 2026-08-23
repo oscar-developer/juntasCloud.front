@@ -3,7 +3,6 @@ import { Alert, Box, Button, Card, CardContent, Fab, LinearProgress, Stack, Typo
 import { Toast } from '../../../shared/ui/Toast';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { ExportPersonasDialog } from '../components/ExportPersonasDialog';
-import { PersonaDetailDialog } from '../components/PersonaDetailDialog';
 import { PersonaFiltersCard } from '../components/PersonaFiltersCard';
 import { PersonaFormDialog } from '../components/PersonaFormDialog';
 import { PersonaMobileList } from '../components/PersonaMobileList';
@@ -82,7 +81,7 @@ export function PersonasPage() {
               onDelete={personasPage.openDeleteDialog}
               onEdit={personasPage.openEditDialog}
               onReachEnd={personasPage.handleReachEnd}
-              onView={personasPage.openDetailDialog}
+              onView={personasPage.openFichaPage}
               rows={personasPage.rows}
             />
           </Card>
@@ -93,7 +92,7 @@ export function PersonasPage() {
             onDelete={personasPage.openDeleteDialog}
             onEdit={personasPage.openEditDialog}
             onReachEnd={personasPage.handleReachEnd}
-            onView={personasPage.openDetailDialog}
+            onView={personasPage.openFichaPage}
             rows={personasPage.rows}
             total={personasPage.total}
           />
@@ -134,12 +133,6 @@ export function PersonasPage() {
             onShowMessage={personasPage.showMessage}
             open={personasPage.formOpen}
             personaId={personasPage.editingPersonaId}
-            tenantId={personasPage.tenantId}
-          />
-          <PersonaDetailDialog
-            onClose={personasPage.closeDetailDialog}
-            open={personasPage.detailOpen}
-            personaId={personasPage.detailPersonaId}
             tenantId={personasPage.tenantId}
           />
         </>

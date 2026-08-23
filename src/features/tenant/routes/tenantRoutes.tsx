@@ -15,6 +15,7 @@ import { ResumenFinancieroPage } from '../../finanzas/resumen/pages/ResumenFinan
 import { JuntaMiembrosPage } from '../../juntaMiembros/pages/JuntaMiembrosPage';
 import { JuntasDirectivasPage } from '../../juntasDirectivas/pages/JuntasDirectivasPage';
 import { PersonaTerrenoPage } from '../../personaTerreno/pages/PersonaTerrenoPage';
+import { PersonaFichaPage } from '../../personas/pages/PersonaFichaPage';
 import { PersonasPage } from '../../personas/pages/PersonasPage';
 import { TerrenosPage } from '../../terrenos/pages/TerrenosPage';
 import { TenantInvitationsPage } from '../../tenantAdmin/pages/TenantInvitationsPage';
@@ -35,6 +36,10 @@ export const tenantRouteChildren: RouteObject[] = [
   {
     path: 'personas',
     element: <PersonasPage />,
+  },
+  {
+    path: 'personas/:personaId',
+    element: <PersonaFichaPage />,
   },
   {
     path: 'terrenos',

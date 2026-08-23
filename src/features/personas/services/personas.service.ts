@@ -4,8 +4,17 @@ import { apiClient } from '../../../api/axios';
 import type {
   ListQuery,
   Persona,
+  PersonaAsistenciaFicha,
   PersonaCreateDto,
+  PersonaFichaAsistenciasQuery,
+  PersonaFichaObligacionesQuery,
+  PersonaFichaPaginatedResponse,
+  PersonaFichaPagosQuery,
+  PersonaFichaResumen,
+  PersonaObligacionFicha,
+  PersonaPagoFicha,
   PersonasListResponse,
+  PersonaTerrenoFicha,
   PersonaUpdateDto,
 } from '../types';
 
@@ -133,6 +142,21 @@ async function deletePersonaRequest(tenantId: string | number, idPersona: string
     `${PERSONAS_BASE_PATH}/${idPersona}`,
     createTenantConfig(tenantId),
   );
+
+  return response.data;
+}
+
+async function fetchPersonaFichaResource(
+  tenantId: string | number,
+  idPersona: string | number,
+  resource: string,
+  params?: Record<string, string | number | undefined>,
+  signal?: AbortSignal,
+) {
+  const response = await apiClient.get(`${PERSONAS_BASE_PATH}/${idPersona}/${resource}`, {
+    ...createTenantConfig(tenantId, signal),
+    params,
+  });
 
   return response.data;
 }
@@ -278,6 +302,229 @@ function buildListParams(query: ListQuery) {
   return params;
 }
 
+function normalizeNumber(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    const parsed = Number(value);
+
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
+function normalizeNullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  return normalizeNumber(value);
+}
+
+function normalizeBoolean(value: unknown): boolean {
+  return value === true || value === 'true';
+}
+
+function normalizeString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function normalizeNullableString(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value : null;
+}
+
+function normalizeId(value: unknown): number | string {
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value;
+  }
+
+  return '';
+}
+
+function normalizeNullableId(value: unknown): number | string | null {
+  if (typeof value === 'number' || typeof value === 'string') {
+    return value;
+  }
+
+  return null;
+}
+
+function normalizeResumenAsistencia(raw: Record<string, unknown>) {
+  return {
+    total: normalizeNumber(raw.total),
+    asistencias: normalizeNumber(raw.asistencias),
+    faltas: normalizeNumber(raw.faltas),
+    tardanzas: normalizeNumber(raw.tardanzas),
+    porcentajeAsistencia: normalizeNumber(raw.porcentajeAsistencia),
+  };
+}
+
+function normalizePersonaFichaResumen(raw: Record<string, unknown>): PersonaFichaResumen {
+  const rawPersona = (raw.persona ?? {}) as Record<string, unknown>;
+  const rawFinanciero = (raw.resumenFinanciero ?? {}) as Record<string, unknown>;
+
+  return {
+    persona: {
+      idPersona: normalizeId(rawPersona.idPersona),
+      nroPadron: normalizeNullableNumber(rawPersona.nroPadron),
+      nombres: normalizeString(rawPersona.nombres),
+      nombreCompleto: normalizeString(rawPersona.nombreCompleto),
+      dni: normalizeNullableString(rawPersona.dni),
+      telefono: normalizeNullableString(rawPersona.telefono),
+      estado: normalizeString(rawPersona.estado, 'ACTIVO'),
+    },
+    resumenFinanciero: {
+      deudaPendienteTotal: normalizeNumber(rawFinanciero.deudaPendienteTotal),
+    },
+    resumenFaenas: normalizeResumenAsistencia((raw.resumenFaenas ?? {}) as Record<string, unknown>),
+    resumenAsambleas: normalizeResumenAsistencia((raw.resumenAsambleas ?? {}) as Record<string, unknown>),
+    ultimosEventos: Array.isArray(raw.ultimosEventos)
+      ? raw.ultimosEventos.map((evento) => normalizePersonaFichaEvento(evento as Record<string, unknown>))
+      : [],
+  };
+}
+
+function normalizePersonaFichaEvento(raw: Record<string, unknown>) {
+  return {
+    tipo: normalizeString(raw.tipo),
+    idEvento: normalizeId(raw.idEvento),
+    idAsistencia: normalizeId(raw.idAsistencia),
+    fecha: normalizeString(raw.fecha),
+    nombreEvento: normalizeString(raw.nombreEvento, 'Evento sin nombre'),
+    estadoAsistencia: normalizeString(raw.estadoAsistencia),
+    horaLlegada: normalizeNullableString(raw.horaLlegada),
+    generoObligacion: normalizeBoolean(raw.generoObligacion),
+    multaGenerada: normalizeBoolean(raw.multaGenerada),
+    montoRelacionado: normalizeNullableNumber(raw.montoRelacionado),
+    idObligacion: normalizeNullableId(raw.idObligacion),
+    relacionObligacionAmbigua: normalizeBoolean(raw.relacionObligacionAmbigua),
+  };
+}
+
+function normalizePersonaAsistencia(raw: Record<string, unknown>): PersonaAsistenciaFicha {
+  return {
+    tipoEvento: normalizeString(raw.tipoEvento),
+    idEvento: normalizeId(raw.idEvento),
+    idAsistencia: normalizeId(raw.idAsistencia),
+    fecha: normalizeString(raw.fecha),
+    nombreEvento: normalizeString(raw.nombreEvento, 'Evento sin nombre'),
+    estado: normalizeString(raw.estado),
+    horaLlegada: normalizeNullableString(raw.horaLlegada),
+    observacion: normalizeNullableString(raw.observacion),
+    multaGenerada: normalizeBoolean(raw.multaGenerada),
+    montoMulta: normalizeNullableNumber(raw.montoMulta),
+    idObligacion: normalizeNullableId(raw.idObligacion),
+    estadoObligacion: normalizeNullableString(raw.estadoObligacion),
+    relacionObligacionAmbigua: normalizeBoolean(raw.relacionObligacionAmbigua),
+  };
+}
+
+function normalizePersonaObligacionEvento(raw: unknown) {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+
+  const eventRaw = raw as Record<string, unknown>;
+
+  return {
+    tipoEvento: normalizeString(eventRaw.tipoEvento),
+    idEvento: normalizeId(eventRaw.idEvento),
+    nombreEvento: normalizeString(eventRaw.nombreEvento, 'Evento sin nombre'),
+    fecha: normalizeString(eventRaw.fecha),
+    idAsistencia: normalizeNullableId(eventRaw.idAsistencia),
+  };
+}
+
+function normalizePersonaObligacion(raw: Record<string, unknown>): PersonaObligacionFicha {
+  return {
+    idObligacion: normalizeId(raw.idObligacion),
+    fecha: normalizeString(raw.fecha),
+    fechaEmision: normalizeNullableString(raw.fechaEmision),
+    fechaVencimiento: normalizeNullableString(raw.fechaVencimiento),
+    periodo: normalizeNullableString(raw.periodo),
+    idConceptoCobro: normalizeNullableId(raw.idConceptoCobro) ?? undefined,
+    codigoConcepto: normalizeNullableString(raw.codigoConcepto),
+    concepto: normalizeString(raw.concepto, 'Obligación'),
+    tipoConcepto: normalizeNullableString(raw.tipoConcepto),
+    descripcion: normalizeNullableString(raw.descripcion),
+    importeOriginal: normalizeNumber(raw.importeOriginal),
+    montoPagado: normalizeNumber(raw.montoPagado),
+    montoExonerado: normalizeNumber(raw.montoExonerado),
+    montoCompensado: normalizeNumber(raw.montoCompensado),
+    saldoPendiente: normalizeNumber(raw.saldoPendiente),
+    estado: normalizeString(raw.estado),
+    origen: normalizeString(raw.origen),
+    tipoEvento: normalizeNullableString(raw.tipoEvento),
+    idEvento: normalizeNullableId(raw.idEvento),
+    idAsistencia: normalizeNullableId(raw.idAsistencia),
+    eventoRelacionado: normalizePersonaObligacionEvento(raw.eventoRelacionado),
+  };
+}
+
+function normalizePersonaPago(raw: Record<string, unknown>): PersonaPagoFicha {
+  return {
+    idObligacionPago: normalizeId(raw.idObligacionPago),
+    idObligacion: normalizeId(raw.idObligacion),
+    idMovimiento: normalizeId(raw.idMovimiento),
+    fecha: normalizeString(raw.fecha),
+    importe: normalizeNumber(raw.importe),
+    montoMovimiento: normalizeNumber(raw.montoMovimiento),
+    idConceptoCobro: normalizeNullableId(raw.idConceptoCobro) ?? undefined,
+    codigoConcepto: normalizeNullableString(raw.codigoConcepto),
+    concepto: normalizeString(raw.concepto, 'Pago'),
+    tipoConcepto: normalizeNullableString(raw.tipoConcepto),
+    medioPago: normalizeString(raw.medioPago, 'No registrado'),
+    referencia: normalizeNullableString(raw.referencia),
+    descripcion: normalizeNullableString(raw.descripcion),
+    observaciones: normalizeNullableString(raw.observaciones),
+    estado: normalizeString(raw.estado),
+    anulado: normalizeBoolean(raw.anulado),
+    tipoEvento: normalizeNullableString(raw.tipoEvento),
+    idEvento: normalizeNullableId(raw.idEvento),
+  };
+}
+
+function normalizePersonaTerreno(raw: Record<string, unknown>): PersonaTerrenoFicha {
+  return {
+    idPersonaTerreno: normalizeId(raw.idPersonaTerreno),
+    idTerreno: normalizeId(raw.idTerreno),
+    codigoLote: normalizeNullableString(raw.codigoLote),
+    manzana: normalizeNullableString(raw.manzana),
+    numeroLote: normalizeNullableString(raw.numeroLote),
+    descripcion: normalizeString(raw.descripcion, 'Terreno'),
+    areaAproxM2: normalizeNullableNumber(raw.areaAproxM2),
+    areaLegalM2: normalizeNullableNumber(raw.areaLegalM2),
+    partidaRegistral: normalizeNullableString(raw.partidaRegistral),
+    ubicacion: normalizeNullableString(raw.ubicacion),
+    estado: normalizeString(raw.estado),
+    tipoRelacion: normalizeString(raw.tipoRelacion),
+    porcentajeParticipacion: normalizeNullableNumber(raw.porcentajeParticipacion),
+    relacionPrincipal: raw.relacionPrincipal === null || raw.relacionPrincipal === undefined
+      ? null
+      : normalizeBoolean(raw.relacionPrincipal),
+  };
+}
+
+function normalizePaginatedFichaResponse<T>(
+  raw: unknown,
+  normalizeItem: (item: Record<string, unknown>) => T,
+): PersonaFichaPaginatedResponse<T> {
+  const response = (raw ?? {}) as Record<string, unknown>;
+  const rawItems = Array.isArray(response.items) ? response.items : [];
+
+  return {
+    items: rawItems.map((item) => normalizeItem(item as Record<string, unknown>)),
+    total: normalizeNumber(response.total),
+    page: normalizeNumber(response.page, 1),
+    limit: normalizeNumber(response.limit, 20),
+  };
+}
+
 function getErrorMessage(error: unknown) {
   if (axios.isAxiosError(error)) {
     const responseData = error.response?.data;
@@ -361,6 +608,111 @@ export async function updatePersona(
       normalizeUpdatePayload(payload),
     )) as PersonaApiShape;
     return normalizePersona(data);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function getPersonaFichaResumen(
+  tenantId: string | number,
+  idPersona: string | number,
+  signal?: AbortSignal,
+): Promise<PersonaFichaResumen> {
+  try {
+    const data = (await fetchPersonaFichaResource(tenantId, idPersona, 'ficha', undefined, signal)) as Record<
+      string,
+      unknown
+    >;
+    return normalizePersonaFichaResumen(data);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function getPersonaFichaAsistencias(
+  tenantId: string | number,
+  idPersona: string | number,
+  query: PersonaFichaAsistenciasQuery,
+  signal?: AbortSignal,
+): Promise<PersonaFichaPaginatedResponse<PersonaAsistenciaFicha>> {
+  try {
+    const data = await fetchPersonaFichaResource(
+      tenantId,
+      idPersona,
+      'asistencias',
+      {
+        tipo: query.tipo,
+        estado: query.estado,
+        anio: query.anio,
+        page: query.page,
+        limit: query.limit,
+      },
+      signal,
+    );
+
+    return normalizePaginatedFichaResponse(data, normalizePersonaAsistencia);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function getPersonaFichaObligaciones(
+  tenantId: string | number,
+  idPersona: string | number,
+  query: PersonaFichaObligacionesQuery,
+  signal?: AbortSignal,
+): Promise<PersonaFichaPaginatedResponse<PersonaObligacionFicha>> {
+  try {
+    const data = await fetchPersonaFichaResource(
+      tenantId,
+      idPersona,
+      'obligaciones',
+      {
+        estado: query.estado,
+        page: query.page,
+        limit: query.limit,
+      },
+      signal,
+    );
+
+    return normalizePaginatedFichaResponse(data, normalizePersonaObligacion);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function getPersonaFichaPagos(
+  tenantId: string | number,
+  idPersona: string | number,
+  query: PersonaFichaPagosQuery,
+  signal?: AbortSignal,
+): Promise<PersonaFichaPaginatedResponse<PersonaPagoFicha>> {
+  try {
+    const data = await fetchPersonaFichaResource(
+      tenantId,
+      idPersona,
+      'pagos',
+      {
+        page: query.page,
+        limit: query.limit,
+      },
+      signal,
+    );
+
+    return normalizePaginatedFichaResponse(data, normalizePersonaPago);
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
+  }
+}
+
+export async function getPersonaFichaTerrenos(
+  tenantId: string | number,
+  idPersona: string | number,
+  signal?: AbortSignal,
+): Promise<PersonaTerrenoFicha[]> {
+  try {
+    const data = await fetchPersonaFichaResource(tenantId, idPersona, 'terrenos', undefined, signal);
+    return Array.isArray(data) ? data.map((item) => normalizePersonaTerreno(item as Record<string, unknown>)) : [];
   } catch (error) {
     throw new Error(getErrorMessage(error));
   }

@@ -52,8 +52,16 @@ type TenantNavEntry = {
   disabled?: boolean;
 };
 
+function isEntryActive(entryTo: string | undefined, pathname: string) {
+  if (!entryTo) {
+    return false;
+  }
+
+  return pathname === entryTo || pathname.startsWith(`${entryTo}/`);
+}
+
 function sectionHasActiveRoute(section: NavSection, pathname: string) {
-  return section.entries.some((entry) => entry.to === pathname);
+  return section.entries.some((entry) => isEntryActive(entry.to, pathname));
 }
 
 function getActiveSectionTitle(sections: NavSection[], pathname: string) {
@@ -79,22 +87,27 @@ export function TenantSidebar({
 
   const sections: NavSection[] = [
     {
-      title: 'Catálogos',
+      title: 'Personas',
       entries: [
         {
-          label: 'Personas',
+          label: 'Listado de personas',
           to: `${tenantBasePath}/personas`,
           icon: <GroupRoundedIcon />,
-        },
-        {
-          label: 'Terrenos',
-          to: `${tenantBasePath}/terrenos`,
-          icon: <HomeWorkRoundedIcon />,
         },
         {
           label: 'Relación Persona–Terreno',
           to: `${tenantBasePath}/persona-terreno`,
           icon: <AccountTreeRoundedIcon />,
+        },
+      ],
+    },
+    {
+      title: 'Catálogos',
+      entries: [
+        {
+          label: 'Terrenos',
+          to: `${tenantBasePath}/terrenos`,
+          icon: <HomeWorkRoundedIcon />,
         },
         {
           label: 'Bienes',
@@ -321,7 +334,7 @@ export function TenantSidebar({
                 <List disablePadding>
                   {section.entries.map((entry) => {
                     const entryTo = entry.to;
-                    const selected = Boolean(entryTo) && location.pathname === entryTo;
+                    const selected = isEntryActive(entryTo, location.pathname);
 
                     if (!entryTo || entry.disabled) {
                       return (

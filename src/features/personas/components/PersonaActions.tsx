@@ -66,7 +66,7 @@ export function PersonaActions({
           transformOrigin={{ horizontal: 'right', vertical: 'top' }}
           anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
         >
-          <MenuItem onClick={() => runAction(onView)}>Ver información</MenuItem>
+          <MenuItem onClick={() => runAction(onView)}>Ver ficha</MenuItem>
           <MenuItem onClick={() => runAction(onEdit)}>Editar</MenuItem>
           <MenuItem onClick={() => runAction(onDelete)} sx={{ color: 'error.main' }}>
             Eliminar

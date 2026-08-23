@@ -1,6 +1,6 @@
 import { useMediaQuery, useTheme } from '@mui/material';
 import { useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTenant } from '../../tenant/context/TenantContext';
 import { getFullName, getPersonaErrorMessage } from '../components/personaUi';
 import {
@@ -47,6 +47,7 @@ function buildListQuery(
 
 export function usePersonasPage() {
   const { tenantId } = useParams<{ tenantId: string }>();
+  const navigate = useNavigate();
   const { tenant } = useTenant();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
@@ -67,8 +68,6 @@ export function usePersonasPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<FormMode>('create');
   const [editingPersonaId, setEditingPersonaId] = useState<string | number | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailPersonaId, setDetailPersonaId] = useState<string | number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Persona | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -223,14 +222,13 @@ export function usePersonasPage() {
     setEditingPersonaId(null);
   };
 
-  const openDetailDialog = (persona: Persona) => {
-    setDetailPersonaId(persona.idPersona);
-    setDetailOpen(true);
-  };
+  const openFichaPage = (persona: Persona) => {
+    if (!tenantId) {
+      showMessage('No se pudo identificar la junta activa.', 'error');
+      return;
+    }
 
-  const closeDetailDialog = () => {
-    setDetailOpen(false);
-    setDetailPersonaId(null);
+    navigate(`/app/juntas/${tenantId}/personas/${persona.idPersona}`);
   };
 
   const handleSaved = (message: string) => {
@@ -341,8 +339,6 @@ export function usePersonasPage() {
     formOpen,
     formMode,
     editingPersonaId,
-    detailOpen,
-    detailPersonaId,
     deleteLoading,
     deleteDialogOpen: Boolean(deleteTarget),
     deleteTargetName: deleteTarget ? getFullName(deleteTarget) : undefined,
@@ -360,8 +356,7 @@ export function usePersonasPage() {
     openCreateDialog,
     openEditDialog,
     closeFormDialog,
-    openDetailDialog,
-    closeDetailDialog,
+    openFichaPage,
     handleSaved,
     showMessage,
     openDeleteDialog,
