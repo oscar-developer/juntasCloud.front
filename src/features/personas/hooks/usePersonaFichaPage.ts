@@ -2,6 +2,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getPersonaErrorMessage } from '../components/personaUi';
 import {
+  exportPersonaConstanciaToPdf,
+  exportPersonaFichaToExcel,
+  getPersonaFichaExportData,
+  issuePersonaConstancia,
+} from '../services/personaConstancias.service';
+import {
   getPersonaById,
   getPersonaFichaAsistencias,
   getPersonaFichaObligaciones,
@@ -12,6 +18,7 @@ import {
 import type {
   Persona,
   PersonaAsistenciaFicha,
+  PersonaConstanciaIssued,
   PersonaFichaPaginatedResponse,
   PersonaFichaResumen,
   PersonaFichaSectionState,
@@ -25,6 +32,18 @@ export type PersonaFichaAsistenciaFilter = 'TODAS' | 'FAENA' | 'ASAMBLEA';
 export type PersonaFichaObligacionFilter = 'PENDIENTES' | 'PAGADAS' | 'TODAS';
 
 const FICHA_PAGE_LIMIT = 20;
+
+type ToastState = {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error' | 'info' | 'warning';
+};
+
+const initialToastState: ToastState = {
+  open: false,
+  message: '',
+  severity: 'info',
+};
 
 function createSectionState<T>(): PersonaFichaSectionState<T> {
   return {
@@ -81,6 +100,10 @@ export function usePersonaFichaPage() {
     createSectionState<PersonaFichaPaginatedResponse<PersonaPagoFicha>>(),
   );
   const [terrenosState, setTerrenosState] = useState(createSectionState<PersonaTerrenoFicha[]>());
+  const [exportOpen, setExportOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+  const [issuedConstancia, setIssuedConstancia] = useState<PersonaConstanciaIssued | null>(null);
+  const [toast, setToast] = useState<ToastState>(initialToastState);
 
   const canLoadFicha = Boolean(tenantId && personaId);
 
@@ -287,6 +310,10 @@ export function usePersonaFichaPage() {
     setObligacionesState(createSectionState<PersonaFichaPaginatedResponse<PersonaObligacionFicha>>());
     setPagosState(createSectionState<PersonaFichaPaginatedResponse<PersonaPagoFicha>>());
     setTerrenosState(createSectionState<PersonaTerrenoFicha[]>());
+    setExportOpen(false);
+    setExportLoading(false);
+    setIssuedConstancia(null);
+    setToast(initialToastState);
   }, [personaId, tenantId]);
 
   useEffect(() => {
@@ -376,6 +403,65 @@ export function usePersonaFichaPage() {
     setInfoCompletaOpen(false);
   };
 
+  const showMessage = (message: string, severity: ToastState['severity']) => {
+    setToast({ open: true, message, severity });
+  };
+
+  const closeToast = () => {
+    setToast((current) => ({ ...current, open: false }));
+  };
+
+  const openExportDialog = () => {
+    setExportOpen(true);
+  };
+
+  const closeExportDialog = () => {
+    if (exportLoading) {
+      return;
+    }
+
+    setExportOpen(false);
+    setIssuedConstancia(null);
+  };
+
+  const prepareConstancia = async () => {
+    if (issuedConstancia) {
+      return issuedConstancia;
+    }
+
+    if (!tenantId || !personaId) {
+      throw new Error('No se pudo identificar la persona solicitada.');
+    }
+
+    const constancia = await issuePersonaConstancia(tenantId, personaId);
+    setIssuedConstancia(constancia);
+    return constancia;
+  };
+
+  const exportFicha = async (format: 'pdf' | 'excel') => {
+    if (!tenantId || !personaId || exportLoading) {
+      return;
+    }
+
+    setExportLoading(true);
+    try {
+      const constancia = await prepareConstancia();
+
+      if (format === 'pdf') {
+        await exportPersonaConstanciaToPdf(constancia);
+        showMessage('Constancia descargada en formato PDF.', 'success');
+      } else {
+        const exportData = await getPersonaFichaExportData(tenantId, personaId);
+        exportPersonaFichaToExcel(constancia, exportData);
+        showMessage('Ficha descargada en formato Excel.', 'success');
+      }
+    } catch (error) {
+      showMessage(getPersonaErrorMessage(error, 'No se pudo exportar la ficha de la persona.'), 'error');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
   const goBackToPersonas = () => {
     navigate(personasPath);
   };
@@ -408,6 +494,10 @@ export function usePersonaFichaPage() {
     terrenosState,
     infoCompletaOpen,
     infoCompletaState,
+    exportOpen,
+    exportLoading,
+    issuedConstancia,
+    toast,
     personasPath,
     setActiveTab,
     changeAsistenciaFilter,
@@ -422,6 +512,10 @@ export function usePersonaFichaPage() {
     canLoadMorePagos,
     openInfoCompleta,
     closeInfoCompleta,
+    openExportDialog,
+    closeExportDialog,
+    exportFicha,
+    closeToast,
     goBackToPersonas,
   };
 }

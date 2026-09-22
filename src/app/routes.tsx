@@ -12,6 +12,7 @@ import { HelpPage } from '../features/help/pages/HelpPage';
 import { InvitationsPage } from '../features/invitations/pages/InvitationsPage';
 import { JuntasListPage } from '../features/juntas/pages/JuntasListPage';
 import { TenantTrashPage } from '../features/juntas/pages/TenantTrashPage';
+import { PersonaConstanciaVerificationPage } from '../features/personas/pages/PersonaConstanciaVerificationPage';
 import { TenantProvider } from '../features/tenant/context/TenantContext';
 import { TenantLayout } from '../features/tenant/layout/TenantLayout';
 import { tenantRouteChildren } from '../features/tenant/routes/tenantRoutes';
@@ -48,6 +49,10 @@ export function AppRoutes() {
     {
       path: '/verify-email',
       element: <VerifyEmailPage />,
+    },
+    {
+      path: '/verificar/constancia/:token',
+      element: <PersonaConstanciaVerificationPage />,
     },
     {
       path: '/',

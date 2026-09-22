@@ -14,8 +14,12 @@ export function mapFaenaAttendanceRecordToStatus(
     return 'unknown';
   }
 
-  if (participation.estado === 'ASISTIO' || participation.estado === 'TARDE') {
+  if (participation.estado === 'ASISTIO') {
     return 'present';
+  }
+
+  if (participation.estado === 'TARDE') {
+    return 'late';
   }
 
   if (participation.estado === 'FALTO' || participation.estado === 'JUSTIFICADO') {
@@ -30,7 +34,11 @@ export function mapFaenaAttendanceStatusToEstado(
   previousEstado?: FaenaParticipacionEstado | null,
 ): FaenaParticipacionEstado {
   if (status === 'present') {
-    return previousEstado === 'TARDE' ? 'TARDE' : 'ASISTIO';
+    return 'ASISTIO';
+  }
+
+  if (status === 'late') {
+    return 'TARDE';
   }
 
   return previousEstado === 'JUSTIFICADO' ? 'JUSTIFICADO' : 'FALTO';
@@ -51,6 +59,14 @@ export function getFaenaAttendanceChipProps(
     return {
       color: 'error',
       label: 'Ausente',
+      variant: 'outlined',
+    };
+  }
+
+  if (status === 'late') {
+    return {
+      color: 'warning',
+      label: 'Tarde',
       variant: 'outlined',
     };
   }
@@ -82,6 +98,10 @@ export function getFaenaAttendanceFilterLabel(filter: FaenaAttendanceFilter) {
     return 'Presentes';
   }
 
+  if (filter === 'late') {
+    return 'Tardanzas';
+  }
+
   if (filter === 'absent') {
     return 'Ausentes';
   }
@@ -99,6 +119,63 @@ export function formatPersonaSecondaryText(persona: Persona) {
     ? persona.email.trim()
     : persona.tipoParticipante.replace(/_/g, ' ');
   return `${documentLabel} · ${emailLabel}`;
+}
+
+export function formatPersonaCompactFaenaAttendanceText(persona: Persona) {
+  const documentLabel = persona.dni?.trim() ? `DNI ${persona.dni.trim()}` : 'Sin DNI';
+  const participantLabel = persona.tipoParticipante.replace(/_/g, ' ');
+
+  return `${documentLabel} · ${participantLabel}`;
+}
+
+export function formatFaenaAttendanceTime(value?: string | null) {
+  if (!value) {
+    return 'Sin hora';
+  }
+
+  const match = value.match(/(\d{2}):(\d{2})/);
+  return match ? `${match[1]}:${match[2]}` : value;
+}
+
+export function formatFaenaAttendanceStatusLabel(
+  status: FaenaAttendanceStatus,
+  horaLlegada?: string | null,
+) {
+  if (status === 'late') {
+    const hora = formatFaenaAttendanceTime(horaLlegada);
+    return hora === 'Sin hora' ? 'Tarde' : `Tarde · ${hora}`;
+  }
+
+  if (status === 'present') {
+    return 'Presente';
+  }
+
+  if (status === 'absent') {
+    return 'Ausente';
+  }
+
+  return 'Pendiente';
+}
+
+export function formatFaenaAttendanceMobileStatusLabel(
+  status: FaenaAttendanceStatus,
+  rawStatus?: FaenaParticipacionEstado | null,
+  horaLlegada?: string | null,
+) {
+  if (rawStatus === 'JUSTIFICADO') {
+    return 'Justificado';
+  }
+
+  if (status === 'late') {
+    const hora = formatFaenaAttendanceTime(horaLlegada);
+    return hora === 'Sin hora' ? 'Tarde' : `Tarde · ${hora}`;
+  }
+
+  if (status === 'unknown') {
+    return 'Pendiente';
+  }
+
+  return null;
 }
 
 export function createFaenaAttendanceTimestamp(date = new Date()) {

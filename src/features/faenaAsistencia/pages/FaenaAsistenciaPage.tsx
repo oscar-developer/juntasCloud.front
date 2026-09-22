@@ -7,19 +7,36 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaenaAttendanceDesktopTable } from '../components/FaenaAttendanceDesktopTable';
 import { FaenaAttendanceHeader } from '../components/FaenaAttendanceHeader';
+import { FaenaAttendanceLateDialog } from '../components/FaenaAttendanceLateDialog';
 import { FaenaAttendanceMobileList } from '../components/FaenaAttendanceMobileList';
 import { FaenaAttendanceToolbar } from '../components/FaenaAttendanceToolbar';
 import { useFaenaAsistencia } from '../hooks/useFaenaAsistencia';
+import type { FaenaAttendanceRowVM } from '../types';
 
 export function FaenaAsistenciaPage() {
   const asistencia = useFaenaAsistencia();
+  const [lateTarget, setLateTarget] = useState<FaenaAttendanceRowVM | null>(null);
+
+  const closeLateDialog = () => {
+    setLateTarget(null);
+  };
+
+  const confirmLateAttendance = async (values: { horaLlegada: string; observaciones?: string }) => {
+    if (!lateTarget) {
+      return;
+    }
+
+    await asistencia.handleSelectStatus(lateTarget, 'late', values);
+    setLateTarget(null);
+  };
 
   return (
-    <Box sx={{ pb: { xs: 4, md: 0 } }}>
-      <Stack spacing={3}>
+    <Box sx={{ pb: { xs: 2, sm: 4, md: 0 } }}>
+      <Stack spacing={{ xs: 1.25, sm: 3 }}>
         <FaenaAttendanceHeader
           faenas={asistencia.orderedFaenas}
           faenasLoading={asistencia.faenasLoading}
@@ -48,7 +65,7 @@ export function FaenaAsistenciaPage() {
           <Box
             sx={{
               position: 'sticky',
-              top: { xs: 8, md: 16 },
+              top: { xs: 4, sm: 8, md: 16 },
               zIndex: 2,
             }}
           >
@@ -145,6 +162,7 @@ export function FaenaAsistenciaPage() {
             <Card elevation={0}>
               <FaenaAttendanceDesktopTable
                 disabled={asistencia.attendanceLoading}
+                onRequestLate={setLateTarget}
                 onSelectStatus={asistencia.handleSelectStatus}
                 rows={asistencia.filteredRows}
               />
@@ -152,12 +170,19 @@ export function FaenaAsistenciaPage() {
           ) : (
             <FaenaAttendanceMobileList
               disabled={asistencia.attendanceLoading}
+              onRequestLate={setLateTarget}
               onSelectStatus={asistencia.handleSelectStatus}
               rows={asistencia.filteredRows}
             />
           )
         ) : null}
       </Stack>
+      <FaenaAttendanceLateDialog
+        onClose={closeLateDialog}
+        onConfirm={confirmLateAttendance}
+        open={Boolean(lateTarget)}
+        row={lateTarget}
+      />
     </Box>
   );
 }

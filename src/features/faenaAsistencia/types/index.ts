@@ -48,9 +48,9 @@ export type FaenaParticipacionListQuery = {
   idPersona?: number | string;
 };
 
-export type FaenaAttendanceStatus = 'present' | 'absent' | 'unknown';
+export type FaenaAttendanceStatus = 'present' | 'late' | 'absent' | 'unknown';
 
-export type FaenaAttendanceFilter = 'all' | 'present' | 'absent' | 'unknown';
+export type FaenaAttendanceFilter = 'all' | 'present' | 'late' | 'absent' | 'unknown';
 
 export type FaenaAttendanceRowSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -60,9 +60,13 @@ export type FaenaAttendanceRowVM = {
   participationId?: number | string | null;
   primaryText: string;
   secondaryText?: string;
+  displayPrimaryText: string;
+  compactSecondaryText: string;
   participantType: 'PADRONADO' | 'NO_PADRONADO' | 'INVITADO';
   status: FaenaAttendanceStatus;
   rawStatus?: FaenaParticipacionEstado | null;
+  horaLlegada?: string | null;
+  observaciones?: string | null;
   isSaving: boolean;
   saveState: FaenaAttendanceRowSaveState;
   errorMessage?: string | null;
@@ -72,6 +76,7 @@ export type FaenaAttendanceRowVM = {
 export type FaenaAttendanceSummaryVM = {
   total: number;
   present: number;
+  late: number;
   absent: number;
   pending: number;
 };

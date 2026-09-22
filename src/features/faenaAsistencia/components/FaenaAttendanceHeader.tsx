@@ -36,6 +36,7 @@ type SummaryMetricCardProps = {
   label: string;
   value: number;
   tone: 'default' | 'success' | 'error' | 'warning';
+  mobileWide?: boolean;
 };
 
 function getSummaryTone(tone: SummaryMetricCardProps['tone']) {
@@ -70,23 +71,28 @@ function getSummaryTone(tone: SummaryMetricCardProps['tone']) {
   };
 }
 
-function SummaryMetricCard({ label, value, tone }: SummaryMetricCardProps) {
+function SummaryMetricCard({ label, value, tone, mobileWide = false }: SummaryMetricCardProps) {
   const palette = getSummaryTone(tone);
 
   return (
     <Box
       sx={{
         border: 1,
-        borderRadius: 3,
-        p: 2,
+        borderRadius: { xs: 2, sm: 3 },
+        p: { xs: mobileWide ? '8px 12px' : 1, sm: 2 },
         backgroundColor: palette.backgroundColor,
         borderColor: palette.borderColor,
+        display: mobileWide ? { xs: 'flex', sm: 'block' } : 'block',
+        gridColumn: mobileWide ? { xs: '1 / -1', md: 'auto' } : 'auto',
+        justifyContent: mobileWide ? { xs: 'space-between', sm: 'initial' } : 'initial',
+        alignItems: mobileWide ? { xs: 'center', sm: 'initial' } : 'initial',
+        textAlign: { xs: 'center', sm: 'left' },
       }}
     >
-      <Typography color="text.secondary" variant="body2">
+      <Typography color="text.secondary" sx={{ fontSize: { xs: 11, sm: 14 } }} variant="body2">
         {label}
       </Typography>
-      <Typography sx={{ color: palette.color, fontSize: 30, fontWeight: 800, lineHeight: 1.05 }}>
+      <Typography sx={{ color: palette.color, fontSize: { xs: 22, sm: 30 }, fontWeight: 800, lineHeight: 1.05 }}>
         {value}
       </Typography>
     </Box>
@@ -111,16 +117,17 @@ export function FaenaAttendanceHeader({
           'linear-gradient(145deg, rgba(255,255,255,1) 0%, rgba(255,251,235,0.98) 34%, rgba(236,253,245,0.92) 100%)',
       }}
     >
-      <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-        <Stack spacing={3}>
+      <CardContent sx={{ p: { xs: 1.5, sm: 2.5, md: 3.5 } }}>
+        <Stack spacing={{ xs: 1.5, sm: 3 }}>
           <Stack
             direction={{ xs: 'column', md: 'row' }}
             justifyContent="space-between"
-            spacing={{ xs: 2, md: 3 }}
+            spacing={{ xs: 1.25, sm: 2, md: 3 }}
           >
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Chip
                 label={tenantName ?? 'Junta activa'}
+                size="small"
                 sx={{
                   bgcolor: alpha('#d97706', 0.12),
                   color: 'warning.dark',
@@ -128,10 +135,10 @@ export function FaenaAttendanceHeader({
                   width: 'fit-content',
                 }}
               />
-              <Typography sx={{ fontSize: { xs: 30, md: 38 }, fontWeight: 900, lineHeight: 1.02, mt: 1.5 }}>
+              <Typography sx={{ fontSize: { xs: 24, sm: 30, md: 38 }, fontWeight: 900, lineHeight: 1.05, mt: { xs: 1, sm: 1.5 } }}>
                 Asistencia de faena
               </Typography>
-              <Typography color="text.secondary" sx={{ mt: 1.25, maxWidth: 760 }}>
+              <Typography color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, mt: 1.25, maxWidth: 760 }}>
                 Registro operativo por padrón para marcar asistencia de la faena activa con filtros,
                 sincronización por URL y guardado rápido en desktop y móvil.
               </Typography>
@@ -160,12 +167,12 @@ export function FaenaAttendanceHeader({
           </Stack>
 
           {selectedFaena ? (
-            <Stack spacing={2.25}>
+            <Stack spacing={{ xs: 1.25, sm: 2.25 }}>
               <Stack
                 alignItems={{ xs: 'flex-start', md: 'center' }}
                 direction={{ xs: 'column', md: 'row' }}
                 justifyContent="space-between"
-                spacing={1.5}
+                spacing={{ xs: 1, sm: 1.5 }}
               >
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Stack alignItems="center" direction="row" spacing={1}>
@@ -174,10 +181,10 @@ export function FaenaAttendanceHeader({
                       {formatFaenaDate(selectedFaena.fechaProgramada)} · {getFaenaScheduleLabel(selectedFaena)}
                     </Typography>
                   </Stack>
-                  <Typography sx={{ fontSize: { xs: 24, md: 28 }, fontWeight: 800, mt: 0.75 }}>
+                  <Typography sx={{ fontSize: { xs: 18, sm: 24, md: 28 }, fontWeight: 800, mt: { xs: 0.35, sm: 0.75 } }}>
                     {selectedFaena.descripcion || 'Faena sin descripcion'}
                   </Typography>
-                  <Typography color="text.secondary" sx={{ mt: 0.5 }}>
+                  <Typography color="text.secondary" sx={{ fontSize: { xs: 13, sm: 16 }, mt: { xs: 0.25, sm: 0.5 } }}>
                     {selectedFaena.lugar?.trim() || 'Lugar no registrado'}
                   </Typography>
                 </Box>
@@ -205,15 +212,16 @@ export function FaenaAttendanceHeader({
                   display: 'grid',
                   gridTemplateColumns: {
                     xs: 'repeat(2, minmax(0, 1fr))',
-                    md: 'repeat(4, minmax(0, 1fr))',
+                    md: 'repeat(5, minmax(0, 1fr))',
                   },
-                  gap: 1.5,
+                  gap: { xs: 0.75, sm: 1.5 },
                 }}
               >
                 <SummaryMetricCard label="Total" tone="default" value={summary.total} />
                 <SummaryMetricCard label="Presentes" tone="success" value={summary.present} />
+                <SummaryMetricCard label="Tardanzas" tone="warning" value={summary.late} />
                 <SummaryMetricCard label="Ausentes" tone="error" value={summary.absent} />
-                <SummaryMetricCard label="Pendientes" tone="warning" value={summary.pending} />
+                <SummaryMetricCard label="Pendientes" mobileWide tone="default" value={summary.pending} />
               </Box>
             </Stack>
           ) : faenasLoading ? (

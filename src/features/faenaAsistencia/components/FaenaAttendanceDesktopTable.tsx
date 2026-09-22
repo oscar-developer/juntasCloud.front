@@ -9,7 +9,10 @@ import {
 } from '../constants';
 import type { FaenaAttendanceRowVM, FaenaAttendanceStatus } from '../types';
 import { FaenaAttendanceActions } from './FaenaAttendanceActions';
-import { getFaenaAttendanceChipProps } from './faenaAttendanceUi';
+import {
+  formatFaenaAttendanceStatusLabel,
+  getFaenaAttendanceChipProps,
+} from './faenaAttendanceUi';
 
 type FaenaAttendanceDesktopTableProps = {
   rows: FaenaAttendanceRowVM[];
@@ -18,12 +21,14 @@ type FaenaAttendanceDesktopTableProps = {
     row: FaenaAttendanceRowVM,
     status: Exclude<FaenaAttendanceStatus, 'unknown'>,
   ) => void;
+  onRequestLate: (row: FaenaAttendanceRowVM) => void;
 };
 
 export function FaenaAttendanceDesktopTable({
   rows,
   disabled = false,
   onSelectStatus,
+  onRequestLate,
 }: FaenaAttendanceDesktopTableProps) {
   const containerHeight = Math.min(
     FAENA_ATTENDANCE_DESKTOP_TABLE_HEIGHT,
@@ -37,7 +42,7 @@ export function FaenaAttendanceDesktopTable({
     overscan: FAENA_ATTENDANCE_VIRTUAL_OVERSCAN,
   });
   const virtualItems = rowVirtualizer.getVirtualItems();
-  const gridTemplateColumns = '2.2fr 1fr 0.9fr 240px';
+  const gridTemplateColumns = '2.2fr 1fr 0.9fr 330px';
 
   return (
     <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
@@ -50,7 +55,7 @@ export function FaenaAttendanceDesktopTable({
           borderBottom: 1,
           borderColor: 'divider',
           backgroundColor: 'grey.50',
-          minWidth: 940,
+          minWidth: 1030,
         }}
       >
         {['Persona', 'Tipo', 'Estado', 'Registro'].map((label) => (
@@ -68,7 +73,7 @@ export function FaenaAttendanceDesktopTable({
         ref={parentRef}
         sx={{
           height: containerHeight,
-          minWidth: 940,
+          minWidth: 1030,
           overflow: 'auto',
           position: 'relative',
         }}
@@ -97,7 +102,7 @@ export function FaenaAttendanceDesktopTable({
                   alignItems: 'center',
                   borderBottom: 1,
                   borderColor: 'divider',
-                  minWidth: 940,
+                  minWidth: 1030,
                   '&:hover': { backgroundColor: 'action.hover' },
                 }}
               >
@@ -117,12 +122,21 @@ export function FaenaAttendanceDesktopTable({
                 </TableCell>
 
                 <TableCell component="div" sx={{ borderBottom: 0, px: 1 }}>
-                  <Chip size="small" {...getFaenaAttendanceChipProps(row.status)} />
+                  <Chip
+                    size="small"
+                    {...getFaenaAttendanceChipProps(row.status)}
+                    label={formatFaenaAttendanceStatusLabel(row.status, row.horaLlegada)}
+                  />
                 </TableCell>
 
                 <TableCell component="div" sx={{ borderBottom: 0, px: 1, textAlign: 'right' }}>
                   <Stack alignItems="flex-end">
-                    <FaenaAttendanceActions disabled={disabled} onSelectStatus={onSelectStatus} row={row} />
+                    <FaenaAttendanceActions
+                      disabled={disabled}
+                      onRequestLate={onRequestLate}
+                      onSelectStatus={onSelectStatus}
+                      row={row}
+                    />
                   </Stack>
                 </TableCell>
               </Box>

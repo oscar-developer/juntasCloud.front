@@ -1,6 +1,8 @@
 import { Box, Stack } from '@mui/material';
+import { Toast } from '../../../shared/ui/Toast';
 import { PersonaFichaAsistenciaSection } from '../components/PersonaFichaAsistenciaSection';
 import { PersonaFichaHeader } from '../components/PersonaFichaHeader';
+import { PersonaFichaExportDialog } from '../components/PersonaFichaExportDialog';
 import { PersonaFichaInfoCompletaDialog } from '../components/PersonaFichaInfoCompletaDialog';
 import { PersonaFichaNavigation } from '../components/PersonaFichaNavigation';
 import { PersonaFichaObligacionesSection } from '../components/PersonaFichaObligacionesSection';
@@ -16,7 +18,10 @@ export function PersonaFichaPage() {
     <Box sx={{ pb: { xs: 3, md: 0 } }}>
       <Stack spacing={{ xs: 1.5, sm: 2.5 }}>
         <PersonaFichaHeader
+          exportDisabled={ficha.resumenState.status !== 'success'}
+          exportLoading={ficha.exportLoading}
           onBack={ficha.goBackToPersonas}
+          onExport={ficha.openExportDialog}
           resumen={ficha.resumenState.data}
         />
 
@@ -92,6 +97,26 @@ export function PersonaFichaPage() {
         onClose={ficha.closeInfoCompleta}
         open={ficha.infoCompletaOpen}
         state={ficha.infoCompletaState}
+      />
+
+      <PersonaFichaExportDialog
+        constancia={ficha.issuedConstancia}
+        loading={ficha.exportLoading}
+        onClose={ficha.closeExportDialog}
+        onExportExcel={() => {
+          void ficha.exportFicha('excel');
+        }}
+        onExportPdf={() => {
+          void ficha.exportFicha('pdf');
+        }}
+        open={ficha.exportOpen}
+      />
+
+      <Toast
+        message={ficha.toast.message}
+        onClose={ficha.closeToast}
+        open={ficha.toast.open}
+        severity={ficha.toast.severity}
       />
     </Box>
   );

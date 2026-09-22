@@ -3,11 +3,12 @@ import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getFaenas } from '../../faenas/services/faenas.service';
 import type { Faena } from '../../faenas/types';
-import { getFullName } from '../../personas/components/personaUi';
+import { getDisplayFullName, getFullName } from '../../personas/components/personaUi';
 import { getPersonas } from '../../personas/services/personas.service';
 import type { Persona } from '../../personas/types';
 import { useTenant } from '../../tenant/context/TenantContext';
 import {
+  formatPersonaCompactFaenaAttendanceText,
   formatPersonaSecondaryText,
   getFaenaAttendanceErrorMessage,
   mapFaenaAttendanceRecordToStatus,
@@ -38,6 +39,11 @@ import type {
   FaenaParticipacion,
   FaenaParticipacionCreateDto,
 } from '../types';
+
+type AttendanceStatusOptions = {
+  horaLlegada?: string;
+  observaciones?: string;
+};
 
 export function useFaenaAsistencia() {
   const { tenant, tenantId } = useTenant();
@@ -321,6 +327,7 @@ export function useFaenaAsistencia() {
 
   const summary = useMemo(() => {
     let present = 0;
+    let late = 0;
     let absent = 0;
 
     attendanceByPersonaId.forEach((record) => {
@@ -328,17 +335,20 @@ export function useFaenaAsistencia() {
 
       if (status === 'present') {
         present += 1;
+      } else if (status === 'late') {
+        late += 1;
       } else if (status === 'absent') {
         absent += 1;
       }
     });
 
     const total = personasProgress.total || personas.length;
-    const pending = Math.max(total - present - absent, 0);
+    const pending = Math.max(total - present - late - absent, 0);
 
     return {
       total,
       present,
+      late,
       absent,
       pending,
     };
@@ -355,9 +365,13 @@ export function useFaenaAsistencia() {
         participationId: record?.idFaenaParticipacion ?? null,
         primaryText: getFullName(persona) || `Persona ${persona.idPersona}`,
         secondaryText: formatPersonaSecondaryText(persona),
+        displayPrimaryText: getDisplayFullName(persona) || `Persona ${persona.idPersona}`,
+        compactSecondaryText: formatPersonaCompactFaenaAttendanceText(persona),
         participantType: persona.tipoParticipante,
         status: mapFaenaAttendanceRecordToStatus(record),
         rawStatus: record?.estado ?? null,
+        horaLlegada: record?.horaLlegada ?? null,
+        observaciones: record?.observaciones ?? null,
         isSaving: rowState.saveState === 'saving',
         saveState: rowState.saveState,
         errorMessage: rowState.errorMessage ?? null,
@@ -371,6 +385,7 @@ export function useFaenaAsistencia() {
       all: summary.total,
       unknown: summary.pending,
       present: summary.present,
+      late: summary.late,
       absent: summary.absent,
     }),
     [summary],
@@ -462,6 +477,7 @@ export function useFaenaAsistencia() {
   const handleSelectStatus = async (
     row: FaenaAttendanceRowVM,
     nextStatus: Exclude<FaenaAttendanceStatus, 'unknown'>,
+    options: AttendanceStatusOptions = {},
   ) => {
     if (!tenantId || !selectedFaenaId) {
       return;
@@ -483,6 +499,8 @@ export function useFaenaAsistencia() {
       persona,
       previousRecord,
       nextStatus,
+      horaLlegada: options.horaLlegada,
+      observaciones: options.observaciones,
     });
 
     clearRowSaveFeedback(rowId);
@@ -508,7 +526,11 @@ export function useFaenaAsistencia() {
           horaLlegada:
             nextStatus === 'present'
               ? previousRecord.horaLlegada ?? optimisticRecord.horaLlegada ?? undefined
-              : undefined,
+              : nextStatus === 'late'
+                ? optimisticRecord.horaLlegada ?? undefined
+                : undefined,
+          observaciones:
+            nextStatus === 'late' ? options.observaciones?.trim() || undefined : undefined,
         });
       } else {
         const payload: FaenaParticipacionCreateDto = {
@@ -517,9 +539,16 @@ export function useFaenaAsistencia() {
           cantPersonasExtra: previousRecord?.cantPersonasExtra ?? 0,
           multaGenerada: previousRecord?.multaGenerada ?? false,
           montoMulta: previousRecord?.montoMulta ?? undefined,
-          observaciones: previousRecord?.observaciones ?? undefined,
+          observaciones:
+            nextStatus === 'late'
+              ? options.observaciones?.trim() || undefined
+              : previousRecord?.observaciones ?? undefined,
           horaLlegada:
-            nextStatus === 'present' ? optimisticRecord.horaLlegada ?? undefined : undefined,
+            nextStatus === 'present'
+              ? optimisticRecord.horaLlegada ?? undefined
+              : nextStatus === 'late'
+                ? optimisticRecord.horaLlegada ?? undefined
+                : undefined,
         };
 
         savedRecord = await createFaenaParticipacion(tenantId, faenaSnapshot, payload);

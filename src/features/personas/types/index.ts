@@ -221,3 +221,81 @@ export type PersonaFichaPagosQuery = {
   page: number;
   limit: number;
 };
+
+export type PersonaConstanciaAttendanceSummary = {
+  total: number;
+  asistencias: number;
+  faltas: number;
+  tardanzas: number;
+  porcentajeAsistencia: number;
+};
+
+export type PersonaConstanciaSigner = {
+  cargo: 'PRESIDENTE' | 'SECRETARIO' | 'TESORERO';
+  nombreCompleto: string | null;
+};
+
+export type PersonaConstanciaSnapshot = {
+  tenant: {
+    nombre: string;
+    tipoDocumento: string | null;
+    numeroDocumento: string | null;
+  };
+  persona: {
+    idPersona: number;
+    nombreCompleto: string;
+    dni: string | null;
+    nroPadron: number | null;
+    tipoParticipante: string;
+    estado: string;
+    fechaRegistro: string;
+  };
+  resumen: {
+    deudaPendienteTotal: number;
+    faenas: PersonaConstanciaAttendanceSummary;
+    asambleas: PersonaConstanciaAttendanceSummary;
+    totalTerrenos: number;
+  };
+  juntaDirectiva: {
+    idJunta: number | null;
+    nombre: string | null;
+    fechaInicio: string | null;
+    fechaFin: string | null;
+  };
+  firmantes: PersonaConstanciaSigner[];
+};
+
+export type PersonaConstanciaIssued = {
+  idConstancia: number;
+  codigo: string;
+  estado: 'VIGENTE' | 'REVOCADA';
+  issuedAt: string;
+  verificationUrl: string;
+  snapshotHash: string;
+  snapshot: PersonaConstanciaSnapshot;
+};
+
+export type PersonaConstanciaVerification = {
+  valida: boolean;
+  estado: 'VIGENTE' | 'REVOCADA';
+  codigo: string;
+  issuedAt: string;
+  revokedAt: string | null;
+  motivoRevocacion: string | null;
+  tenant: PersonaConstanciaSnapshot['tenant'];
+  persona: {
+    nombreCompleto: string;
+    dniEnmascarado: string | null;
+    nroPadron: number | null;
+    estado: string;
+  };
+  snapshotHash: string;
+};
+
+export type PersonaFichaExportData = {
+  persona: Persona;
+  asistencias: PersonaAsistenciaFicha[];
+  obligaciones: PersonaObligacionFicha[];
+  pagos: PersonaPagoFicha[];
+  terrenos: PersonaTerrenoFicha[];
+};

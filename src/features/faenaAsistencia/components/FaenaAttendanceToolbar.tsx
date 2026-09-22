@@ -5,6 +5,8 @@ import {
   Button,
   Card,
   CardContent,
+  Chip,
+  IconButton,
   InputAdornment,
   LinearProgress,
   Stack,
@@ -45,6 +47,8 @@ export function FaenaAttendanceToolbar({
   onStatusFilterChange,
 }: FaenaAttendanceToolbarProps) {
   const theme = useTheme();
+  const hasActiveToolbarValue = Boolean(searchInput.trim()) || statusFilter !== 'all';
+  const filterOrder: FaenaAttendanceFilter[] = ['all', 'unknown', 'present', 'late', 'absent'];
 
   return (
     <Card
@@ -56,14 +60,24 @@ export function FaenaAttendanceToolbar({
         backgroundColor: alpha(theme.palette.background.paper, 0.92),
       }}
     >
-      <CardContent sx={{ p: { xs: 2, md: 2.5 } }}>
-        <Stack spacing={2}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+      <CardContent sx={{ p: { xs: 1, sm: 2, md: 2.5 } }}>
+        <Stack spacing={{ xs: 1, sm: 2 }}>
+          <Stack direction={{ xs: 'row', sm: 'column', md: 'row' }} spacing={{ xs: 1, sm: 1.5 }}>
             <TextField
               fullWidth
               onChange={(event) => onSearchInputChange(event.target.value)}
               placeholder="Buscar por nombre, DNI o correo"
               value={searchInput}
+              sx={(currentTheme) => ({
+                [currentTheme.breakpoints.down('sm')]: {
+                  '& .MuiOutlinedInput-root': {
+                    minHeight: 42,
+                  },
+                  '& .MuiInputBase-input': {
+                    py: 1,
+                  },
+                },
+              })}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -72,17 +86,94 @@ export function FaenaAttendanceToolbar({
                 ),
               }}
             />
-            <Button onClick={onReload} startIcon={<RefreshRoundedIcon />} variant="outlined">
+            <IconButton
+              aria-label="Recargar"
+              onClick={onReload}
+              sx={{
+                border: 1,
+                borderColor: 'divider',
+                color: 'text.secondary',
+                display: { xs: 'inline-flex', sm: 'none' },
+                height: 42,
+                width: 42,
+              }}
+            >
+              <RefreshRoundedIcon />
+            </IconButton>
+            <Button
+              onClick={onReload}
+              startIcon={<RefreshRoundedIcon />}
+              sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              variant="outlined"
+            >
               Recargar
             </Button>
-            <Button onClick={onClear} variant="text">
+            <Button
+              onClick={onClear}
+              sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              variant="text"
+            >
               Limpiar
             </Button>
           </Stack>
 
-          <Box sx={{ overflowX: 'auto' }}>
-            <Stack direction="row" spacing={1} sx={{ minWidth: 'max-content' }}>
-              {(['all', 'unknown', 'present', 'absent'] as FaenaAttendanceFilter[]).map((filterValue) => (
+          <Box
+            sx={{
+              position: 'relative',
+              overflowX: 'auto',
+              pb: { xs: 0.25, sm: 0 },
+              scrollbarWidth: 'none',
+              '&::after': {
+                background: `linear-gradient(90deg, ${alpha(theme.palette.background.paper, 0)}, ${alpha(
+                  theme.palette.background.paper,
+                  0.96,
+                )})`,
+                content: '\"\"',
+                display: { xs: 'block', sm: 'none' },
+                height: '100%',
+                pointerEvents: 'none',
+                position: 'absolute',
+                right: 0,
+                top: 0,
+                width: 24,
+              },
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={{ xs: 0.75, sm: 1 }}
+              sx={{ display: { xs: 'flex', sm: 'none' }, minWidth: 'max-content', pr: 3 }}
+            >
+              {filterOrder.map((filterValue) => {
+                const selected = statusFilter === filterValue;
+
+                return (
+                  <Chip
+                    color={selected ? 'primary' : 'default'}
+                    key={filterValue}
+                    label={`${getFaenaAttendanceFilterLabel(filterValue)} ${filterCounts[filterValue]}`}
+                    onClick={() => onStatusFilterChange(filterValue)}
+                    size="small"
+                    sx={{
+                      fontWeight: selected ? 700 : 600,
+                      height: 30,
+                      '& .MuiChip-label': {
+                        fontSize: 12,
+                        px: 1,
+                      },
+                    }}
+                    variant={selected ? 'filled' : 'outlined'}
+                  />
+                );
+              })}
+            </Stack>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ display: { xs: 'none', sm: 'flex' }, minWidth: 'max-content' }}
+            >
+              {filterOrder.map((filterValue) => (
                 <Button
                   key={filterValue}
                   onClick={() => onStatusFilterChange(filterValue)}
@@ -95,9 +186,28 @@ export function FaenaAttendanceToolbar({
             </Stack>
           </Box>
 
-          <Typography color="text.secondary" variant="caption">
-            {filteredCount} visibles de {totalCount} personas activas.
-          </Typography>
+          <Stack
+            alignItems={{ xs: 'center', sm: 'flex-start' }}
+            direction={{ xs: 'row', sm: 'column' }}
+            justifyContent="space-between"
+            spacing={1}
+          >
+            <Typography color="text.secondary" variant="caption">
+              {filteredCount} visibles de {totalCount} personas activas.
+            </Typography>
+            <Button
+              onClick={onClear}
+              size="small"
+              sx={{
+                display: { xs: hasActiveToolbarValue ? 'inline-flex' : 'none', sm: 'none' },
+                minHeight: 28,
+                px: 1,
+              }}
+              variant="text"
+            >
+              Limpiar
+            </Button>
+          </Stack>
 
           {personasLoading ? (
             <Stack spacing={0.75}>

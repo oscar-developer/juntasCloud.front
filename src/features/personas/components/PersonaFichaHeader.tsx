@@ -1,23 +1,55 @@
 import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import { Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
+import { Box, Button, Card, CardContent, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import type { PersonaFichaResumen } from '../types';
 import { getEstadoChipProps } from './personaUi';
 
 type PersonaFichaHeaderProps = {
   resumen: PersonaFichaResumen | null;
   onBack: () => void;
+  onExport: () => void;
+  exportDisabled?: boolean;
+  exportLoading?: boolean;
 };
 
-export function PersonaFichaHeader({ resumen, onBack }: PersonaFichaHeaderProps) {
+export function PersonaFichaHeader({
+  resumen,
+  onBack,
+  onExport,
+  exportDisabled = false,
+  exportLoading = false,
+}: PersonaFichaHeaderProps) {
   const persona = resumen?.persona;
 
   return (
     <Stack spacing={1.25}>
-      <Box>
+      <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1}>
         <Button onClick={onBack} startIcon={<ArrowBackRoundedIcon />} variant="text">
           Volver a personas
         </Button>
-      </Box>
+        <Button
+          disabled={exportDisabled || exportLoading}
+          onClick={onExport}
+          startIcon={<FileDownloadRoundedIcon />}
+          sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+          variant="contained"
+        >
+          Exportar ficha
+        </Button>
+        <Tooltip title="Exportar ficha">
+          <span>
+            <IconButton
+              aria-label="Exportar ficha"
+              color="primary"
+              disabled={exportDisabled || exportLoading}
+              onClick={onExport}
+              sx={{ display: { xs: 'inline-flex', sm: 'none' } }}
+            >
+              <FileDownloadRoundedIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
+      </Stack>
 
       <Card elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>

@@ -53,8 +53,16 @@ export function buildOptimisticFaenaParticipationRecord(params: {
   persona: Persona;
   previousRecord: FaenaParticipacion | null;
   nextStatus: Exclude<FaenaAttendanceStatus, 'unknown'>;
+  horaLlegada?: string;
+  observaciones?: string;
 }) {
-  const { tenantId, idFaena, persona, previousRecord, nextStatus } = params;
+  const { tenantId, idFaena, persona, previousRecord, nextStatus, horaLlegada, observaciones } = params;
+  const nextHoraLlegada =
+    nextStatus === 'present'
+      ? previousRecord?.horaLlegada ?? createFaenaAttendanceTimestamp()
+      : nextStatus === 'late'
+        ? horaLlegada ?? previousRecord?.horaLlegada ?? createFaenaAttendanceTimestamp()
+        : previousRecord?.horaLlegada ?? null;
 
   return {
     idFaenaParticipacion:
@@ -63,14 +71,11 @@ export function buildOptimisticFaenaParticipationRecord(params: {
     idFaena: previousRecord?.idFaena ?? idFaena,
     idPersona: persona.idPersona,
     estado: mapFaenaAttendanceStatusToEstado(nextStatus, previousRecord?.estado),
-    horaLlegada:
-      nextStatus === 'present'
-        ? previousRecord?.horaLlegada ?? createFaenaAttendanceTimestamp()
-        : previousRecord?.horaLlegada ?? null,
+    horaLlegada: nextHoraLlegada,
     cantPersonasExtra: previousRecord?.cantPersonasExtra ?? 0,
     multaGenerada: previousRecord?.multaGenerada ?? false,
     montoMulta: previousRecord?.montoMulta ?? null,
-    observaciones: previousRecord?.observaciones ?? null,
+    observaciones: observaciones?.trim() || previousRecord?.observaciones || null,
     createdAt: previousRecord?.createdAt,
     createdByUser: previousRecord?.createdByUser ?? null,
     updatedAt: previousRecord?.updatedAt ?? null,
