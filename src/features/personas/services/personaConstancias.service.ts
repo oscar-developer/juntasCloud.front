@@ -1,8 +1,10 @@
 import axios from 'axios';
-import { jsPDF } from 'jspdf';
-import * as QRCode from 'qrcode';
 import * as XLSX from 'xlsx';
 import { apiClient } from '../../../api/axios';
+import {
+  createPersonaConstanciaPdf,
+  type ConstanciaPdfAttendanceRow,
+} from '../../../shared/utils/exportPersonaConstanciaPdf';
 import type {
   PersonaAsistenciaFicha,
   PersonaConstanciaIssued,
@@ -21,6 +23,9 @@ import {
 } from './personas.service';
 
 const EXPORT_PAGE_SIZE = 100;
+
+type AttendanceEventType = 'FAENA' | 'ASAMBLEA';
+type ConstanciaAttendance = Record<AttendanceEventType, PersonaAsistenciaFicha[]>;
 
 function resolveApiPath(path: string) {
   const baseUrl = apiClient.defaults.baseURL?.trim() ?? '';
@@ -119,6 +124,58 @@ async function collectPages<T>(
   return items;
 }
 
+async function collectConstanciaAttendance(
+  tenantId: string | number,
+  personaId: string | number,
+  tipo: AttendanceEventType,
+): Promise<PersonaAsistenciaFicha[]> {
+  const items: PersonaAsistenciaFicha[] = [];
+  const ids = new Set<string>();
+  const incomplete = () => new Error('No se pudo cargar el historial completo de asistencias. Vuelve a intentarlo.');
+  let total: number | undefined;
+
+  for (let page = 1; ; page += 1) {
+    const response = await getPersonaFichaAsistencias(tenantId, personaId, {
+      tipo,
+      page,
+      limit: EXPORT_PAGE_SIZE,
+    });
+    total ??= response.total;
+
+    if (response.page !== page || response.total !== total || items.length + response.items.length > total) {
+      throw incomplete();
+    }
+
+    for (const item of response.items) {
+      const id = String(item.idAsistencia);
+      if (item.tipoEvento !== tipo || ids.has(id)) {
+        throw incomplete();
+      }
+      ids.add(id);
+      items.push(item);
+    }
+
+    if (items.length === total) {
+      return items;
+    }
+    if (response.items.length < EXPORT_PAGE_SIZE) {
+      throw incomplete();
+    }
+  }
+}
+
+export async function getPersonaConstanciaAttendance(
+  tenantId: string | number,
+  personaId: string | number,
+): Promise<ConstanciaAttendance> {
+  const [faenas, asambleas] = await Promise.all([
+    collectConstanciaAttendance(tenantId, personaId, 'FAENA'),
+    collectConstanciaAttendance(tenantId, personaId, 'ASAMBLEA'),
+  ]);
+
+  return { FAENA: faenas, ASAMBLEA: asambleas };
+}
+
 export async function getPersonaFichaExportData(
   tenantId: string | number,
   personaId: string | number,
@@ -158,10 +215,6 @@ function formatDate(value?: string | null, includeTime = false) {
   }).format(date);
 }
 
-function formatMoney(value?: number | null) {
-  return new Intl.NumberFormat('es-PE', { style: 'currency', currency: 'PEN' }).format(value ?? 0);
-}
-
 function slugify(value: string) {
   return (
     value
@@ -177,147 +230,60 @@ function attendanceLabel(summary: PersonaConstanciaIssued['snapshot']['resumen']
   return `${summary.asistencias + summary.tardanzas} de ${summary.total} (${Math.round(summary.porcentajeAsistencia)}%)`;
 }
 
-export async function buildPersonaConstanciaPdf(constancia: PersonaConstanciaIssued) {
-  const document = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
-  const { snapshot } = constancia;
-  const pageWidth = document.internal.pageSize.getWidth();
-  const margin = 16;
-  const contentWidth = pageWidth - margin * 2;
-  const qrDataUrl = await QRCode.toDataURL(constancia.verificationUrl, {
-    errorCorrectionLevel: 'M',
-    margin: 1,
-    width: 360,
-  });
-
-  document.setFillColor(22, 101, 52);
-  document.rect(0, 0, pageWidth, 9, 'F');
-  document.setTextColor(17, 24, 39);
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(16);
-  document.text(snapshot.tenant.nombre, pageWidth / 2, 20, { align: 'center', maxWidth: contentWidth });
-  document.setFont('helvetica', 'normal');
-  document.setFontSize(9);
-  document.setTextColor(75, 85, 99);
-  const tenantDocument = [snapshot.tenant.tipoDocumento, snapshot.tenant.numeroDocumento].filter(Boolean).join(' ');
-  document.text(tenantDocument || 'Organización comunal', pageWidth / 2, 26, { align: 'center' });
-  document.setDrawColor(203, 213, 225);
-  document.line(margin, 32, pageWidth - margin, 32);
-
-  document.setTextColor(17, 24, 39);
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(15);
-  document.text('CONSTANCIA DE REGISTRO Y CONDICIÓN', pageWidth / 2, 43, { align: 'center' });
-  document.setFontSize(9);
-  document.setFont('helvetica', 'normal');
-  document.setTextColor(75, 85, 99);
-  document.text(`Código: ${constancia.codigo}`, margin, 52);
-  document.text(`Fecha de emisión: ${formatDate(constancia.issuedAt, true)}`, pageWidth - margin, 52, {
-    align: 'right',
-  });
-
-  document.setTextColor(31, 41, 55);
-  document.setFontSize(10.5);
-  const statement =
-    `La ${snapshot.tenant.nombre} deja constancia que ${snapshot.persona.nombreCompleto}, ` +
-    `identificado(a) con DNI ${snapshot.persona.dni || 'no registrado'}, figura en el registro institucional ` +
-    `como ${snapshot.persona.tipoParticipante.replace(/_/g, ' ').toLowerCase()}, ` +
-    `${snapshot.persona.nroPadron ? `con padrón Nro. ${snapshot.persona.nroPadron}, ` : ''}` +
-    `en condición ${snapshot.persona.estado.toLowerCase()} a la fecha de emisión del presente documento.`;
-  const statementLines = document.splitTextToSize(statement, contentWidth);
-  document.text(statementLines, margin, 64, { lineHeightFactor: 1.45 });
-
-  document.setFillColor(248, 250, 252);
-  document.setDrawColor(226, 232, 240);
-  document.roundedRect(margin, 92, contentWidth, 43, 2, 2, 'FD');
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(10);
-  document.setTextColor(17, 24, 39);
-  document.text('Datos de registro', margin + 5, 101);
-  document.setFont('helvetica', 'normal');
-  document.setFontSize(9);
-  document.text(`Nombre completo: ${snapshot.persona.nombreCompleto}`, margin + 5, 109, { maxWidth: contentWidth - 10 });
-  document.text(`DNI: ${snapshot.persona.dni || 'No registrado'}`, margin + 5, 116);
-  document.text(`Padrón: ${snapshot.persona.nroPadron ?? 'No registrado'}`, margin + 70, 116);
-  document.text(`Fecha de registro: ${formatDate(snapshot.persona.fechaRegistro)}`, margin + 5, 123);
-  document.text(`Estado: ${snapshot.persona.estado}`, margin + 70, 123);
-  document.text(`Tipo: ${snapshot.persona.tipoParticipante.replace(/_/g, ' ')}`, margin + 5, 130);
-
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(10);
-  document.text('Resumen informativo al momento de emisión', margin, 147);
-  const metrics = [
-    ['Deuda pendiente', formatMoney(snapshot.resumen.deudaPendienteTotal)],
-    ['Asistencia a faenas', attendanceLabel(snapshot.resumen.faenas)],
-    ['Asistencia a asambleas', attendanceLabel(snapshot.resumen.asambleas)],
-    ['Terrenos relacionados', String(snapshot.resumen.totalTerrenos)],
-  ];
-  metrics.forEach(([label, value], index) => {
-    const column = index % 2;
-    const row = Math.floor(index / 2);
-    const x = margin + column * (contentWidth / 2);
-    const y = 157 + row * 14;
-    document.setFont('helvetica', 'normal');
-    document.setFontSize(8.5);
-    document.setTextColor(100, 116, 139);
-    document.text(label, x, y);
-    document.setFont('helvetica', 'bold');
-    document.setFontSize(10);
-    document.setTextColor(17, 24, 39);
-    document.text(value, x, y + 5);
-  });
-
-  document.addImage(qrDataUrl, 'PNG', pageWidth - margin - 34, 188, 34, 34);
-  document.setFont('helvetica', 'bold');
-  document.setFontSize(9.5);
-  document.setTextColor(17, 24, 39);
-  document.text('Verificación pública', margin, 194);
-  document.setFont('helvetica', 'normal');
-  document.setFontSize(8.5);
-  document.setTextColor(75, 85, 99);
-  const verificationText = document.splitTextToSize(
-    `Escanee el código QR o visite el siguiente enlace para comprobar la autenticidad y vigencia de esta constancia: ${constancia.verificationUrl}`,
-    contentWidth - 44,
-  );
-  document.text(verificationText, margin, 201, { lineHeightFactor: 1.35 });
-  document.setFontSize(7.5);
-  document.text(`Huella: ${constancia.snapshotHash}`, margin, 222, { maxWidth: contentWidth - 44 });
-
-  const signerWidth = contentWidth / 3;
-  const signatureY = 258;
-  snapshot.firmantes.forEach((signer, index) => {
-    const centerX = margin + signerWidth * index + signerWidth / 2;
-    document.setDrawColor(100, 116, 139);
-    document.line(centerX - 23, signatureY, centerX + 23, signatureY);
-    document.setTextColor(17, 24, 39);
-    document.setFont('helvetica', 'bold');
-    document.setFontSize(8.5);
-    document.text(signer.nombreCompleto || ' ', centerX, signatureY + 5, { align: 'center', maxWidth: 48 });
-    document.setFont('helvetica', 'normal');
-    document.setTextColor(75, 85, 99);
-    document.text(signer.cargo.charAt(0) + signer.cargo.slice(1).toLowerCase(), centerX, signatureY + 10, {
-      align: 'center',
-    });
-    document.text('Firma y sello', centerX, signatureY + 14, { align: 'center' });
-  });
-
-  document.setFont('helvetica', 'normal');
-  document.setFontSize(7.5);
-  document.setTextColor(100, 116, 139);
-  document.text(
-    'Documento generado por el sistema. Su autenticidad se confirma exclusivamente mediante el enlace de verificación.',
-    pageWidth / 2,
-    289,
-    { align: 'center', maxWidth: contentWidth },
-  );
-
-  return document;
+function formatCalendarDate(value: string) {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(value);
+  return parts ? `${parts[3]}/${parts[2]}/${parts[1]}` : formatDate(value);
 }
 
-export async function exportPersonaConstanciaToPdf(constancia: PersonaConstanciaIssued) {
-  const document = await buildPersonaConstanciaPdf(constancia);
-  document.save(
-    `constancia-${slugify(constancia.snapshot.persona.nombreCompleto)}-${constancia.codigo}.pdf`,
-  );
+function toPdfAttendanceRows(items: PersonaAsistenciaFicha[], tipo: AttendanceEventType) {
+  const rows: ConstanciaPdfAttendanceRow[] = [];
+
+  for (const { estado, fecha, nombreEvento } of items) {
+    if (estado === 'ASISTIO' || estado === 'TARDE' || estado === 'FALTO' || estado === 'JUSTIFICADO') {
+      rows.push({
+        fecha: tipo === 'FAENA' ? formatCalendarDate(fecha) : formatDate(fecha),
+        evento: nombreEvento,
+        estado,
+      });
+    }
+  }
+
+  return rows;
+}
+
+export function buildPersonaConstanciaPdf(
+  constancia: PersonaConstanciaIssued,
+  asistencias: ConstanciaAttendance,
+) {
+  const { persona, tenant } = constancia.snapshot;
+
+  return createPersonaConstanciaPdf({
+    organizacion: tenant.nombre,
+    documentoOrganizacion: [tenant.tipoDocumento, tenant.numeroDocumento].filter(Boolean).join(' '),
+    codigo: constancia.codigo,
+    fechaEmision: formatDate(constancia.issuedAt, true),
+    persona: {
+      nombre: persona.nombreCompleto,
+      dni: persona.dni || 'No registrado',
+      padron: String(persona.nroPadron ?? 'No registrado'),
+      fechaRegistro: formatCalendarDate(persona.fechaRegistro),
+      tipo: persona.tipoParticipante.replace(/_/g, ' '),
+      estado: persona.estado,
+    },
+    verificationUrl: constancia.verificationUrl,
+    snapshotHash: constancia.snapshotHash,
+    faenas: toPdfAttendanceRows(asistencias.FAENA, 'FAENA'),
+    asambleas: toPdfAttendanceRows(asistencias.ASAMBLEA, 'ASAMBLEA'),
+  });
+}
+
+export async function exportPersonaConstanciaToPdf(
+  constancia: PersonaConstanciaIssued,
+  asistencias: ConstanciaAttendance,
+) {
+  const document = await buildPersonaConstanciaPdf(constancia, asistencias);
+  const personSlug = slugify(constancia.snapshot.persona.nombreCompleto).slice(0, 100).replace(/-$/, '');
+  document.save(`constancia-${personSlug}-${constancia.codigo}.pdf`);
 }
 
 function createSheet(rows: Array<Array<string | number | boolean | null | undefined>>, widths: number[]) {

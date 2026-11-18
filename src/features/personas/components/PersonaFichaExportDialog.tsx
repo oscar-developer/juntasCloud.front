@@ -36,8 +36,8 @@ export function PersonaFichaExportDialog({
       <DialogContent>
         <Stack spacing={2.5}>
           <Typography color="text.secondary" variant="body2">
-            El PDF es una constancia institucional verificable. El Excel contiene el detalle de la
-            ficha como anexo informativo.
+            El PDF incluye una constancia institucional verificable y un anexo informativo de
+            faenas y asambleas. El Excel contiene el detalle completo de la ficha.
           </Typography>
 
           {constancia ? (

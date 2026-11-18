@@ -4,6 +4,7 @@ import { getPersonaErrorMessage } from '../components/personaUi';
 import {
   exportPersonaConstanciaToPdf,
   exportPersonaFichaToExcel,
+  getPersonaConstanciaAttendance,
   getPersonaFichaExportData,
   issuePersonaConstancia,
 } from '../services/personaConstancias.service';
@@ -445,12 +446,13 @@ export function usePersonaFichaPage() {
 
     setExportLoading(true);
     try {
-      const constancia = await prepareConstancia();
-
       if (format === 'pdf') {
-        await exportPersonaConstanciaToPdf(constancia);
+        const asistencias = await getPersonaConstanciaAttendance(tenantId, personaId);
+        const constancia = await prepareConstancia();
+        await exportPersonaConstanciaToPdf(constancia, asistencias);
         showMessage('Constancia descargada en formato PDF.', 'success');
       } else {
+        const constancia = await prepareConstancia();
         const exportData = await getPersonaFichaExportData(tenantId, personaId);
         exportPersonaFichaToExcel(constancia, exportData);
         showMessage('Ficha descargada en formato Excel.', 'success');
